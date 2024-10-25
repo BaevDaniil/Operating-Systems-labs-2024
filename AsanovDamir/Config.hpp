@@ -5,5 +5,14 @@
 class Config
 {
 public:
-    bool readConfig(const std::string& path);
+    Config();
+    bool read_config();
+
+private:
+    std::string get_absolute_path(const char* path);
+
+    std::string pathToConfig;
+    std::string folder1;
+    std::string folder2;
+    int seconds;
 };

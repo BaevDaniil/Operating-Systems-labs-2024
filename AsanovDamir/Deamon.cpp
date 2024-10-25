@@ -1,8 +1,6 @@
 #include "Deamon.hpp"
-#include "Logger.hpp"
-#include "Config.hpp"
 
-Deamon& Deamon::getInstance()
+Deamon& Deamon::get_instance()
 {
     static Deamon instance;
     return instance;

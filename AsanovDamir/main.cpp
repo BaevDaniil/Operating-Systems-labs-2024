@@ -2,5 +2,6 @@
 
 int main()
 {
+    Config config;
     return 0;
 }
