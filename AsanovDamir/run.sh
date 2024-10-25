@@ -1,1 +1,1 @@
-sudo ./build/DamirAsanov
+sudo ./build/DamirAsanov ./Config.txt

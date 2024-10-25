@@ -114,8 +114,10 @@ bool Deamon::coping()
     return true;
 }
 
-void Deamon::start()
+void Deamon::start(const char* config_path)
 {
+    config.set_path_to_config(config_path);
+
     destroy_prev_deamon_if_exist();
     daemonize();
 

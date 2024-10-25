@@ -20,6 +20,11 @@ bool Config::read_config()
     std::getline(config, folder2);
     config >> seconds;
 
-    if (folder1.empty() || folder2.empty() || seconds == 0) return false;
+    if (folder1.empty() || folder2.empty() || seconds == 0 || pathToConfig.empty()) return false;
     return true;
+}
+
+void Config::set_path_to_config(const char* path_to_config)
+{
+    pathToConfig = get_absolute_path(path_to_config);
 }

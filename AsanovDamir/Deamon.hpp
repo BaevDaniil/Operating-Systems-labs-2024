@@ -7,7 +7,7 @@ class Deamon
 {
 public:
     static Deamon& get_instance();
-    void start();
+    void start(const char* config_path);
     bool coping();
 
 private:

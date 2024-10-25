@@ -11,6 +11,7 @@ public:
     const std::string& get_folder1() const { return folder1; }
     const std::string& get_folder2() const { return folder2; }
     int get_seconds() const { return seconds; }
+    void set_path_to_config(const char* path_to_config);
 
 private:
     std::string get_absolute_path(const char* path);
