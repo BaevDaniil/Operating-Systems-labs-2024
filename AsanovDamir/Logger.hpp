@@ -1,5 +1,14 @@
 #pragma once
 
+#include <string>
+#include <syslog.h>
+
+enum class Status : short
+{
+INFO = LOG_INFO,
+ERROR = LOG_ERR
+};
+
 class Logger
 {
 public:
@@ -9,7 +18,15 @@ public:
         return instance;
     }
 
-    // TODO: implement
+    void open_log(const std::string& identifier) const
+    {
+        openlog(identifier.c_str(), LOG_PID, LOG_DAEMON);
+    }
+    void log(Status status, const std::string& message)
+    {
+        syslog(static_cast<int>(status), "%s", message.c_str());
+    }
+    void close_log() { closelog(); }
 
 private:
     Logger();
