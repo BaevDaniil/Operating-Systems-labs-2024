@@ -1,15 +1,14 @@
 #pragma once
 
-#include <expected>
 #include <string>
 
-inline std::string const CONFIG_PATH{"/home/daniil/Desktop/Daniil/OS/Demon/config.txt"}; // "../../Demon/config.txt";
+inline std::string const CONFIG_PATH{"Demon/config.txt"};
 
 class Reader
 {
 public:
     static Reader& getInstance();
-    std::expected<void, std::string> readConfig(std::string const& configPath = CONFIG_PATH);
+    bool readConfig(std::string const& configPath = CONFIG_PATH);
 
     std::string const& getDir1() const noexcept { return m_dir1; }
     std::string const& getDir2() const noexcept { return m_dir2; }

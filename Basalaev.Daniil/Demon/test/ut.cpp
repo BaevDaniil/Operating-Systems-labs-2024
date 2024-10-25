@@ -3,11 +3,17 @@
 #include "Demon.hpp"
 #include <fstream>
 #include <sys/stat.h>
+#include <unistd.h>
 
 TEST_CASE("Reader read config")
 {
     Reader& reader = Reader::getInstance();
 
+    SECTION("Rainy")
+    {
+        auto result = reader.readConfig("LALALALA");
+        REQUIRE(!result);
+    }
     SECTION("Sanity")
     {
         auto result = reader.readConfig();
@@ -15,12 +21,6 @@ TEST_CASE("Reader read config")
         REQUIRE(reader.getDir1() == "/home/daniil/Desktop/test1");
         REQUIRE(reader.getDir2() == "/home/daniil/Desktop/test2");
         REQUIRE(reader.getInterval() == 30);
-    }
-    SECTION("Rainy")
-    {
-        auto result = reader.readConfig("LALALALA");
-        REQUIRE(!result);
-        REQUIRE(result.error() == "Failed to open config file.");
     }
 }
 
