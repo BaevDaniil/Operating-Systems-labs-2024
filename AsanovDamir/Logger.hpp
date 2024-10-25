@@ -12,15 +12,15 @@ ERROR = LOG_ERR
 class Logger
 {
 public:
-    Logger& get_instance()
+    static Logger& get_instance()
     {
         static Logger instance;
         return instance;
     }
 
-    void open_log(const std::string& identifier) const
+    void open_log()
     {
-        openlog(identifier.c_str(), LOG_PID, LOG_DAEMON);
+        openlog("Deamon", LOG_PID, LOG_DAEMON);
     }
     void log(Status status, const std::string& message)
     {
@@ -29,7 +29,7 @@ public:
     void close_log() { closelog(); }
 
 private:
-    Logger();
+    Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 };

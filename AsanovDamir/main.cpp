@@ -2,6 +2,6 @@
 
 int main()
 {
-    Config config;
+    Deamon::get_instance().start();
     return 0;
 }

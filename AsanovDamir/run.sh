@@ -1,1 +1,1 @@
-./build/DamirAsanov
+sudo ./build/DamirAsanov
