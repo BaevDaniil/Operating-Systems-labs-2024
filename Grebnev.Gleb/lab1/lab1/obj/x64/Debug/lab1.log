@@ -1,0 +1,12 @@
+﻿  Очистка удаленного каталога проекта
+  Проверка исходных файлов
+  Удаленное копирование исходных файлов в "localhost"
+  Проверка архитектуры
+  Проверка архитектуры
+  Запуск удаленной сборки.
+  Компиляция исходных файлов:
+  daemon.cpp
+C:\Users\79823\source\repos\lab1\lab1\daemon.cpp(42,39): error : ‘std::filesystem’ has not been declared
+C:\Users\79823\source\repos\lab1\lab1\daemon.cpp(51,26): warning : structured bindings only available with ‘-std=c++17’ or ‘-std=gnu++17’
+C:\Users\79823\source\repos\lab1\lab1\daemon.cpp(54,47): error : ‘std::filesystem’ has not been declared
+C:\Users\79823\source\repos\lab1\lab1\daemon.cpp(56,30): error : ‘std::filesystem’ has not been declared
