@@ -32,10 +32,8 @@ public:
 
     void Initialize(const std::string& configLocalPath);
 
-    // SIGTERM handler
     void Terminate();
 
-    // SIGHUP handler
     void ReloadConfig();
 
     void Run();
