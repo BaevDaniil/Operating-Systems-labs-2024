@@ -33,7 +33,9 @@ void Demon::start(const char* configPath)
 
     if (!m_reader.readConfig(configPath))
     {
-        m_logger.logError("Failed to open config");
+        m_logger.logError("Failed to open config. Destroy");
+        unlink(PID_FILE);
+        m_logger.closeLog();
         exit(EXIT_FAILURE);
     }
 
@@ -102,7 +104,9 @@ void Demon::sighupHandler(int)
     Logger::getInstance().logInfo("SIGHUP received, re-reading config.");
     if (!Reader::getInstance().readConfig())
     {
-        Logger::getInstance().logError("Failed to open config");
+        Logger::getInstance().logError("Failed to open config. Destroy");
+        unlink(PID_FILE);
+        Logger::getInstance().closeLog();
         exit(EXIT_FAILURE);
     }
 }
