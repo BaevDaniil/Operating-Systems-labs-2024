@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <filesystem>
 
 TEST_CASE("Reader read config")
 {
@@ -18,8 +19,8 @@ TEST_CASE("Reader read config")
     {
         auto result = reader.readConfig();
         REQUIRE(result);
-        REQUIRE(reader.getDir1() == "/home/daniil/Desktop/test1");
-        REQUIRE(reader.getDir2() == "/home/daniil/Desktop/test2");
+        REQUIRE(reader.getDir1() == std::filesystem::current_path() / "Demon/src");
+        REQUIRE(reader.getDir2() == std::filesystem::current_path() / "Demon/test");
         REQUIRE(reader.getInterval() == 30);
     }
 }
