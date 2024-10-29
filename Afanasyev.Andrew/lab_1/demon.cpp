@@ -1,79 +1,50 @@
 #include "demon.h"
 
-#include <exception>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <unordered_set>
-#include <vector>
-
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/file.h>
-#include <syslog.h>
-#include <unistd.h>
-
-namespace fs = std::filesystem;
-
-namespace demon
+static void kill_existing_process(const std::string& pid_file)
 {
-
-struct config_line
-{
-	fs::path from;
-	fs::path to;
-	std::string ext;
-};
-
-static const std::string IDENT("demon");
-static const std::string PID_FILE("/var/run/" + IDENT + ".pid");
-static std::string CONFIG_FILE = {};
-
-static bool kill_existing_process(const std::string& pid_file)
-{
-	std::ifstream fin(pid_file);
-
-	if (!fin.is_open())
+	int pid_file_handle = open(pid_file.c_str(), O_RDWR | O_CREAT, 0600);
+	if (pid_file_handle == -1)
 	{
-		return true;
+		syslog(LOG_ERR, "PID file %s cannot be opened", pid_file.c_str());
+		exit(EXIT_FAILURE);
 	}
 
-	int pid;
-	fin >> pid;
-
-	if (fin.fail())
+	if (lockf(pid_file_handle, F_TLOCK, 0) == -1)
 	{
-		fin.close();
-		return false;
-	}
-	
-	fin.close();
-	errno = 0;
-
-	if (kill(pid, SIGTERM) < 0 && errno != ESRCH)
-	{
-		return false;
+		syslog(LOG_ERR, "Daemon is already running (PID file is locked)");
+		exit(EXIT_FAILURE);
 	}
 
-	std::ofstream out(pid_file);
-
-	if (!out.is_open())
+	char old_pid_str[10];
+	if (read(pid_file_handle, old_pid_str, sizeof(old_pid_str) - 1) > 0)
 	{
-		return true;
+		int old_pid = atoi(old_pid_str);
+
+		if (old_pid > 0 && kill(old_pid, 0) == 0)
+		{
+			syslog(LOG_INFO, "Process with PID %d is already running, sending SIGTERM", old_pid);
+			kill(old_pid, SIGTERM);
+			sleep(1);
+		}
+		else
+		{
+			syslog(LOG_INFO, "No process found with PID %d, continuing...", old_pid);
+		}
 	}
 
-	out << getpid() << std::endl;
-	out.close();
+	ftruncate(pid_file_handle, 0);
+	lseek(pid_file_handle, 0, SEEK_SET);
 
-	return true;
+	char str[10];
+	snprintf(str, sizeof(str), "%d\n", getpid());
+	write(pid_file_handle, str, strlen(str));
+
+	syslog(LOG_INFO, "PID file %s created successfully with PID %d", pid_file.c_str(), getpid());
+
+	close(pid_file_handle);
 }
 
-static bool read_config(std::vector<config_line>& config)
+static bool read_config(std::vector<config_line> &config, const std::string &CONFIG_FILE, const fs::path current_path)
 {
 	std::ifstream fin(CONFIG_FILE);
 
@@ -87,12 +58,21 @@ static bool read_config(std::vector<config_line>& config)
 	while (std::getline(fin, line))
 	{
 		config_line config_line;
-		std::stringstream ss(line);
-		ss >> config_line.from >> config_line.to >> config_line.ext;
+		static const std::regex re(R"(^\s*("?)([^"]+)\1\s+("?)([^"]+)\3\s+("?)([^"]+)\5\s*$)");
+		std::smatch match;
 
-		if (ss.fail())
+		if (std::regex_match(line, match, re) && match.size() == 7)
 		{
-			return false;
+			auto from_path = fs::path(match[2].str());
+			config_line.from = from_path.is_absolute() ? from_path : current_path / from_path;
+			auto to_path = fs::path(match[4].str());
+			config_line.to = to_path.is_absolute() ? to_path : current_path / to_path;
+			config_line.ext = match[6].str();
+		}
+		else
+		{
+			syslog(LOG_ERR, "Line %s is not correct", line.c_str());
+			continue;
 		}
 
 		syslog(LOG_DEBUG, "Read config line: '%s' -> '%s' (%s)",
@@ -159,52 +139,51 @@ static void work(const std::vector<config_line>& config)
 	}
 }
 
-static void sighup_fun(int sig)
+void sighup_fun(int sig)
 {
 	syslog(LOG_NOTICE, "Reload config");
 
-	std::vector<config_line> config;
-
-	if (!read_config(config))
+	if (!read_config(Daemon::get_instance().config, Daemon::get_instance().CONFIG_FILE, Daemon::get_instance().current_path))
 	{
 		syslog(LOG_ERR, "Failed reloading config");
 		closelog();
 		exit(1);
 	}
-
-	work(config);
-	syslog(LOG_DEBUG, "Work done");
+	syslog(LOG_DEBUG, "File was reloaded");
 }
 
-static void sigterm_fun(int sig)
+void sigterm_fun(int sig)
 {
 	syslog(LOG_NOTICE, "Terminate");
 	closelog();
 	exit(0);
 }
 
-bool start(const std::string& config_file)
+bool Daemon::start(const std::string& config_file)
 {
-	CONFIG_FILE = config_file;
+	current_path = fs::current_path();
+	openlog("demon", LOG_PID | LOG_CONS, LOG_DAEMON);
+	syslog(LOG_INFO, "Daemon starts"); 
 
-	openlog(IDENT.c_str(), LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL0);
-	syslog(LOG_NOTICE, "Start");
-	setsid();
-
-	if (chdir("/root") == -1)
-	{
-		syslog(LOG_ERR, "chdir failed");
-		return false;
-	}
-
+	pid_t pid, sid;
+	pid = fork();
+	if (pid < 0)
+		exit(EXIT_FAILURE);
+	if (pid > 0)
+		exit(EXIT_SUCCESS);
+	umask(0);
+	sid = setsid();
+	if (sid < 0)
+		exit(EXIT_FAILURE);
+	if ((chdir("/")) < 0)
+		exit(EXIT_FAILURE);
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
 
-	if (!kill_existing_process(PID_FILE))
-	{
-		return false;
-	}
+	CONFIG_FILE = config_file;
+
+	kill_existing_process(PID_FILE);
 
 	struct sigaction sighup_action;
 	memset(&sighup_action, 0, sizeof(sighup_action));
@@ -217,17 +196,19 @@ bool start(const std::string& config_file)
 	sigaction(SIGHUP, &sighup_action, NULL);
 	sigaction(SIGTERM, &sigterm_action, NULL);
 
-	std::vector<config_line> config;
-
-	if (!read_config(config))
+	if (!read_config(config, CONFIG_FILE, current_path))
 	{
+		syslog(LOG_ERR, "Error while reading config");
 		return false;
 	}
 
-	work(config);
-	sleep(UINT_MAX);
+	while(true)
+	{
+		work(config);
+		sleep(30);
+		syslog(LOG_INFO, "awake after 30 seconds");
+	}
 
 	return true;
 }
 
-} // namespace demon

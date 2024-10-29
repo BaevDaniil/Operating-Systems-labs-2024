@@ -2,6 +2,5 @@
 
 sudo make demon
 
-sudo ./demon
+sudo ./demon config.cfg
 
-sudo rm -rf ./demon

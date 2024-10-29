@@ -5,28 +5,21 @@
 
 #include "demon.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-	static const char config[] = "config.cfg";
-	char config_file[PATH_MAX];
+	if (argc != 2)
+	{
+		std::cerr << "Usage: " << argv[0] << " <config_file_path>" << std::endl;
+		return EXIT_FAILURE;
+	}
 
-	if (realpath(config, config_file) == NULL)
+	if (realpath(argv[1], NULL) == NULL)
 	{
 		std::cerr << "realpath failed\n";
 		return 1;
 	}
 
-	int daemon_pid = fork();
-
-	if (daemon_pid == 0)
-	{
-		return demon::start(config_file) ? 0 : 1;
-	}
-	else if (daemon_pid < 0)
-	{
-		std::cerr << "fork failed\n";
-		return 1;
-	}
-
+	return Daemon::get_instance().start(std::string(std::filesystem::absolute(argv[1])));
+ 
 	return 0;
 }
