@@ -33,7 +33,9 @@ void Demon::start(const char* configPath)
 
     if (!m_reader.readConfig(configPath))
     {
-        m_logger.logError("Failed to open config");
+        m_logger.logError("Failed to open config. Destroy");
+        unlink(PID_FILE);
+        m_logger.closeLog();
         exit(EXIT_FAILURE);
     }
 
@@ -48,15 +50,30 @@ void Demon::start(const char* configPath)
 void Demon::demonize()
 {
     pid_t pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
+    if (pid < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0)
+    {
+        exit(EXIT_SUCCESS);
+    }
 
-    if (setsid() < 0) exit(EXIT_FAILURE);
+    if (setsid() < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
 
     signal(SIGHUP, SIG_IGN);
     pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
+    if (pid < 0)
+    {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0)
+    {
+        exit(EXIT_SUCCESS);
+    }
 
     umask(0);
     chdir("/");
@@ -65,7 +82,8 @@ void Demon::demonize()
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
-    if (std::ofstream pidFile(PID_FILE); pidFile)
+    std::ofstream pidFile(PID_FILE);
+    if (pidFile)
     {
         pidFile << getpid() << std::endl;
     }
@@ -102,7 +120,9 @@ void Demon::sighupHandler(int)
     Logger::getInstance().logInfo("SIGHUP received, re-reading config.");
     if (!Reader::getInstance().readConfig())
     {
-        Logger::getInstance().logError("Failed to open config");
+        Logger::getInstance().logError("Failed to open config. Destroy");
+        unlink(PID_FILE);
+        Logger::getInstance().closeLog();
         exit(EXIT_FAILURE);
     }
 }
