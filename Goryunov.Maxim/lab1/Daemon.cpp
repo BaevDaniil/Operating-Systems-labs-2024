@@ -168,7 +168,6 @@ bool Daemon::copyFiles(PathedConfigRule const& rule) {
 			string fileTail = sourcePath.substr(source.string().size() + 1);
 			fs::path pathFileTail = fs::path(fileTail);
 
-			syslog(LOG_INFO, "DESTINATION: %s, FILETAIL: %s", destination.string().c_str(), pathFileTail.string().c_str());
 			fs::path copied = destination / pathFileTail;
 			fs::path copiedCopy = copied;
 			fs::create_directories(copiedCopy.remove_filename());
@@ -233,9 +232,11 @@ void Daemon::run(
 
 	while (true) {
 		syslog(LOG_INFO, "Begin copying files from source folders to destinations.");
+		vector<PathedConfigRule> pathedRules;
 		for (auto const& rule : this->rules) {
 			PathedConfigRule pathed = this->ruleToPathed(rule, initDir);
 			bool checked = this->setupFolders(pathed);
+			pathedRules.push_back(pathed);
 			if (!checked) {
 				syslog(
 					LOG_ERR,
@@ -244,9 +245,10 @@ void Daemon::run(
 				continue;
 			}
 		}
+		int counter = 0;
 		for (auto const& rule : this->rules) {
 			try {
-				PathedConfigRule pathed = this->ruleToPathed(rule, initDir);
+				PathedConfigRule pathed = pathedRules[counter];
 				bool success = this->copyFiles(pathed);
 				if (!success) {
 					syslog(
@@ -266,6 +268,7 @@ void Daemon::run(
 					e.what()
 				);
 			}
+			counter++;
 		}
 		syslog(LOG_INFO, "Finished copying files.");
 		sleep(repeat);
