@@ -1,3 +1,0 @@
-/home/max/lab1/Goryunov.Maxim/lab1/build/CMakeFiles/app_daemon.dir
-/home/max/lab1/Goryunov.Maxim/lab1/build/CMakeFiles/edit_cache.dir
-/home/max/lab1/Goryunov.Maxim/lab1/build/CMakeFiles/rebuild_cache.dir

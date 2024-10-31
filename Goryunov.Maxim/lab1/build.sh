@@ -30,7 +30,11 @@ fi
 # back
 cd "$init_dir" || { echo "Failed to exit build directory."; exit 1; }
 
-# exec
-sudo "$init_dir/build/app_daemon" "$init_dir/config.txt"
+# move exe to init folder
+mv "$init_dir/build/app_daemon" "$init_dir"
 
-# sudo rm -rf "$init_dir/build/daemon"
+# exec
+sudo "$init_dir/app_daemon" "$init_dir/config.txt"
+
+# remove buld dir
+sudo rm -rf "$init_dir/build/"
