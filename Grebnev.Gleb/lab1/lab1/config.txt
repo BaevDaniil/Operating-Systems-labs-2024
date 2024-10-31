@@ -1,0 +1,4 @@
+/mnt/c/Users/79823/source/repos/lab1/lab1/folder1 500000
+/mnt/c/Users/79823/source/repos/lab1/lab1/folder2 10000000
+/mnt/c/Users/79823/source/repos/lab1/lab1/folder3 0
+/mnt/c/Users/79823/source/repos/lab1/lab1/folder4 55
