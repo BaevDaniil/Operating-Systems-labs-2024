@@ -164,9 +164,16 @@ bool Daemon::copyFiles(PathedConfigRule const& rule) {
 
 	for (const auto& file : fs::recursive_directory_iterator(source)) {
 		if (file.is_regular_file() && file.path().extension() == extension) {
-			fs::path copied = destination / file.path().filename();
-			fs::copy_file(file.path(), copied, fs::copy_options::overwrite_existing);
+			string sourcePath = file.path().string();
+			string fileTail = sourcePath.substr(source.string().size() + 1);
+			fs::path pathFileTail = fs::path(fileTail);
+
+			syslog(LOG_INFO, "DESTINATION: %s, FILETAIL: %s", destination.string().c_str(), pathFileTail.string().c_str());
+			fs::path copied = destination / pathFileTail;
+			fs::path copiedCopy = copied;
+			fs::create_directories(copiedCopy.remove_filename());
 			syslog(LOG_INFO, "Copying FILES %s to %s", file.path().string().c_str(), copied.string().c_str());
+			fs::copy_file(file.path(), copied, fs::copy_options::overwrite_existing);
 		}
 	}
 	syslog(
