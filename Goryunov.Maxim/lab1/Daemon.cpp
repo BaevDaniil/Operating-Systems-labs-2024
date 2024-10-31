@@ -56,7 +56,6 @@ void logErrorSetsid(pid_t sid) {
 void Daemon::forkFromParent() {
 	pid_t pid, sid;
 	pid = fork();
-	cout << "Console message" << endl;
 	logErrorFork(pid);
 	stopParent(pid);
 	syslog(LOG_INFO, "Pid info: %i", pid);

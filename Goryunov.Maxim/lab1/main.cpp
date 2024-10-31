@@ -27,16 +27,13 @@ int main(int argc, char* argv[]) {
 	checkArgCount(argc);
 	const char* cfg = argv[1];
 	checkConfigAccessible(cfg);
-	std::string path = "config.txt";
+	std::string path(cfg);
+	std::cout << "Suggested config path: " << path << std::endl;
 	Config config = Config(path);
-	//std::cout << config.path << std::endl;
-	std::vector<ConfigRule> rules = config.getRules();
-	// std::cout << rules.size() << std::endl;
-	for (const auto& rule : rules) {
-		std::cout << rule.source << ";" << rule.destination << ";" << rule.extension << std::endl;
-	}
+
+	
 	openlog("app_daemon", LOG_PID | LOG_CONS, LOG_DAEMON);
 	syslog(LOG_INFO, "Daemon startup");
-	Daemon::getInstance().run(std::string(cfg), std::filesystem::current_path());
+	Daemon::getInstance().run(path, std::filesystem::current_path(), 5);
 	return EXIT_SUCCESS;
 }
