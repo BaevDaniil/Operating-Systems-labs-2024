@@ -1,0 +1,2 @@
+/folder 1 /folder 3 txt
+//home/max/lab1/Goryunov.Maxim/lab1/folder 2 //home/max/lab1/Goryunov.Maxim/lab1/folder 3 cpp

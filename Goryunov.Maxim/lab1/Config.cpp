@@ -17,7 +17,6 @@ namespace fs = std::filesystem;
 
 enum class ReadState {
 	Reading,
-	ReadQuote,
 	ReadWhitespace,
 };
 
@@ -41,9 +40,9 @@ void Config::checkAbsolute() {
 }
 
 void Config::logNonexistentFile() {
-	cout << "path:" << this->path << endl;
+	//cout << "path:" << this->path << endl;
 	if (!std::filesystem::exists(this->path)) {
-		cout << "Could not locate config file " << this->path << endl;
+		//cout << "Could not locate config file " << this->path << endl;
 		syslog(LOG_ERR, "Could not locate config file %s.", this->path.c_str());
 	}
 }
@@ -79,6 +78,7 @@ optional<ConfigRule> Config::parseLine(string const& line) {
 			else if ((state == ReadState::ReadWhitespace) && (ch == '/')) {
 				rtrim(current);
 				parts.push_back(current);
+				state = ReadState::Reading;
 				current = ch;
 			}
 			else {
@@ -89,9 +89,7 @@ optional<ConfigRule> Config::parseLine(string const& line) {
 	}
 	size_t whitespace = current.find_last_of(' ');
 	if (whitespace != string::npos) {
-		string dest = current.substr(0, whitespace);
-		rtrim(dest);
-		parts.push_back(dest);
+		parts.push_back(current.substr(0, whitespace));
 		parts.push_back(current.substr(whitespace + 1));
 	}
 	else {
@@ -99,8 +97,8 @@ optional<ConfigRule> Config::parseLine(string const& line) {
 	}
 	if (parts.size() == 3) {
 		ConfigRule rule;
-		rule.source = parts[0];
-		rule.destination = parts[1];
+		rule.source = parts[0].substr(1);
+		rule.destination = parts[1].substr(1);
 		rule.extension = parts[2];
 		syslog(LOG_INFO, "Read line %s,%s,%s", rule.source.c_str(),
 			rule.destination.c_str(), rule.extension.c_str());
@@ -119,7 +117,7 @@ vector<ConfigRule> Config::getRules() {
 
 	while (std::getline(source, line)) {
 		//rules.push_back(this->parseLine(line));
-		cout << line << endl;
+		//cout << line << endl;
 		optional<ConfigRule> rule = this->parseLine(line);
 		if (rule.has_value()) {
 			rules.emplace_back(rule.value());

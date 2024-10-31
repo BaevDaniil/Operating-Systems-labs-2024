@@ -162,11 +162,11 @@ bool Daemon::copyFiles(PathedConfigRule const& rule) {
 	}
 	syslog(LOG_INFO, "Extension for copying: %s", extension.c_str());
 
-	for (const auto& file : fs::directory_iterator(source)) {
+	for (const auto& file : fs::recursive_directory_iterator(source)) {
 		if (file.is_regular_file() && file.path().extension() == extension) {
 			fs::path copied = destination / file.path().filename();
 			fs::copy_file(file.path(), copied, fs::copy_options::overwrite_existing);
-			syslog(LOG_INFO, "Copying to %s", copied.string().c_str());
+			syslog(LOG_INFO, "Copying FILES %s to %s", file.path().string().c_str(), copied.string().c_str());
 		}
 	}
 	syslog(
@@ -227,16 +227,19 @@ void Daemon::run(
 	while (true) {
 		syslog(LOG_INFO, "Begin copying files from source folders to destinations.");
 		for (auto const& rule : this->rules) {
+			PathedConfigRule pathed = this->ruleToPathed(rule, initDir);
+			bool checked = this->setupFolders(pathed);
+			if (!checked) {
+				syslog(
+					LOG_ERR,
+					"Some error occured, incorrect foldeer format."
+				);
+				continue;
+			}
+		}
+		for (auto const& rule : this->rules) {
 			try {
 				PathedConfigRule pathed = this->ruleToPathed(rule, initDir);
-				bool checked = this->setupFolders(pathed);
-				if (!checked) {
-					syslog(
-						LOG_ERR,
-						"Some error occured, incorrect foldeer format."
-					);
-					continue;
-				}
 				bool success = this->copyFiles(pathed);
 				if (!success) {
 					syslog(
