@@ -110,7 +110,7 @@ bool Deamon::coping()
         return false;
     }
 
-    Logger::get_instance().log(Status::INFO, "Copied files from" + folder1 + "to " + folder2);
+    Logger::get_instance().log(Status::INFO, "Copied files from" + folder1 + " to " + folder2);
     return true;
 }
 
@@ -152,6 +152,8 @@ void Deamon::sighup_handler(int)
     Logger::get_instance().log(Status::INFO, "Re-reading config");
     if (!config.read_config()) {
         Logger::get_instance().log(Status::ERROR, "Failed to read config");
+        Logger::get_instance().close_log();
+        unlink(PID);
         exit(EXIT_FAILURE);
     }
 }

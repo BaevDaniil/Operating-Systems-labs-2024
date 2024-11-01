@@ -1,11 +1,16 @@
 #include "Config.hpp"
 #include <fstream>
+#include <filesystem>
 
-std::string Config::get_absolute_path(const char* path)
+std::string Config::get_absolute_path(const char* pathStr)
 {
-    char absolute_path_buffer[4096];
-    if (!realpath(path, absolute_path_buffer)) return "";
-    return absolute_path_buffer;
+    std::filesystem::path absPath = std::filesystem::absolute(pathStr);
+    if (std::filesystem::exists(absPath))
+        return absPath.c_str();
+    else
+        return "";
+
+    return std::filesystem::absolute(pathStr).c_str();
 }
 
 Config::Config() : pathToConfig{get_absolute_path("Config.txt")}
@@ -17,7 +22,9 @@ bool Config::read_config()
     if (!config) return false;
 
     std::getline(config, folder1);
+    folder1 = get_absolute_path(folder1.c_str());
     std::getline(config, folder2);
+    folder2 = get_absolute_path(folder2.c_str());
     config >> seconds;
 
     if (folder1.empty() || folder2.empty() || seconds == 0 || pathToConfig.empty()) return false;
