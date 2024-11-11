@@ -1,8 +1,8 @@
 #pragma once
-#include <cstring>
-#include <stdexcept>
 
-template<class T>
+#include "../includes/includes.hpp"
+
+template<typename T>
 class Connection
 {
 public:

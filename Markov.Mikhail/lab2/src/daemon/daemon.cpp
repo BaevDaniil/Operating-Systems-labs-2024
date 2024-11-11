@@ -15,7 +15,7 @@ void signal_handler(int sig)
 
 void Daemon::create_pid_file()
 {
-    std::string pid_file = "/var/run/daemon.pid";
+    std::string pid_file = "/var/run/host.pid";
     int pid_file_handle = open(pid_file.c_str(), O_RDWR | O_CREAT, 0600);
     if (pid_file_handle == -1)
     {
