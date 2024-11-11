@@ -26,5 +26,4 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>

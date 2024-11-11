@@ -10,14 +10,16 @@ public:
         static Daemon instance;
         return instance;
     };
+    void daemonize(const std::filesystem::path &);
     void run(...);
 
 private:
     volatile sig_atomic_t got_sighup = 0;
     volatile sig_atomic_t got_sigterm = 0;
 
+    std::filesystem::path pid_file;
+    
     void create_pid_file();
-    void daemonize();
 
     friend void signal_handler(int sig);
 

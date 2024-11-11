@@ -15,7 +15,6 @@ void signal_handler(int sig)
 
 void Daemon::create_pid_file()
 {
-    std::string pid_file = "/var/run/host.pid";
     int pid_file_handle = open(pid_file.c_str(), O_RDWR | O_CREAT, 0600);
     if (pid_file_handle == -1)
     {
@@ -58,7 +57,7 @@ void Daemon::create_pid_file()
     close(pid_file_handle);
 }
 
-void Daemon::daemonize()
+void Daemon::daemonize(const std::filesystem::path &pid_folder)
 {
     pid_t pid, sid;
     pid = fork();
@@ -76,5 +75,6 @@ void Daemon::daemonize()
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
+    pid_file = pid_folder / std::to_string(pid);
     create_pid_file();
 }
