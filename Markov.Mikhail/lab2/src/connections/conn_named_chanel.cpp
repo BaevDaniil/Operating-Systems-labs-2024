@@ -1,12 +1,12 @@
 #include "conn_named_chanel.hpp"
 
-NamedChanel::NamedChanel(const char *pathname, bool create)
+NamedChanel::NamedChanel(const std::string & pathname, bool create)
 {
     if (create)
-        if (mkfifo(pathname, 0666) == -1)
+        if (mkfifo(pathname.c_str(), 0666) == -1)
             throw std::runtime_error("Failed to create FIFO channel");
 
-    fd = open(pathname, O_RDWR);
+    fd = open(pathname.c_str(), O_RDWR);
     if (fd == -1)
         throw std::runtime_error("Failed to open FIFO channel");
 }

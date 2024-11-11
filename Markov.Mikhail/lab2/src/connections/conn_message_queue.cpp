@@ -1,10 +1,10 @@
 #include "conn_message_queue.hpp"
 
-MessageQueue::MessageQueue(key_t id, bool create)
+MessageQueue::MessageQueue(const std::string &id, bool create)
 {
     int flags = 0666 | (create ? IPC_CREAT : 0); 
 
-    msgid = msgget(id, flags);
+    msgid = msgget(std::stoi(id), flags);
     if (msgid == -1)
         throw std::runtime_error("Failed to create or access message queue");
 }
