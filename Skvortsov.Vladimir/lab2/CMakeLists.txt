@@ -16,34 +16,61 @@ include_directories(include)
 # Find Qt6 package
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-# Host source files
-set(HOST_SRC_FILES
-  src/host.cpp
-  src/conn_queue.cpp
+# Host and Client source files for FIFO
+set(HOST_FIFO_SRC_FILES
+  src/host_fifo.cpp
   src/conn_fifo.cpp
+)
+
+set(CLIENT_FIFO_SRC_FILES
+  src/client_fifo.cpp
+  src/conn_fifo.cpp
+)
+
+# Host and Client source files for Queue
+set(HOST_QUEUE_SRC_FILES
+  src/host_queue.cpp
+  src/conn_queue.cpp
+)
+
+set(CLIENT_QUEUE_SRC_FILES
+  src/client_queue.cpp
+  src/conn_queue.cpp
+)
+
+# Host and Client source files for Socket
+set(HOST_SOCKET_SRC_FILES
+  src/host_socket.cpp
   src/conn_socket.cpp
 )
 
-# Client source files
-set(CLIENT_SRC_FILES
-  src/client.cpp
-  src/conn_queue.cpp
-  src/conn_fifo.cpp
+set(CLIENT_SOCKET_SRC_FILES
+  src/client_socket.cpp
   src/conn_socket.cpp
 )
 
-# Add host executable
-add_executable(host ${HOST_SRC_FILES})
+# Add executables for FIFO communication
+add_executable(host_fifo ${HOST_FIFO_SRC_FILES})
+add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES})
 
-# Add client executable
-add_executable(client ${CLIENT_SRC_FILES})
+# Add executables for Queue communication
+add_executable(host_queue ${HOST_QUEUE_SRC_FILES})
+add_executable(client_queue ${CLIENT_QUEUE_SRC_FILES})
 
-# Set output directories for host and client
-set_target_properties(host PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set_target_properties(client PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# Add executables for Socket communication
+add_executable(host_socket ${HOST_SOCKET_SRC_FILES})
+add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES})
+
+# Set output directories for all executables
+set_target_properties(host_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(client_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(host_queue PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(client_queue PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(host_socket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_target_properties(client_socket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Add subdirectory for GUI
 add_subdirectory(src/gui)
 
 # Custom target to build all
-add_custom_target(all_targets DEPENDS host client chat_gui)
+add_custom_target(all_targets DEPENDS host_fifo client_fifo host_queue client_queue host_socket client_socket chat_gui)
