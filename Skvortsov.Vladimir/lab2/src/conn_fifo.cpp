@@ -16,7 +16,7 @@ ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), v
     }
   }
 
-  fd = open(path.c_str(), create ? O_RDONLY : O_RDWR);
+  fd = open(path.c_str(), O_RDWR);
   if (fd == -1) {
     std::cerr << "Error opening FIFO: " << strerror(errno) << "\n";
   } else {
