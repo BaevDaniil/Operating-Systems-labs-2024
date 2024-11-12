@@ -2,29 +2,23 @@
 #define CONN_FIFO_H
 
 #include <string>
+#include "conn.hpp"
 
-class ConnFifo {
-public:
-  // Конструктор и деструктор
-  ConnFifo(const std::string& path, bool create);
-  ~ConnFifo();
+class ConnFifo : Conn {
+  public:
+    ConnFifo(const std::string& path, bool create);
+    ~ConnFifo();
 
-  // Запись данных в FIFO
-  bool Write(const std::string& data);
+    bool write(const std::string& msg);
+    bool read(std::string& msg, size_t max_size);
+    bool is_valid() const;
 
-  // Чтение данных из FIFO
-  bool Read(std::string& data, size_t maxSize);
+  private:
+    std::string path;
+    int fd;
+    bool valid;
 
-  // Проверка валидности FIFO
-  bool IsValid() const;
-
-private:
-  std::string path; // Путь к FIFO
-  int fd; // Дескриптор файла для FIFO
-  bool valid; // Флаг валидности FIFO
-
-  // Закрытие FIFO
-  void Close();
+    void close();
 };
 
-#endif // CONN_FIFO_H
+#endif

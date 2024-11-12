@@ -1,9 +1,9 @@
 #include "conn_fifo.hpp"
 #include <iostream>
-#include <fcntl.h>    // Для O_WRONLY, O_RDONLY
-#include <sys/stat.h>   // Для mkfifo
-#include <unistd.h>   // Для close, read, write
-#include <cstring>    // Для strerror
+#include <fcntl.h>  // Для O_WRONLY, O_RDONLY
+#include <sys/stat.h> // Для mkfifo
+#include <unistd.h> // Для close, read, write
+#include <cstring> // Для strerror
 
 ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), valid(false) {
   if (create) {
@@ -26,7 +26,7 @@ ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), v
 }
 
 ConnFifo::~ConnFifo() {
-  Close();
+  close();
   if (valid) {
     // Удаление FIFO
     if (unlink(path.c_str()) == -1) {
@@ -35,13 +35,13 @@ ConnFifo::~ConnFifo() {
   }
 }
 
-bool ConnFifo::Write(const std::string& data) {
-  if (!IsValid()) {
+bool ConnFifo::write(const std::string& msg) {
+  if (!is_valid()) {
     std::cerr << "FIFO недоступен для записи\n";
     return false;
   }
 
-  ssize_t bytesWritten = write(fd, data.c_str(), data.size());
+  ssize_t bytesWritten = write(fd, msg.c_str(), msg.size());
   if (bytesWritten == -1) {
     std::cerr << "Ошибка записи в FIFO: " << strerror(errno) << "\n";
     return false;
@@ -49,13 +49,13 @@ bool ConnFifo::Write(const std::string& data) {
   return true;
 }
 
-bool ConnFifo::Read(std::string& data, size_t maxSize) {
-  if (!IsValid()) {
+bool ConnFifo::read(std::string& data, size_t max_size) {
+  if (!is_valid()) {
     std::cerr << "FIFO недоступен для чтения\n";
     return false;
   }
 
-  char buffer[maxSize];
+  char buffer[max_size];
   memset(buffer, 0, sizeof(buffer));
 
   ssize_t bytesRead = read(fd, buffer, sizeof(buffer));
@@ -68,12 +68,12 @@ bool ConnFifo::Read(std::string& data, size_t maxSize) {
   return true;
 }
 
-bool ConnFifo::IsValid() const {
+bool ConnFifo::is_valid() const {
   return valid;
 }
 
-void ConnFifo::Close() {
-  if (IsValid() && fd != -1) {
+void ConnFifo::close() {
+  if (is_valid() && fd != -1) {
     if (close(fd) == -1) {
       std::cerr << "Ошибка закрытия FIFO: " << strerror(errno) << "\n";
     }

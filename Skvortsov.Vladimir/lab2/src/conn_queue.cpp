@@ -5,13 +5,13 @@
 #include <sys/stat.h>   // Для mode constants
 #include <unistd.h>   // Для close
 
-ConnQueue::ConnQueue(const std::string& name, bool create, int maxMsgSize, int maxMsgCount)
-  : name(name), valid(false), maxMsgSize(maxMsgSize) {
+ConnQueue::ConnQueue(const std::string& name, bool create, int max_msg_size, int maxMsgCount)
+  : name(name), valid(false), max_msg_size(max_msg_size) {
 
   struct mq_attr attr;
   attr.mq_flags = 0;
   attr.mq_maxmsg = maxMsgCount;
-  attr.mq_msgsize = maxMsgSize;
+  attr.mq_msgsize = max_msg_size;
   attr.mq_curmsgs = 0;
 
   if (create) {
@@ -34,7 +34,7 @@ ConnQueue::~ConnQueue() {
 }
 
 bool ConnQueue::Send(const std::string& message) {
-  if (!IsValid()) {
+  if (!is_valid()) {
     std::cerr << "Очередь сообщений недоступна для отправки\n";
     return false;
   }
@@ -47,12 +47,12 @@ bool ConnQueue::Send(const std::string& message) {
 }
 
 bool ConnQueue::Receive(std::string& message) {
-  if (!IsValid()) {
+  if (!is_valid()) {
     std::cerr << "Очередь сообщений недоступна для получения\n";
     return false;
   }
 
-  char buffer[maxMsgSize];
+  char buffer[max_msg_size];
   memset(buffer, 0, sizeof(buffer));
 
   ssize_t bytesReceived = mq_receive(mq, buffer, sizeof(buffer), nullptr);
@@ -65,12 +65,12 @@ bool ConnQueue::Receive(std::string& message) {
   return true;
 }
 
-bool ConnQueue::IsValid() const {
+bool ConnQueue::is_valid() const {
   return valid;
 }
 
 void ConnQueue::Close() {
-  if (IsValid()) {
+  if (is_valid()) {
     if (mq_close(mq) == -1) {
       std::cerr << "Ошибка закрытия очереди сообщений: " << strerror(errno) << "\n";
     }

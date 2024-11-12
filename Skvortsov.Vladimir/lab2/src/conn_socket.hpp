@@ -3,39 +3,35 @@
 
 #include <string>
 #include <netinet/in.h>
+#include "conn.hpp"
 
-class ConnSocket {
+class ConnSocket : Conn {
 public:
   ConnSocket();
   ~ConnSocket();
 
-  // Создание серверного сокета
-  bool CreateServerSocket(int port);
+  bool create_server_socket(int port);
+  ConnSocket accept_connection();
+  bool connect_to_server(const std::string& address, int port);
 
-  // Принятие входящего соединения
-  ConnSocket AcceptConnection();
+  bool write(const void* buffer, size_t size);
+  bool read(void *buffer, size_t size);
+  bool is_valid() const;
 
-  // Подключение к серверу (для клиента)
-  bool ConnectToServer(const std::string& address, int port);
+  bool operator != (const ConnSocket& other) const {
+    return this->sockfd != other.sockfd;
+  };
+  bool operator == (const ConnSocket& other) const {
+    return this->sockfd == other.sockfd;
+  };
 
-  // Отправка данных
-  bool Write(const void* buffer, size_t size);
+  private:
+    int sockfd;
+    sockaddr_in addr;
 
-  // Получение данных
-  ssize_t Read(void* buffer, size_t size);
+    ConnSocket(int sockfd, sockaddr_in addr);
 
-  // Проверка валидности сокета
-  bool IsValid() const;
-
-  // Закрытие сокета
-  void Close();
-
-private:
-  int sockfd;  // Дескриптор сокета
-  sockaddr_in addr;  // Структура адреса сокета
-
-  // Конструктор для создания объекта с уже существующим сокетом
-  ConnSocket(int sockfd, sockaddr_in addr);
+    void Close();
 };
 
 #endif // CONN_SOCKET_H

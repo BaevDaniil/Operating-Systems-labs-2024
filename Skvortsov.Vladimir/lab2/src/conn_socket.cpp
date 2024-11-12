@@ -15,7 +15,7 @@ ConnSocket::~ConnSocket() {
   Close();
 }
 
-bool ConnSocket::CreateServerSocket(int port) {
+bool ConnSocket::create_server_socket(int port) {
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
     std::cerr << "Ошибка создания сокета\n";
@@ -84,7 +84,7 @@ bool ConnSocket::ConnectToServer(const std::string& address, int port) {
   return true;
 }
 
-bool ConnSocket::Write(const void* buffer, size_t size) {
+bool ConnSocket::write(const void* buffer, size_t size) {
   ssize_t bytesSent = send(sockfd, buffer, size, 0);
   if (bytesSent < 0) {
     std::cerr << "Ошибка отправки данных\n";
@@ -93,20 +93,30 @@ bool ConnSocket::Write(const void* buffer, size_t size) {
   return true;
 }
 
-ssize_t ConnSocket::Read(void* buffer, size_t size) {
-  ssize_t bytesRead = recv(sockfd, buffer, size, 0);
-  if (bytesRead < 0) {
-    std::cerr << "Ошибка получения данных\n";
-  }
-  return bytesRead;
+ssize_t ConnSocket::read(void* buffer, size_t size) {
+    ssize_t bytesRead = recv(sockfd, buffer, size, 0);
+    if (bytesRead < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // Non-blocking mode: no data available right now
+            std::cerr << "No data available to read, try again later\n";
+        } else if (errno == EINTR) {
+            // Interrupted by a signal: retry the operation
+            std::cerr << "Read interrupted by a signal, retrying\n";
+            return read(buffer, size); // Retry reading
+        } else {
+            // Other errors
+            std::cerr << "Ошибка получения данных: " << strerror(errno) << " (errno: " << errno << ")\n";
+        }
+    }
+    return bytesRead;
 }
 
-bool ConnSocket::IsValid() const {
+bool ConnSocket::is_valid() const {
   return sockfd >= 0;
 }
 
 void ConnSocket::Close() {
-  if (IsValid()) {
+  if (is_valid()) {
     close(sockfd);
     sockfd = -1;
   }
