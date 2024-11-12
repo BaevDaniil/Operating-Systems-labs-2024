@@ -11,7 +11,7 @@ class ConnQueue : public Conn {
     ~ConnQueue();
 
     bool write(const std::string& msg) override;
-    bool read(std::string& msg) override;
+    bool read(std::string& msg, size_t max_size) override;
     bool is_valid() const override;
 
   private:

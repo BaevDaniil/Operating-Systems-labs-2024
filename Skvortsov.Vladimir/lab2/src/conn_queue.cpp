@@ -45,13 +45,13 @@ bool ConnQueue::write(const std::string &message) {
   return true;
 }
 
-bool ConnQueue::read(std::string &message) {
+bool ConnQueue::read(std::string& message, size_t max_size) {
   if (!is_valid()) {
     std::cerr << "Message queue not available for receiving\n";
     return false;
   }
 
-  char buffer[max_msg_size];
+  char buffer[max_size];
   memset(buffer, 0, sizeof(buffer));
 
   ssize_t bytesReceived = mq_receive(mq, buffer, sizeof(buffer), nullptr);
