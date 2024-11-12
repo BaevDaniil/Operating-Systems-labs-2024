@@ -3,7 +3,7 @@
 #include "conn_fifo.hpp"
 
 int main() {
-  ConnFifo hostFifo("/tmp/fifo_example", true);
+  ConnFifo hostFifo("/tmp/fifo_connector", true);
 
   if (!hostFifo.is_valid()) {
     std::cerr << "Failed to create FIFO for writing\n";
