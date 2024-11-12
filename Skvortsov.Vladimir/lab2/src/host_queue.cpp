@@ -11,8 +11,10 @@ int main() {
   }
 
   std::string message;
+  const size_t max_size = 1024;
+
   while (true) {
-    if (!hostQueue.read(message)) {
+    if (!hostQueue.read(message, max_size)) {
       std::cerr << "Error reading message\n";
       break;
     }
