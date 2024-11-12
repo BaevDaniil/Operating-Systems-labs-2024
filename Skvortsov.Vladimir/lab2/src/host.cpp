@@ -5,8 +5,6 @@
 #include <mutex>
 #include <algorithm>
 #include <cstring>
-#include <unistd.h>
-#include <arpa/inet.h>
 #include "conn_socket.hpp"
 
 const int PORT = 12345;
@@ -16,12 +14,12 @@ std::vector<ConnSocket> clients;
 std::mutex clients_mutex;
 
 // Function to broadcast a message to all clients except the sender
-void broadcastMessage(const std::string& message, ConnSocket& sender) {
+void broadcastMessage(const std::string &message, ConnSocket &sender) {
   std::lock_guard<std::mutex> lock(clients_mutex);
   std::cout << "Broadcasting message: " << message << std::endl;
-  for (auto& client : clients) {
+  for (auto &client : clients) {
     if (client.is_valid() && client != sender) {
-      if (client.write(message.c_str(), message.size())) {
+      if (client.write(message)) {
         std::cout << "Sent message to client with fd: " << client.sockfd << std::endl;
       } else {
         std::cerr << "Failed to send message to client with fd: " << client.sockfd << std::endl;
@@ -42,22 +40,15 @@ void handleClient(ConnSocket clientSocket) {
     std::cout << "Client connected with fd: " << clientSocket.sockfd << std::endl;
   }
 
-  char buffer[1024];
+  std::string buffer;
   while (true) {
-    memset(buffer, 0, sizeof(buffer));
-    ssize_t bytesReceived = clientSocket.read(buffer, sizeof(buffer));
-    if (bytesReceived < 0) {
-      std::cerr << "Error receiving data: " << strerror(errno) << " on fd: " << clientSocket.sockfd << "\n";
-      break;
-    } else if (bytesReceived == 0) {
-      std::cout << "Client disconnected. fd: " << clientSocket.sockfd << "\n";
+    if (!clientSocket.read(buffer, 1024)) {
+      std::cerr << "Error receiving data on fd: " << clientSocket.sockfd << "\n";
       break;
     }
 
-    std::string message(buffer, bytesReceived);
-    std::cout << "Received message from client with fd " << clientSocket.sockfd << ": " << message << std::endl;
-
-    broadcastMessage(message, clientSocket);
+    std::cout << "Received message from client with fd " << clientSocket.sockfd << ": " << buffer << std::endl;
+    broadcastMessage(buffer, clientSocket);
   }
 
   clientSocket.close();
@@ -79,7 +70,7 @@ int main() {
   std::cout << "Server started and listening on port " << PORT << std::endl;
 
   while (true) {
-    ConnSocket clientSocket = serverSocket.AcceptConnection();
+    ConnSocket clientSocket = serverSocket.accept_connection();
     if (!clientSocket.is_valid()) {
       std::cerr << "Error accepting connection\n";
       continue;
@@ -89,6 +80,5 @@ int main() {
     std::thread(handleClient, std::move(clientSocket)).detach();
   }
 
-  // No need to close serverSocket here unless shutting down the server
   return 0;
 }
