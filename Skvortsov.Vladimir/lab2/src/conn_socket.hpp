@@ -18,6 +18,8 @@ class ConnSocket : public Conn {
     bool read(std::string& data, size_t max_size) override;
     bool is_valid() const override;
 
+    void close();
+
     bool operator != (const ConnSocket &other) const {
         return this->sockfd != other.sockfd;
     };
@@ -30,8 +32,6 @@ class ConnSocket : public Conn {
     sockaddr_in addr;
 
     ConnSocket(int sockfd, sockaddr_in addr);
-
-    void close();
 };
 
 #endif
