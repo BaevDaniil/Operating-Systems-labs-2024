@@ -7,33 +7,28 @@
 const std::string SERVER_ADDRESS = "127.0.0.1";
 const int SERVER_PORT = 12345;
 
-void receiveMessages(ConnSocket& clientSocket) {
-  char buffer[1024];
+void receive_messages(Conn &clientConn) {
+  std::string buffer;
   while (true) {
-    memset(buffer, 0, sizeof(buffer));
-    ssize_t bytesReceived = clientSocket.Read(buffer, sizeof(buffer));
-    if (bytesReceived < 0) {
-      std::cerr << "Error: connection lost. Error code: " << strerror(errno) << "\n";
-      break;
-    } else if (bytesReceived == 0) {
-      std::cerr << "Connection closed by server\n";
+    if (!clientConn.read(buffer, 1024)) {
+      std::cerr << "Error: connection lost.\n";
       break;
     }
     std::cout << "Message from server: " << buffer << std::endl;
   }
-};
+}
 
 int main() {
-  ConnSocket clientSocket;
+  ConnSocket clientConn;
 
-  if (!clientSocket.ConnectToServer(SERVER_ADDRESS, SERVER_PORT)) {
+  if (!clientConn.connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
     std::cerr << "Failed to connect to server\n";
     return 1;
   }
 
   std::cout << "Connected to server " << SERVER_ADDRESS << " on port " << SERVER_PORT << std::endl;
 
-  std::thread receiverThread(receiveMessages, std::ref(clientSocket));
+  std::thread receiverThread(receive_messages, std::ref(clientConn));
 
   std::string message;
   while (true) {
@@ -44,14 +39,14 @@ int main() {
       break;
     }
 
-    if (!clientSocket.Write(message.c_str(), message.size())) {
+    if (!clientConn.write(message)) {
       std::cerr << "Error sending message\n";
       break;
     }
   }
 
-  clientSocket.Close();
+  clientConn.close();
   receiverThread.join();
 
   return 0;
-};
+}
