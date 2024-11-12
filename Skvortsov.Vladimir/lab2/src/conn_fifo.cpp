@@ -1,13 +1,13 @@
 #include "conn_fifo.hpp"
 #include <iostream>
-#include <fcntl.h>  // Для O_WRONLY, O_RDONLY
-#include <sys/stat.h> // Для mkfifo
-#include <unistd.h> // Для close, read, write
-#include <cstring> // Для strerror
+#include <fcntl.h>  // For O_WRONLY, O_RDONLY
+#include <sys/stat.h> // For mkfifo
+#include <unistd.h> // For close, read, write
+#include <cstring> // For strerror
 
 ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), valid(false) {
   if (create) {
-    // Создание нового FIFO
+    // Create new FIFO
     if (mkfifo(path.c_str(), 0644) == -1) {
       if (errno != EEXIST) {
         std::cerr << "Ошибка создания FIFO: " << strerror(errno) << "\n";
@@ -16,10 +16,9 @@ ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), v
     }
   }
 
-  // Открытие FIFO
   fd = open(path.c_str(), create ? O_RDWR : O_RDONLY);
   if (fd == -1) {
-    std::cerr << "Ошибка открытия FIFO: " << strerror(errno) << "\n";
+    std::cerr << "Error opening FIFO: " << strerror(errno) << "\n";
   } else {
     valid = true;
   }
@@ -28,39 +27,39 @@ ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), v
 ConnFifo::~ConnFifo() {
   close();
   if (valid) {
-    // Удаление FIFO
+    // Delete FIFO
     if (unlink(path.c_str()) == -1) {
-      std::cerr << "Ошибка удаления FIFO: " << strerror(errno) << "\n";
+      std::cerr << "Error removing FIFO: " << strerror(errno) << "\n";
     }
   }
 }
 
-bool ConnFifo::write(const std::string& msg) {
+bool ConnFifo::write(const std::string &msg) {
   if (!is_valid()) {
-    std::cerr << "FIFO недоступен для записи\n";
+    std::cerr << "FIFO not available for writing\n";
     return false;
   }
 
-  ssize_t bytesWritten = write(fd, msg.c_str(), msg.size());
+  ssize_t bytesWritten = ::write(fd, msg.c_str(), msg.size());
   if (bytesWritten == -1) {
-    std::cerr << "Ошибка записи в FIFO: " << strerror(errno) << "\n";
+    std::cerr << "Error writing to FIFO: " << strerror(errno) << "\n";
     return false;
   }
   return true;
 }
 
-bool ConnFifo::read(std::string& data, size_t max_size) {
+bool ConnFifo::read(std::string &data, size_t max_size) {
   if (!is_valid()) {
-    std::cerr << "FIFO недоступен для чтения\n";
+    std::cerr << "FIFO not available for reading\n";
     return false;
   }
 
   char buffer[max_size];
   memset(buffer, 0, sizeof(buffer));
 
-  ssize_t bytesRead = read(fd, buffer, sizeof(buffer));
+  ssize_t bytesRead = ::read(fd, buffer, sizeof(buffer));
   if (bytesRead == -1) {
-    std::cerr << "Ошибка чтения из FIFO: " << strerror(errno) << "\n";
+    std::cerr << "Error reading from FIFO: " << strerror(errno) << "\n";
     return false;
   }
 
@@ -74,8 +73,8 @@ bool ConnFifo::is_valid() const {
 
 void ConnFifo::close() {
   if (is_valid() && fd != -1) {
-    if (close(fd) == -1) {
-      std::cerr << "Ошибка закрытия FIFO: " << strerror(errno) << "\n";
+    if (::close(fd) == -1) {
+      std::cerr << "Error closing FIFO: " << strerror(errno) << "\n";
     }
     fd = -1;
   }
