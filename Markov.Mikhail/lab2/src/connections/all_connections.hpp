@@ -1,3 +1,3 @@
 #pragma once
-#include "conn_named_chanel.hpp"
-#include "conn_message_queue.hpp"
+#include "conn_fifo.hpp"
+#include "conn_mq.hpp"

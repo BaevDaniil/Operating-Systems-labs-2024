@@ -27,3 +27,6 @@
 #include <sys/msg.h>
 #include <stdexcept>
 #include <utility>
+#include <semaphore.h>
+#include <errno.h>
+#include <mqueue.h>

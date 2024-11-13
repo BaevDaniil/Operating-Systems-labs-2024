@@ -9,6 +9,6 @@ template <typename ConnectionType>
 class Host
 {
     Conn connection;
-    static const std::filesystem::path pid_path = "/var/run/host.pid";
+    std::filesystem::path pid_path;
     std::unordered_map<std::string, ClientInfo> table;
 };

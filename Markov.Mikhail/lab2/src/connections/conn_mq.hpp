@@ -8,5 +8,8 @@ class MessageQueue final : public Connection
     virtual bool Write(void *buf, size_t count) override;
     virtual ~MessageQueue() override;
 private:
+    std::string name;
+    const int max_msg_size = 1024;
+    const int max_msg_count = 10;
     int msgid;
 };
