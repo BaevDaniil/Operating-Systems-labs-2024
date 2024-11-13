@@ -10,6 +10,10 @@ private:
     int host_pid;
     int pid;
     T connect;
+    struct sigaction signal_handler;
 public:
     Client(const std::string& host_pid_path);
+
+    friend void client_signal_handler(int, siginfo_t *, void *);
 };
+

@@ -5,7 +5,9 @@
 class ClientInfo
 {
 private: 
-    int pid;
+    int host_pid;
+    int client_pid;
+    struct sigaction signal_handler;
     std::jthread thread;
     std::chrono::time_point<std::chrono::steady_clock> time_point;
 };

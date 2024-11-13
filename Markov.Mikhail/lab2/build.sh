@@ -30,7 +30,7 @@ mv "$initial_dir/build/local_chat" "$initial_dir/local_chat"
 
 sudo rm -rf "$initial_dir/build"
 
-mkdir "$initial_dir/host"
+mkdir -p "$initial_dir/host"
 
 touch "$initial_dir/host/host.txt"
 
