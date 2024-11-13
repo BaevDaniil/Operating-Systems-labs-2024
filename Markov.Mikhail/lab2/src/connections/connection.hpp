@@ -11,3 +11,6 @@ public:
     virtual ~Connection() = default;
     Connection() = default;
 };
+
+template <typename T>
+concept Conn = std::is_base_of<Connection, T>::value;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../includes/includes.hpp"
-
+#include "../connections/all_connections.hpp"
 class ClientInfo
 {
 private: 

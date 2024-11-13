@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../connections/all_connections.hpp"
 #include "client_info.hpp"
-template <typename Conn>
-concept ConnectionType = std::is_base_of<Connection, Conn>::value;
 
-template <typename ConnectionType>
+template<Conn T>
 class Host
 {
-    Conn connection;
-    std::filesystem::path pid_path;
-    std::unordered_map<std::string, ClientInfo> table;
+private:
+    int pid;
+    std::unordered_map<int, ClientInfo> table;
+public: 
+    Host(const std::string& pid_path);
+
 };
