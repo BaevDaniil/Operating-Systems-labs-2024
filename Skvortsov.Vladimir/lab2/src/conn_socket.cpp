@@ -1,4 +1,3 @@
-// src/conn_socket.cpp
 #include "conn_socket.hpp"
 #include <iostream>
 #include <unistd.h>
@@ -8,13 +7,13 @@
 
 ConnSocket::ConnSocket() : sockfd(-1) {
   memset(&addr, 0, sizeof(addr));
-}
+};
 
-ConnSocket::ConnSocket(int sockfd, sockaddr_in addr) : sockfd(sockfd), addr(addr) {}
+ConnSocket::ConnSocket(int sockfd, sockaddr_in addr) : sockfd(sockfd), addr(addr) {};
 
 ConnSocket::~ConnSocket() {
   close();
-}
+};
 
 bool ConnSocket::create_server_socket(int port) {
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -47,7 +46,7 @@ bool ConnSocket::create_server_socket(int port) {
   }
 
   return true;
-}
+};
 
 ConnSocket ConnSocket::accept_connection() {
   sockaddr_in clientAddr;
@@ -83,44 +82,54 @@ bool ConnSocket::connect_to_server(const std::string &address, int port) {
   }
 
   return true;
-}
+};
 
-bool ConnSocket::write(const std::string &data) {
-  ssize_t bytesSent = send(sockfd, data.c_str(), data.size(), 0);
-  if (bytesSent < 0) {
-    std::cerr << "Error sending data\n";
+bool ConnSocket::write(const std::string& msg) {
+  if (!is_valid()) {
+    std::cerr << "Socket not available for writing\n";
+    return false;
+  }
+
+  ssize_t bytes_written = send(sockfd, msg.c_str(), msg.size(), 0);
+  if (bytes_written < 0) {
+    std::cerr << "Error sending msg\n";
     return false;
   }
   return true;
-}
+};
 
-bool ConnSocket::read(std::string &data, size_t max_size) {
+bool ConnSocket::read(std::string& msg, size_t max_size) {
+  if (!is_valid()) {
+    std::cerr << "Socket not available for reading\n";
+    return false;
+  }
+
   char buffer[max_size];
-  memset(buffer, 0, sizeof(buffer));
+  memset(buffer, '\0', max_size);
 
-  ssize_t bytesRead = recv(sockfd, buffer, max_size, 0);
-  if (bytesRead < 0) {
+  ssize_t bytes_read = recv(sockfd, buffer, max_size - 1, 0);
+  if (bytes_read < 0) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      std::cerr << "No data available to read, try again later\n";
+      std::cerr << "No msg available to read, try again later\n";
     } else if (errno == EINTR) {
       std::cerr << "Read interrupted by a signal, retrying\n";
-      return read(data, max_size); // Retry reading
+      return read(msg, max_size); // Retry reading
     } else {
-      std::cerr << "Error receiving data: " << strerror(errno) << " (errno: " << errno << ")\n";
+      std::cerr << "Error receiving msg: " << strerror(errno) << " (errno: " << errno << ")\n";
     }
     return false;
   }
-  data.assign(buffer, bytesRead);
+  msg.assign(buffer, bytes_read);
   return true;
-}
+};
 
 bool ConnSocket::is_valid() const {
   return sockfd >= 0;
-}
+};
 
 void ConnSocket::close() {
   if (is_valid()) {
     ::close(sockfd);
     sockfd = -1;
   }
-}
+};
