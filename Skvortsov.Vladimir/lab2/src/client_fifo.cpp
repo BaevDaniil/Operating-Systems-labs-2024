@@ -19,18 +19,17 @@ void read_fifo(ConnFifo& fifo, pid_t pid) {
         std::string actualMessage = message.substr(pos + 1);
 
         if (senderPid != pid) {
-          std::cout << ">>> Received: " << actualMessage << std::endl;
+          std::cout << ">>> " << actualMessage << std::endl;
         }
       }
     }
   }
-}
+};
 
 void write_fifo(ConnFifo& fifo, pid_t pid) {
   std::string message;
 
   while (true) {
-    std::cout << "Enter message to send: ";
     std::getline(std::cin, message);
 
     if (message == "exit") {
@@ -43,9 +42,9 @@ void write_fifo(ConnFifo& fifo, pid_t pid) {
       std::cerr << "Error sending message\n";
       break;
     }
-    std::cout << "<<< Sent: " << message << std::endl;
+    std::cout << "<<< " << message << std::endl;
   }
-}
+};
 
 int main() {
   pid_t pid = getpid();
@@ -67,19 +66,28 @@ int main() {
 
   std::cout << "Read host PID: " << host_pid << " and removed PID file\n";
 
-  std::string fifo_name = "/tmp/fifo_example_" + std::to_string(host_pid);
-  ConnFifo client_fifo(fifo_name, false);
+  std::string client_fifo_path = "/tmp/chat_client_fifo" + std::to_string(host_pid);
+  std::string host_fifo_path = "/tmp/chat_host_fifo" + std::to_string(host_pid);
+
+  ConnFifo client_fifo(client_fifo_path, false);
 
   if (!client_fifo.is_valid()) {
     std::cerr << "Failed to open FIFO for reading\n";
     return 1;
   }
 
+  ConnFifo host_fifo(host_fifo_path, false);
+
+  if (!host_fifo.is_valid()) {
+    std::cerr << "Failed to open FIFO for writing\n";
+    return 1;
+  }
+
   std::thread reader(read_fifo, std::ref(client_fifo), pid);
-  std::thread writer(write_fifo, std::ref(client_fifo), pid);
+  std::thread writer(write_fifo, std::ref(host_fifo), pid);
 
   reader.join();
   writer.join();
 
   return 0;
-}
+};
