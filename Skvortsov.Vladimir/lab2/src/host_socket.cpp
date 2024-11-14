@@ -12,24 +12,12 @@ std::vector<ConnSocket> clients;
 std::mutex clients_mutex;
 
 void handle_client(ConnSocket socket_client, pid_t host_pid) {
-  std::string message;
+  std::string msg;
   const size_t max_size = 1024;
 
   while (true) {
-    if (!socket_client.read(message, max_size)) {
-      std::cerr << "Error receiving message\n";
-      break;
-    }
-
-    // Extract the sender PID from the message
-    size_t pos = message.find(':');
-    if (pos != std::string::npos) {
-      pid_t senderPid = std::stoi(message.substr(0, pos));
-      std::string actual_msg = message.substr(pos + 1);
-
-      if (senderPid != host_pid) {
-        std::cout << ">>> " << actual_msg << std::endl;
-      }
+    if (socket_client.read(msg, max_size)) {
+      std::cout << ">>> " << msg << std::endl;
     }
   }
 
@@ -40,27 +28,25 @@ void handle_client(ConnSocket socket_client, pid_t host_pid) {
   }
 }
 
-void writeToClients(ConnSocket &serverSocket, pid_t host_pid) {
-  std::string message;
+void write_to_clients(ConnSocket& serverSocket, pid_t host_pid) {
+  std::string msg;
 
   while (true) {
-    std::getline(std::cin, message);
+    std::getline(std::cin, msg);
 
-    if (message == "exit") {
+    if (msg == "exit") {
       break;
     }
-
-    std::string fullMessage = std::to_string(host_pid) + ":" + message;
 
     std::lock_guard<std::mutex> lock(clients_mutex);
     for (auto &client : clients) {
       if (client.is_valid()) {
-        if (!client.write(fullMessage)) {
+        if (!client.write(msg)) {
           std::cerr << "Error sending message to client\n";
         }
       }
     }
-    std::cout << "<<< " << message << std::endl;
+    std::cout << "<<< " << msg << std::endl;
   }
 }
 
@@ -75,7 +61,7 @@ int main() {
 
   std::cout << "Server started on port " << PORT << " with PID: " << pid << std::endl;
 
-  std::thread writer(writeToClients, std::ref(serverSocket), pid);
+  std::thread writer(write_to_clients, std::ref(serverSocket), pid);
 
   while (true) {
     ConnSocket socket_client = serverSocket.accept_connection();
