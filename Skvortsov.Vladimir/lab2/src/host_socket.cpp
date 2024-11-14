@@ -11,12 +11,12 @@ const int PORT = 12345;
 std::vector<ConnSocket> clients;
 std::mutex clients_mutex;
 
-void handleClient(ConnSocket clientSocket, pid_t hostPid) {
+void handle_client(ConnSocket socket_client, pid_t host_pid) {
   std::string message;
   const size_t max_size = 1024;
 
   while (true) {
-    if (!clientSocket.read(message, max_size)) {
+    if (!socket_client.read(message, max_size)) {
       std::cerr << "Error receiving message\n";
       break;
     }
@@ -25,22 +25,22 @@ void handleClient(ConnSocket clientSocket, pid_t hostPid) {
     size_t pos = message.find(':');
     if (pos != std::string::npos) {
       pid_t senderPid = std::stoi(message.substr(0, pos));
-      std::string actualMessage = message.substr(pos + 1);
+      std::string actual_msg = message.substr(pos + 1);
 
-      if (senderPid != hostPid) {
-        std::cout << ">>> " << actualMessage << std::endl;
+      if (senderPid != host_pid) {
+        std::cout << ">>> " << actual_msg << std::endl;
       }
     }
   }
 
-  clientSocket.close();
+  socket_client.close();
   {
     std::lock_guard<std::mutex> lock(clients_mutex);
-    clients.erase(std::remove(clients.begin(), clients.end(), clientSocket), clients.end());
+    clients.erase(std::remove(clients.begin(), clients.end(), socket_client), clients.end());
   }
 }
 
-void writeToClients(ConnSocket &serverSocket, pid_t hostPid) {
+void writeToClients(ConnSocket &serverSocket, pid_t host_pid) {
   std::string message;
 
   while (true) {
@@ -50,7 +50,7 @@ void writeToClients(ConnSocket &serverSocket, pid_t hostPid) {
       break;
     }
 
-    std::string fullMessage = std::to_string(hostPid) + ":" + message;
+    std::string fullMessage = std::to_string(host_pid) + ":" + message;
 
     std::lock_guard<std::mutex> lock(clients_mutex);
     for (auto &client : clients) {
@@ -78,18 +78,18 @@ int main() {
   std::thread writer(writeToClients, std::ref(serverSocket), pid);
 
   while (true) {
-    ConnSocket clientSocket = serverSocket.accept_connection();
-    if (!clientSocket.is_valid()) {
+    ConnSocket socket_client = serverSocket.accept_connection();
+    if (!socket_client.is_valid()) {
       std::cerr << "Error accepting connection\n";
       continue;
     }
 
     {
       std::lock_guard<std::mutex> lock(clients_mutex);
-      clients.push_back(clientSocket);
+      clients.push_back(socket_client);
     }
 
-    std::thread(handleClient, std::move(clientSocket), pid).detach();
+    std::thread(handle_client, std::move(socket_client), pid).detach();
   }
 
   writer.join();

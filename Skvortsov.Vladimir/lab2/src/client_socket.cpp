@@ -7,7 +7,7 @@
 const std::string SERVER_ADDRESS = "127.0.0.1";
 const int SERVER_PORT = 12345;
 
-void readFromServer(ConnSocket &clientSocket, pid_t clientPid) {
+void read_socket(ConnSocket &clientSocket, pid_t clientPid) {
   std::string message;
   const size_t max_size = 1024;
 
@@ -29,7 +29,7 @@ void readFromServer(ConnSocket &clientSocket, pid_t clientPid) {
   }
 }
 
-void writeToServer(ConnSocket &clientSocket, pid_t clientPid) {
+void write_socket(ConnSocket &clientSocket, pid_t clientPid) {
   std::string message;
 
   while (true) {
@@ -59,8 +59,8 @@ int main() {
 
   std::cout << "Connected to server at " << SERVER_ADDRESS << ":" << SERVER_PORT << " with PID: " << pid << std::endl;
 
-  std::thread reader(readFromServer, std::ref(clientSocket), pid);
-  std::thread writer(writeToServer, std::ref(clientSocket), pid);
+  std::thread reader(read_socket, std::ref(clientSocket), pid);
+  std::thread writer(write_socket, std::ref(clientSocket), pid);
 
   reader.join();
   writer.join();
