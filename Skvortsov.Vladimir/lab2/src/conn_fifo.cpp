@@ -48,7 +48,7 @@ bool ConnFifo::write(const std::string& msg) {
   return true;
 }
 
-bool ConnFifo::read(std::string& data, size_t max_size) {
+bool ConnFifo::read(std::string& msg, size_t max_size) {
   if (!is_valid()) {
     std::cerr << "FIFO not available for reading\n";
     return false;
@@ -63,7 +63,7 @@ bool ConnFifo::read(std::string& data, size_t max_size) {
     return false;
   }
 
-  data.assign(buffer, bytes_read);
+  msg.assign(buffer, bytes_read);
   return true;
 };
 
