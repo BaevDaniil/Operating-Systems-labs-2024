@@ -6,42 +6,31 @@
 #include "conn_queue.hpp"
 
 void read_queue(ConnQueue& queue, pid_t pid) {
-  std::string message;
+  std::string msg;
   const size_t max_size = 1024;
 
   while (true) {
-    if (queue.read(message, max_size)) {
-      // Extract the sender PID from the message
-      size_t pos = message.find(':');
-      if (pos != std::string::npos) {
-        pid_t senderPid = std::stoi(message.substr(0, pos));
-        std::string actualMessage = message.substr(pos + 1);
-
-        if (senderPid != pid) {
-          std::cout << ">>> " << actualMessage << std::endl;
-        }
-      }
+    if (queue.read(msg, max_size)) {
+      std::cout << ">>> " << msg << std::endl;
     }
   }
 };
 
 void write_queue(ConnQueue& queue, pid_t pid) {
-  std::string message;
+  std::string msg;
 
   while (true) {
-    std::getline(std::cin, message);
+    std::getline(std::cin, msg);
 
-    if (message == "exit") {
+    if (msg == "exit") {
       break;
     }
 
-    // Prepend the host PID to the message
-    std::string fullMessage = std::to_string(pid) + ":" + message;
-    if (!queue.write(fullMessage)) {
+    if (!queue.write(msg)) {
       std::cerr << "Error sending message\n";
       break;
     }
-    std::cout << "<<< " << message << std::endl;
+    std::cout << "<<< " << msg << std::endl;
   }
 };
 

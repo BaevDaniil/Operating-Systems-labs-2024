@@ -109,6 +109,7 @@ bool ConnSocket::read(std::string& msg, size_t max_size) {
 
   ssize_t bytes_read = recv(sockfd, buffer, max_size - 1, 0);
   if (bytes_read < 0) {
+    std::cerr << bytes_read << std::endl;
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       std::cerr << "No msg available to read, try again later\n";
     } else if (errno == EINTR) {

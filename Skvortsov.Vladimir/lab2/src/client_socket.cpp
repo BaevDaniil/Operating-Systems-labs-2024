@@ -7,60 +7,48 @@
 const std::string SERVER_ADDRESS = "127.0.0.1";
 const int SERVER_PORT = 12345;
 
-void read_socket(ConnSocket &clientSocket, pid_t clientPid) {
-  std::string message;
+void read_socket(ConnSocket& socket_client, pid_t client_pid) {
+  std::string msg;
   const size_t max_size = 1024;
 
   while (true) {
-    if (!clientSocket.read(message, max_size)) {
-      std::cerr << "Error receiving message\n";
-      break;
-    }
-
-    size_t pos = message.find(':');
-    if (pos != std::string::npos) {
-      pid_t senderPid = std::stoi(message.substr(0, pos));
-      std::string actualMessage = message.substr(pos + 1);
-
-      if (senderPid != clientPid) {
-        std::cout << ">>> " << actualMessage << std::endl;
-      }
+    if (!socket_client.read(msg, max_size)) {
+      std::cout << ">>> " << msg << std::endl;
     }
   }
 }
 
-void write_socket(ConnSocket &clientSocket, pid_t clientPid) {
-  std::string message;
+void write_socket(ConnSocket &socket_client, pid_t client_pid) {
+  std::string msg;
 
   while (true) {
-    std::getline(std::cin, message);
+    std::getline(std::cin, msg);
 
-    if (message == "exit") {
+    if (msg == "exit") {
       break;
     }
 
-    std::string fullMessage = std::to_string(clientPid) + ":" + message;
-    if (!clientSocket.write(fullMessage)) {
+    if (!socket_client.write(msg)) {
       std::cerr << "Error sending message\n";
       break;
     }
-    std::cout << "<<< " << message << std::endl;
+    std::cout << "<<< " << msg << std::endl;
   }
 }
 
 int main() {
   pid_t pid = getpid();
 
-  ConnSocket clientSocket;
-  if (!clientSocket.connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
+  ConnSocket socket_client;
+  if (!socket_client.connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
     std::cerr << "Failed to connect to server\n";
     return 1;
   }
 
   std::cout << "Connected to server at " << SERVER_ADDRESS << ":" << SERVER_PORT << " with PID: " << pid << std::endl;
 
-  std::thread reader(read_socket, std::ref(clientSocket), pid);
-  std::thread writer(write_socket, std::ref(clientSocket), pid);
+  std::thread reader(read_socket, std::ref(socket_client), pid);
+  std::thread writer(write_socket, std::ref(socket_client), pid);
 
   reader.join();
   writer.join();
