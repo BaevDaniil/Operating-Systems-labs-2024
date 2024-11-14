@@ -17,7 +17,7 @@ inline void client_signal_handler(int sig, siginfo_t *info, void *context)
         break;
     }
 }
-template<Conn T>
+template <Conn T>
 class Client
 {
 private:

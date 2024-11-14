@@ -17,7 +17,7 @@ inline void host_signal_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
-template<Conn T>
+template <Conn T>
 class Host
 {
 private:
