@@ -26,13 +26,17 @@ fi
 
 cd "$initial_dir" || { echo "Failed to exit build directory."; exit 1; }
 
-mv "$initial_dir/build/local_chat" "$initial_dir/local_chat"
+mv "$initial_dir/build/host_fifo" "$initial_dir/host_fifo"
 
-sudo rm -rf "$initial_dir/build"
+mv "$initial_dir/build/client_fifo" "$initial_dir/client_fifo"
+
+# rm -rf "$initial_dir/build"
 
 mkdir -p "$initial_dir/host"
 
 touch "$initial_dir/host/host.txt"
 
-sudo "$initial_dir/local_chat" 
+# "$initial_dir/host_main" 
+
+# "$initial_dir/client_main" 
 

@@ -1,3 +1,4 @@
 build
 local_chat
 .vscode
+./host
