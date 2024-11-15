@@ -1,76 +1,120 @@
-#include <iostream>
-#include <string>
+#include <QMessageBox>
+#include <QApplication>
+#include <QTimer>
 #include <fstream>
-#include <thread>
 #include <unistd.h>
 #include "conn_fifo.hpp"
+#include "ChatWindow.hpp"
 
-void read_fifo(ConnFifo& fifo, pid_t pid) {
-  std::string msg;
-  const size_t max_size = 1024;
+ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent), host_fifo(nullptr), client_fifo(nullptr) {
+  setup_ui();
+  setup_conn();
+  setup_timers();
+};
 
-  while (true) {
-    if (fifo.read(msg, max_size)) {
-      std::cout << ">>> " << msg << std::endl;
-    } else {
-      std::cerr << "Client disconnected or error occurred\n";
-      break;
-    }
+ChatWindow::~ChatWindow() {
+  if (host_fifo) {
+    delete host_fifo;
+  }
+  if (client_fifo) {
+    delete client_fifo;
   }
 };
 
-void write_fifo(ConnFifo& fifo, pid_t pid) {
-  std::string msg;
+void ChatWindow::setup_ui() {
+  QWidget* central_widget = new QWidget(this);
+  setCentralWidget(central_widget);
 
-  while (true) {
-    std::getline(std::cin, msg);
+  chat_display = new QTextEdit(this);
+  chat_display->setReadOnly(true);
 
-    if (msg == "exit") {
-      break;
-    }
+  msg_input = new QLineEdit(this);
+  send_btn = new QPushButton("Send", this);
 
-    if (!fifo.write(msg)) {
-      std::cerr << "Error sending message\n";
-      break;
-    }
-    std::cout << "<<< " << msg << std::endl;
-  }
+  QVBoxLayout* mainLayout = new QVBoxLayout();
+  QHBoxLayout* inputLayout = new QHBoxLayout();
+
+  inputLayout->addWidget(msg_input);
+  inputLayout->addWidget(send_btn);
+
+  mainLayout->addWidget(chat_display);
+  mainLayout->addLayout(inputLayout);
+
+  central_widget->setLayout(mainLayout);
+
+  connect(send_btn, &QPushButton::clicked, this, &ChatWindow::send_msg);
+  connect(msg_input, &QLineEdit::returnPressed, this, &ChatWindow::send_msg);
 };
 
-int main() {
+void ChatWindow::setup_conn() {
   pid_t pid = getpid();
-
   std::ofstream pid_file("host_pid.txt");
   if (!pid_file) {
-    std::cerr << "Failed to open PID file for writing\n";
-    return 1;
+    QMessageBox::critical(this, "Error", "Failed to open PID file for writing");
+    return;
   }
   pid_file << pid;
   pid_file.close();
-  std::cout << "Host PID: " << pid << std::endl;
 
-  std::string client_fifo_path = "/tmp/chat_client_fifo" + std::to_string(pid);
-  std::string host_fifo_path = "/tmp/chat_host_fifo" + std::to_string(pid);
+  std::string client_path = "/tmp/chat_client_fifo" + std::to_string(pid);
+  std::string host_path = "/tmp/chat_host_fifo" + std::to_string(pid);
 
-  ConnFifo client_fifo(client_fifo_path, true);
-
-  if (!client_fifo.is_valid()) {
-    std::cerr << "Failed to open FIFO for writing\n";
-    return 1;
+  client_fifo = new ConnFifo(client_path, true);
+  if (!client_fifo->is_valid()) {
+    QMessageBox::critical(this, "Error", "Failed to open FIFO for writing");
+    return;
   }
 
-  ConnFifo host_fifo(host_fifo_path, true);
+  host_fifo = new ConnFifo(host_path, true);
+  if (!host_fifo->is_valid()) {
+    QMessageBox::critical(this, "Error", "Failed to open FIFO for reading");
+    return;
+  }
+};
 
-  if (!host_fifo.is_valid()) {
-    std::cerr << "Failed to open FIFO for reading\n";
-    return 1;
+void ChatWindow::setup_timers() {
+  QTimer* timer = new QTimer(this);
+  connect(timer, &QTimer::timeout, this, &ChatWindow::read_msg);
+  timer->start(10);
+};
+
+void ChatWindow::send_msg() {
+  QString message = msg_input->text().trimmed();
+  if (message.isEmpty()) {
+    QMessageBox::warning(this, "Warning", "Cannot send an empty message.");
+    return;
   }
 
-  std::thread reader(read_fifo, std::ref(host_fifo), pid);
-  std::thread writer(write_fifo, std::ref(client_fifo), pid);
+  if (client_fifo && client_fifo->is_valid()) {
+    if (!client_fifo->write(message.toStdString())) {
+      QMessageBox::critical(this, "Error", "Failed to send message");
+      return;
+    }
+    chat_display->append("<<< " + message);
+  }
 
-  reader.join();
-  writer.join();
+  msg_input->clear();
+};
 
-  return 0;
+void ChatWindow::read_msg() {
+  if (host_fifo && host_fifo->is_valid()) {
+    std::string msg;
+    const size_t max_size = 1024;
+    if (host_fifo->read(msg, max_size)) {
+      if (!msg.empty()) {
+        chat_display->append(">>> " + QString::fromStdString(msg));
+      }
+    }
+  }
+};
+
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
+
+  ChatWindow window;
+  window.setWindowTitle("Chat Application");
+  window.resize(400, 300);
+  window.show();
+
+  return app.exec();
 };

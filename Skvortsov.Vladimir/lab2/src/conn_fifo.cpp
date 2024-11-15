@@ -16,7 +16,7 @@ ConnFifo::ConnFifo(const std::string& path, bool create) : path(path), fd(-1), v
     }
   }
 
-  fd = open(path.c_str(), O_RDWR);
+  fd = open(path.c_str(), O_RDWR | O_NONBLOCK);
   if (fd == -1) {
     std::cerr << "Error opening FIFO: " << strerror(errno) << "\n";
   } else {
@@ -59,7 +59,6 @@ bool ConnFifo::read(std::string& msg, size_t max_size) {
 
   ssize_t bytes_read = ::read(fd, buffer, max_size - 1);
   if (bytes_read == -1) {
-    std::cerr << "Error reading from FIFO: " << strerror(errno) << "\n";
     return false;
   }
 

@@ -4,7 +4,6 @@ project(LocalChatApp)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
 # Set the path for Qt6
@@ -49,8 +48,11 @@ set(CLIENT_SOCKET_SRC_FILES
   src/conn_socket.cpp
 )
 
+# Ensure Qt's moc is run on the ChatWindow header
+qt6_wrap_cpp(MOC_SOURCES src/ChatWindow.hpp)
+
 # Add executables for FIFO communication
-add_executable(host_fifo ${HOST_FIFO_SRC_FILES})
+add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${MOC_SOURCES})
 add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES})
 
 # Add executables for Queue communication
@@ -61,6 +63,9 @@ add_executable(client_queue ${CLIENT_QUEUE_SRC_FILES})
 add_executable(host_socket ${HOST_SOCKET_SRC_FILES})
 add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES})
 
+# Link Qt libraries to the GUI executable
+target_link_libraries(host_fifo Qt6::Widgets)
+
 # Set output directories for all executables
 set_target_properties(host_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(client_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -68,9 +73,6 @@ set_target_properties(host_queue PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BIN
 set_target_properties(client_queue PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(host_socket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(client_socket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Add subdirectory for GUI
-add_subdirectory(src/gui)
 
 # Custom target to build all
 add_custom_target(all_targets DEPENDS host_fifo client_fifo host_queue client_queue host_socket client_socket chat_gui)

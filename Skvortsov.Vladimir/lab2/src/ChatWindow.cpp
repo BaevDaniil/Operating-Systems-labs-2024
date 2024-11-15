@@ -1,7 +1,4 @@
 #include "ChatWindow.hpp"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QMessageBox>
 
 ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent) {
   setup_ui();
