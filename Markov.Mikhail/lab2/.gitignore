@@ -3,3 +3,5 @@ local_chat
 .vscode
 ./host
 tmp
+client_fifo
+host_fifo

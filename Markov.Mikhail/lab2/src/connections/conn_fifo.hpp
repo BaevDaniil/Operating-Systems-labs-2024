@@ -14,6 +14,14 @@ public:
     bool Read(std::string & message) override;
     virtual bool Write(const std::string & message) override;
     static std::string to_string() { return "fifo"; }
+    static std::string make_filename(int pid1, int pid2) 
+    { 
+        return to_string() + '_' + std::to_string(pid1) + '_' + std::to_string(pid2); 
+    }
+    static std::string make_general_filename(int pid1, int pid2) 
+    { 
+        return make_filename(pid1, pid2) + "_general"; 
+    }
     NamedChannel() = default;
     NamedChannel(const NamedChannel&) = default;
     NamedChannel& operator = (const NamedChannel&) = default;

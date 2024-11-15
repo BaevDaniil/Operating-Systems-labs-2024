@@ -20,10 +20,10 @@ private:
 public:
     ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid)
     {
-        connections.emplace_back(T::to_string() + '_' + std::to_string(host_pid) + "_" + std::to_string(pid), create);
-        connections.emplace_back(T::to_string() + '_' + std::to_string(pid) + '_' + std::to_string(host_pid), create);
-        connections.emplace_back(T::to_string() + '_' + std::to_string(host_pid) + '_' + std::to_string(pid) + "_" + "general", create);
-        connections.emplace_back(T::to_string() + '_' + std::to_string(pid) + '_' + std::to_string(host_pid) + "_" + "general", create);
+        connections.emplace_back(T::make_filename(host_pid, pid), create);
+        connections.emplace_back(T::make_filename(pid, host_pid), create);
+        connections.emplace_back(T::make_general_filename(host_pid, pid), create);
+        connections.emplace_back(T::make_general_filename(pid, host_pid), create);
     }
     // void start();
 };
