@@ -13,21 +13,21 @@
 class ChatWindow : public QMainWindow {
     Q_OBJECT
 
-public:
+  public:
     explicit ChatWindow(QWidget *parent = nullptr);
     ~ChatWindow();
 
-private slots:
+  private slots:
     void send_msg();
     void read_msg();
 
-private:
+  private:
     QTextEdit* chat_display;
     QLineEdit* msg_input;
     QPushButton* send_btn;
 
-    ConnFifo* host_fifo;
-    ConnFifo* client_fifo;
+    ConnFifo* host_conn;
+    ConnFifo* client_conn;
 
     void setup_ui();
     void setup_conn();

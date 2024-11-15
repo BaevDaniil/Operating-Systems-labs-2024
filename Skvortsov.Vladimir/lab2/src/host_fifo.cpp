@@ -6,18 +6,18 @@
 #include "conn_fifo.hpp"
 #include "ChatWindow.hpp"
 
-ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent), host_fifo(nullptr), client_fifo(nullptr) {
+ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent), host_conn(nullptr), client_conn(nullptr) {
   setup_ui();
   setup_conn();
   setup_timers();
 };
 
 ChatWindow::~ChatWindow() {
-  if (host_fifo) {
-    delete host_fifo;
+  if (host_conn) {
+    delete host_conn;
   }
-  if (client_fifo) {
-    delete client_fifo;
+  if (client_conn) {
+    delete client_conn;
   }
 };
 
@@ -59,14 +59,14 @@ void ChatWindow::setup_conn() {
   std::string client_path = "/tmp/chat_client_fifo" + std::to_string(pid);
   std::string host_path = "/tmp/chat_host_fifo" + std::to_string(pid);
 
-  client_fifo = new ConnFifo(client_path, true);
-  if (!client_fifo->is_valid()) {
+  client_conn = new ConnFifo(client_path, true);
+  if (!client_conn->is_valid()) {
     QMessageBox::critical(this, "Error", "Failed to open FIFO for writing");
     return;
   }
 
-  host_fifo = new ConnFifo(host_path, true);
-  if (!host_fifo->is_valid()) {
+  host_conn = new ConnFifo(host_path, true);
+  if (!host_conn->is_valid()) {
     QMessageBox::critical(this, "Error", "Failed to open FIFO for reading");
     return;
   }
@@ -79,28 +79,28 @@ void ChatWindow::setup_timers() {
 };
 
 void ChatWindow::send_msg() {
-  QString message = msg_input->text().trimmed();
-  if (message.isEmpty()) {
+  QString msg = msg_input->text().trimmed();
+  if (msg.isEmpty()) {
     QMessageBox::warning(this, "Warning", "Cannot send an empty message.");
     return;
   }
 
-  if (client_fifo && client_fifo->is_valid()) {
-    if (!client_fifo->write(message.toStdString())) {
+  if (client_conn && client_conn->is_valid()) {
+    if (!client_conn->write(msg.toStdString())) {
       QMessageBox::critical(this, "Error", "Failed to send message");
       return;
     }
-    chat_display->append("<<< " + message);
+    chat_display->append("<<< " + msg);
   }
 
   msg_input->clear();
 };
 
 void ChatWindow::read_msg() {
-  if (host_fifo && host_fifo->is_valid()) {
+  if (host_conn && host_conn->is_valid()) {
     std::string msg;
     const size_t max_size = 1024;
-    if (host_fifo->read(msg, max_size)) {
+    if (host_conn->read(msg, max_size)) {
       if (!msg.empty()) {
         chat_display->append(">>> " + QString::fromStdString(msg));
       }

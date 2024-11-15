@@ -53,7 +53,7 @@ qt6_wrap_cpp(MOC_SOURCES src/ChatWindow.hpp)
 
 # Add executables for FIFO communication
 add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${MOC_SOURCES})
-add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES})
+add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES} ${MOC_SOURCES})
 
 # Add executables for Queue communication
 add_executable(host_queue ${HOST_QUEUE_SRC_FILES})
@@ -65,6 +65,7 @@ add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES})
 
 # Link Qt libraries to the GUI executable
 target_link_libraries(host_fifo Qt6::Widgets)
+target_link_libraries(client_fifo Qt6::Widgets)
 
 # Set output directories for all executables
 set_target_properties(host_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
