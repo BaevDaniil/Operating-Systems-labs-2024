@@ -39,11 +39,13 @@ private:
         kill(host_pid, SIGUSR1);
 
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(5000ms);
+        sem_t *semaphore = sem_open((T::make_filename(host_pid, pid) + "_creation").c_str(), O_CREAT, 0777, 0);
+        sem_wait(semaphore);
         connections.emplace_back(T::make_filename(host_pid, pid), create);
         connections.emplace_back(T::make_filename(pid, host_pid), create);
         connections.emplace_back(T::make_general_filename(host_pid, pid), create);
         connections.emplace_back(T::make_general_filename(pid, host_pid), create);
+        sem_unlink(T::make_filename(host_pid, pid).c_str());
     }
 
 public:

@@ -24,6 +24,10 @@ public:
         connections.emplace_back(T::make_filename(pid, host_pid), create);
         connections.emplace_back(T::make_general_filename(host_pid, pid), create);
         connections.emplace_back(T::make_general_filename(pid, host_pid), create);
+        sem_t* semaphore = sem_open((T::make_filename(host_pid, pid) + "_creation").c_str(), O_CREAT, 0777, 0);
+        if (semaphore == SEM_FAILED)
+            throw std::runtime_error("Error to create a semaphore!");
+        sem_post(semaphore);
     }
     // void start();
 };
