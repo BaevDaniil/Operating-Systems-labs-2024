@@ -2,13 +2,14 @@
 
 MessageQueue::MessageQueue(const std::string &id, bool create) : name(id)
 {
+    std::filesystem::path path = std::filesystem::current_path() / "tmp" / id;
     struct mq_attr attr;
     attr.mq_flags = 0;
     attr.mq_maxmsg = max_msg_count;
     attr.mq_msgsize = max_msg_size;
     attr.mq_curmsgs = 0;
 
-    mq = mq_open(name.c_str(), O_CREAT | O_RDWR, 0644, &attr);
+    mq = mq_open(path.c_str(), O_CREAT | O_RDWR, 0644, &attr);
 
     if (mq == (mqd_t)-1)
         throw std::runtime_error("Error opening message queue");

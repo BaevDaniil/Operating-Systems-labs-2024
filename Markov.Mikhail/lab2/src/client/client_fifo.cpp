@@ -3,8 +3,8 @@
 namespace
 {
     using TempClient = Client<NamedChannel>;
-    bool identifier = false;
-    std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
+    const bool identifier = false;
+    const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
 }
 inline void client_signal_handler(int sig, siginfo_t *info, void *context)
 {
@@ -35,7 +35,7 @@ int main()
 {
     std::cout << getpid() << std::endl;
 
-    TempClient::get_instance(host_pid_path, identifier);
+    TempClient client = TempClient::get_instance(host_pid_path, identifier);
     while(true)
     {
     }

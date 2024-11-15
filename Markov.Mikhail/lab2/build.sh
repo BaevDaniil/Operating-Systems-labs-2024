@@ -34,6 +34,10 @@ mv "$initial_dir/build/client_fifo" "$initial_dir/client_fifo"
 
 mkdir -p "$initial_dir/host"
 
+rm -rf  "$initial_dir/tmp"
+
+mkdir "$initial_dir/tmp"
+
 touch "$initial_dir/host/host.txt"
 
 # "$initial_dir/host_main" 
