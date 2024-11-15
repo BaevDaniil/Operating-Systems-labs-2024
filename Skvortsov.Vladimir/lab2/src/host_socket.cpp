@@ -18,7 +18,25 @@ void read_socket(ConnSocket& client_socket) {
       break;
     }
   }
-}
+};
+
+void write_socket(ConnSocket& client_socket) {
+  std::string msg;
+
+  while (true) {
+    std::getline(std::cin, msg);
+
+    if (msg == "exit") {
+      break;
+    }
+
+    if (!client_socket.write(msg)) {
+      std::cerr << "Error sending message to client\n";
+      break;
+    }
+    std::cout << "<<< " << msg << std::endl;
+  }
+};
 
 int main() {
   pid_t pid = getpid();
@@ -38,25 +56,12 @@ int main() {
   }
 
   std::thread reader(read_socket, std::ref(client_socket));
-
-  std::string msg;
-  while (true) {
-    std::getline(std::cin, msg);
-
-    if (msg == "exit") {
-      break;
-    }
-
-    if (!client_socket.write(msg)) {
-      std::cerr << "Error sending message to client\n";
-      break;
-    }
-    std::cout << "<<< " << msg << std::endl;
-  }
+  std::thread writer(write_socket, std::ref(client_socket));
 
   reader.join();
+  writer.join();
 
   client_socket.close();
 
   return 0;
-}
+};

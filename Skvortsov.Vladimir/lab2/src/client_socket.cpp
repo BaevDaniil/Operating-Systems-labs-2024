@@ -19,22 +19,11 @@ void read_socket(ConnSocket& server_socket) {
       break;
     }
   }
-}
+};
 
-int main() {
-  pid_t pid = getpid();
-
-  ConnSocket client_socket;
-  if (!client_socket.connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
-    std::cerr << "Error connecting to server\n";
-    return 1;
-  }
-
-  std::cout << "Connected to server at " << SERVER_ADDRESS << ":" << SERVER_PORT << " with PID: " << pid << std::endl;
-
-  std::thread reader(read_socket, std::ref(client_socket));
-
+void write_socket(ConnSocket& client_socket) {
   std::string msg;
+
   while (true) {
     std::getline(std::cin, msg);
 
@@ -48,10 +37,26 @@ int main() {
     }
     std::cout << "<<< " << msg << std::endl;
   }
+};
+
+int main() {
+  pid_t pid = getpid();
+
+  ConnSocket client_socket;
+  if (!client_socket.connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
+    std::cerr << "Error connecting to server\n";
+    return 1;
+  }
+
+  std::cout << "Connected to server at " << SERVER_ADDRESS << ":" << SERVER_PORT << " with PID: " << pid << std::endl;
+
+  std::thread reader(read_socket, std::ref(client_socket));
+  std::thread writer(write_socket, std::ref(client_socket));
 
   reader.join();
+  writer.join();
 
   client_socket.close();
 
   return 0;
-}
+};
