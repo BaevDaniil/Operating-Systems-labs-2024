@@ -11,7 +11,7 @@ class ConnSocket : public Conn {
     ~ConnSocket();
 
     bool create_server_socket(int port);
-    ConnSocket accept_connection();
+    ConnSocket* accept_connection();
     bool connect_to_server(const std::string &address, int port);
 
     bool write(const std::string& data) override;

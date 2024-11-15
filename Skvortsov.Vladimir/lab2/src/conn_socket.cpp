@@ -4,12 +4,23 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <fcntl.h> // For fcntl
 
 ConnSocket::ConnSocket() : socket_fd(-1) {
   memset(&addr, 0, sizeof(addr));
 };
 
-ConnSocket::ConnSocket(int socket_fd, sockaddr_in addr) : socket_fd(socket_fd), addr(addr) {};
+ConnSocket::ConnSocket(int socket_fd, sockaddr_in addr) : socket_fd(socket_fd), addr(addr) {
+  // Set the socket to non-blocking mode
+  int flags = fcntl(socket_fd, F_GETFL, 0);
+  if (flags == -1) {
+    std::cerr << "Error getting socket flags\n";
+  } else {
+    if (fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+      std::cerr << "Error setting socket to non-blocking mode\n";
+    }
+  }
+};
 
 ConnSocket::~ConnSocket() {
   close();
@@ -41,15 +52,15 @@ bool ConnSocket::create_server_socket(int port) {
   return true;
 };
 
-ConnSocket ConnSocket::accept_connection() {
+ConnSocket* ConnSocket::accept_connection() {
   sockaddr_in client_addr;
   socklen_t clientLen = sizeof(client_addr);
   int client_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr, &clientLen);
   if (client_socket_fd < 0) {
     std::cerr << "Error accepting connection\n";
-    return ConnSocket();
+    return new ConnSocket();
   }
-  return ConnSocket(client_socket_fd, client_addr);
+  return new ConnSocket(client_socket_fd, client_addr);
 }
 
 bool ConnSocket::connect_to_server(const std::string& address, int port) {
@@ -72,6 +83,16 @@ bool ConnSocket::connect_to_server(const std::string& address, int port) {
     std::cerr << "Error connecting to server\n";
     close();
     return false;
+  }
+
+  // Set the socket to non-blocking mode
+  int flags = fcntl(socket_fd, F_GETFL, 0);
+  if (flags == -1) {
+    std::cerr << "Error getting socket flags\n";
+  } else {
+    if (fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+      std::cerr << "Error setting socket to non-blocking mode\n";
+    }
   }
 
   return true;
@@ -102,11 +123,13 @@ bool ConnSocket::read(std::string& msg, size_t max_size) {
 
   ssize_t bytes_read = recv(socket_fd, buffer, max_size - 1, 0);
   if (bytes_read == 0) {
+    std::cerr << "Connection closed by peer\n";
     return false;
   }
   if (bytes_read == -1) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      std::cerr << "No msg available to read, try again later\n";
+      // No message available, handle this as non-blocking
+      return false;
     } else if (errno == EINTR) {
       std::cerr << "Read interrupted by a signal, retrying\n";
       return read(msg, max_size); // Retry reading

@@ -60,14 +60,16 @@ add_executable(host_queue ${HOST_QUEUE_SRC_FILES} ${MOC_SOURCES})
 add_executable(client_queue ${CLIENT_QUEUE_SRC_FILES} ${MOC_SOURCES})
 
 # Add executables for Socket communication
-add_executable(host_socket ${HOST_SOCKET_SRC_FILES})
-add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES})
+add_executable(host_socket ${HOST_SOCKET_SRC_FILES} ${MOC_SOURCES})
+add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES} ${MOC_SOURCES})
 
 # Link Qt libraries to the GUI executable
 target_link_libraries(host_fifo Qt6::Widgets)
 target_link_libraries(client_fifo Qt6::Widgets)
 target_link_libraries(host_queue Qt6::Widgets)
 target_link_libraries(client_queue Qt6::Widgets)
+target_link_libraries(host_socket Qt6::Widgets)
+target_link_libraries(client_socket Qt6::Widgets)
 
 # Set output directories for all executables
 set_target_properties(host_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

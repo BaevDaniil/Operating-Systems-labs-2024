@@ -1,62 +1,108 @@
-#include <iostream>
-#include <string>
-#include <thread>
+#include <QMessageBox>
+#include <QApplication>
+#include <QTimer>
+#include <fstream>
 #include <unistd.h>
 #include "conn_socket.hpp"
+#include "ChatWindow.hpp"
 
 const std::string SERVER_ADDRESS = "127.0.0.1";
 const int SERVER_PORT = 8080;
 
-void read_socket(ConnSocket& server_socket) {
-  std::string msg;
-  const size_t max_size = 1024;
+ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent), host_conn(nullptr), client_conn(nullptr) {
+  setup_ui();
+  setup_conn();
+  setup_timers();
+};
 
-  while (true) {
-    if (server_socket.read(msg, max_size)) {
-      std::cout << ">>> " << msg << std::endl;
-    } else {
-      std::cerr << "Server disconnected or error occurred\n";
-      break;
+ChatWindow::~ChatWindow() {
+  if (host_conn) {
+    delete host_conn;
+  }
+  if (client_conn) {
+    delete client_conn;
+  }
+};
+
+void ChatWindow::setup_ui() {
+  QWidget* central_widget = new QWidget(this);
+  setCentralWidget(central_widget);
+
+  chat_display = new QTextEdit(this);
+  chat_display->setReadOnly(true);
+
+  msg_input = new QLineEdit(this);
+  send_btn = new QPushButton("Send", this);
+
+  QVBoxLayout* mainLayout = new QVBoxLayout();
+  QHBoxLayout* inputLayout = new QHBoxLayout();
+
+  inputLayout->addWidget(msg_input);
+  inputLayout->addWidget(send_btn);
+
+  mainLayout->addWidget(chat_display);
+  mainLayout->addLayout(inputLayout);
+
+  central_widget->setLayout(mainLayout);
+
+  connect(send_btn, &QPushButton::clicked, this, &ChatWindow::send_msg);
+  connect(msg_input, &QLineEdit::returnPressed, this, &ChatWindow::send_msg);
+};
+
+void ChatWindow::setup_conn() {
+  ConnSocket* client_conn = new ConnSocket();
+
+  if (!client_conn->connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
+    QMessageBox::critical(this, "Error", "Error connecting to server\n");
+    return;
+  }
+
+  this->client_conn = client_conn;
+};
+
+void ChatWindow::setup_timers() {
+  QTimer* timer = new QTimer(this);
+  connect(timer, &QTimer::timeout, this, &ChatWindow::read_msg);
+  timer->start(10);
+};
+
+void ChatWindow::send_msg() {
+  QString msg = msg_input->text().trimmed();
+  if (msg.isEmpty()) {
+    QMessageBox::warning(this, "Warning", "Cannot send an empty message.");
+    return;
+  }
+
+  if (client_conn && client_conn->is_valid()) {
+    if (!client_conn->write(msg.toStdString())) {
+      QMessageBox::critical(this, "Error", "Failed to send message");
+      return;
+    }
+    chat_display->append("<<< " + msg);
+  }
+
+  msg_input->clear();
+};
+
+void ChatWindow::read_msg() {
+  if (client_conn && client_conn->is_valid()) {
+    std::string msg;
+    const size_t max_size = 1024;
+    if (client_conn->read(msg, max_size)) {
+      if (!msg.empty()) {
+        chat_display->append(">>> " + QString::fromStdString(msg));
+      }
     }
   }
 };
 
-void write_socket(ConnSocket& client_socket) {
-  std::string msg;
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
 
-  while (true) {
-    std::getline(std::cin, msg);
+  ChatWindow window;
+  window.setWindowTitle("Chat Application");
+  window.resize(400, 300);
+  window.show();
 
-    if (msg == "exit") {
-      break;
-    }
-
-    if (!client_socket.write(msg)) {
-      std::cerr << "Error sending message to server\n";
-      break;
-    }
-    std::cout << "<<< " << msg << std::endl;
-  }
-};
-
-int main() {
-  pid_t pid = getpid();
-
-  ConnSocket client_socket;
-  if (!client_socket.connect_to_server(SERVER_ADDRESS, SERVER_PORT)) {
-    std::cerr << "Error connecting to server\n";
-    return 1;
-  }
-
-  std::cout << "Connected to server at " << SERVER_ADDRESS << ":" << SERVER_PORT << " with PID: " << pid << std::endl;
-
-  std::thread reader(read_socket, std::ref(client_socket));
-  std::thread writer(write_socket, std::ref(client_socket));
-
-  reader.join();
-  writer.join();
-
-  client_socket.close();
-
-  return 0;
+  return app.exec();
 };
