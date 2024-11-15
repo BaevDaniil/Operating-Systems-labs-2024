@@ -13,9 +13,10 @@ public:
     NamedChannel(const std::string &pathname, bool create);
     bool Read(std::string & message) override;
     virtual bool Write(const std::string & message) override;
+    static std::string to_string() { return "fifo"; }
     NamedChannel() = default;
-    NamedChannel(const NamedChannel&) = delete;
-    NamedChannel& operator = (const NamedChannel&) = delete;
+    NamedChannel(const NamedChannel&) = default;
+    NamedChannel& operator = (const NamedChannel&) = default;
     NamedChannel(NamedChannel &&) = default;
     NamedChannel &operator=(NamedChannel &&) = default;
     virtual ~NamedChannel() override;
