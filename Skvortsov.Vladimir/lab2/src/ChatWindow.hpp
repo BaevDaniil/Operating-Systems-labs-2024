@@ -8,7 +8,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
-#include "conn_fifo.hpp"
+#include "conn.hpp"
 
 class ChatWindow : public QMainWindow {
     Q_OBJECT
@@ -26,8 +26,8 @@ class ChatWindow : public QMainWindow {
     QLineEdit* msg_input;
     QPushButton* send_btn;
 
-    ConnFifo* host_conn;
-    ConnFifo* client_conn;
+    Conn* host_conn;
+    Conn* client_conn;
 
     void setup_ui();
     void setup_conn();

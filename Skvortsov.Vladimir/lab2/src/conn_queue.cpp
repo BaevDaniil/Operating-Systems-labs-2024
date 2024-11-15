@@ -16,9 +16,9 @@ ConnQueue::ConnQueue(const std::string &name, bool create, int max_msg_size, int
   attr.mq_curmsgs = 0;
 
   if (create) {
-    mq = mq_open(name.c_str(), O_CREAT | O_RDWR, 0644, &attr);
+    mq = mq_open(name.c_str(), O_CREAT | O_RDWR | O_NONBLOCK, 0644, &attr);
   } else {
-    mq = mq_open(name.c_str(), O_RDWR);
+    mq = mq_open(name.c_str(), O_RDWR | O_NONBLOCK);
   }
 
   if (mq == (mqd_t)-1) {
@@ -56,6 +56,9 @@ bool ConnQueue::read(std::string& message, size_t max_size) {
 
   ssize_t bytesReceived = mq_receive(mq, buffer, sizeof(buffer), nullptr);
   if (bytesReceived == -1) {
+    if (errno == EAGAIN) {
+      return false;
+    }
     std::cerr << "Error receiving message: " << strerror(errno) << "\n";
     return false;
   }
