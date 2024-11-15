@@ -8,19 +8,31 @@ namespace
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
 }
 
-inline void host_signal_handler(int sig, siginfo_t *info, void *context)
+void host_signal_handler(int sig, siginfo_t *info, void *context)
 {
     std::cout << "signal was handled" << std::endl;
+    if(!host.table.contains(info->si_pid))
+    {
+        host.table.insert({info->si_pid, ClientInfo<NamedChannel>{getpid(), info->si_pid, identifier}});
+        return;
+    }
+    std::string msg = "a ";
+    std::string general_msg = "a ";
+    bool f;
     switch (sig)
     {
     case SIGUSR1:
         std::cout << info->si_pid << std::endl;
-        if (host.table.contains(info->si_pid))
-            host.table.erase(info->si_pid);
-        else
-            host.table.insert({info->si_pid,{getpid(),info->si_pid, identifier}});
+        f = host.table[info->si_pid].read_from_client(msg);
+        std::cout << msg <<"\nstatus: " << f<< std::endl;
+        msg.clear();
         break;
-
+    case SIGUSR2:
+        std::cout << info->si_pid << std::endl;
+        f = host.table[info->si_pid].read_from_client_general(general_msg);
+        std::cout << general_msg <<"\nstatus: " << f << std::endl;
+        general_msg.clear();
+        break;
     default : 
         std::cout<< info->si_pid << std::endl;
         break;

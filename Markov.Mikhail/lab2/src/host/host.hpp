@@ -34,6 +34,4 @@ public:
         static Host instance(pid_path, create);
         return instance;
     }
-
-    
 };

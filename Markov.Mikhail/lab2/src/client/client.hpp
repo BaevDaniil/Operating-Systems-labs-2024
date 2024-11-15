@@ -55,26 +55,28 @@ public:
         static Client instance(host_pid_path, create);
         return instance;
     }
-    void send_to_host(const std::string& message)
+    bool send_to_host(const std::string& message)
     {
-        connections[1].Write(message);
+        bool f = connections[1].Write(message);
         kill(host_pid, SIGUSR1);
+        return f;
     }
 
-    void read_from_host(std::string& message)
+    bool read_from_host(std::string& message)
     {
-        connections[0].Read(message);
+        return connections[0].Read(message);
     }
 
-    void send_to_host_general(const std::string &message)
+    bool send_to_host_general(const std::string &message)
     {
-        connections[3].Write(message);
+        bool f = connections[3].Write(message);
         kill(host_pid, SIGUSR2);
+        return f;
     }
 
-    void read_from_host_general(std::string &message)
+    bool read_from_host_general(std::string &message)
     {
-        connections[2].Read(message);
+        return connections[2].Read(message);
     }
 };
 

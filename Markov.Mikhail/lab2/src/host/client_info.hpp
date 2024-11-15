@@ -29,5 +29,34 @@ public:
             throw std::runtime_error("Error to create a semaphore!");
         sem_post(semaphore);
     }
+    ClientInfo() = default;
+    ClientInfo(const ClientInfo &) = default;
+    ClientInfo &operator=(const ClientInfo &) = default;
+    ClientInfo(ClientInfo &&) = default;
+    ClientInfo &operator=(ClientInfo &&) = default;
+
+    bool send_to_client(const std::string &message)
+    {
+        bool f = connections[0].Write(message);
+        kill(host_pid, SIGUSR1);
+        return f;
+    }
+
+    bool read_from_client(std::string &message)
+    {
+        return connections[1].Read(message);
+    }
+
+    bool send_to_client_general(const std::string &message)
+    {
+        bool f = connections[2].Write(message);
+        kill(host_pid, SIGUSR2);
+        return f;
+    }
+
+    bool read_from_client_general(std::string &message)
+    {
+        return connections[3].Read(message);
+    }
     // void start();
 };

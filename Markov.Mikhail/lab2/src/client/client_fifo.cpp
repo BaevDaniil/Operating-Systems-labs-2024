@@ -5,8 +5,9 @@ namespace
     using TempClient = Client<NamedChannel>;
     const bool identifier = false;
     const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
+    TempClient client = TempClient::get_instance(host_pid_path, identifier);
 }
-inline void client_signal_handler(int sig, siginfo_t *info, void *context)
+void client_signal_handler(int sig, siginfo_t *info, void *context)
 {
     std::cout << "signal was handled" << std::endl;
     static std::string msg;
@@ -15,13 +16,13 @@ inline void client_signal_handler(int sig, siginfo_t *info, void *context)
     {
     case SIGUSR1:
         std::cout << info->si_pid << std::endl;
-        TempClient::get_instance(host_pid_path, identifier).read_from_host(msg);
+        client.read_from_host(msg);
         std::cout << msg << std::endl;
         msg.clear();
         break;
     case SIGUSR2:
         std::cout << info->si_pid << std::endl;
-        TempClient::get_instance(host_pid_path, identifier).read_from_host_general(msg_general);
+        client.read_from_host_general(msg_general);
         std::cout << msg_general << std::endl;
         msg_general.clear();
         break;
@@ -35,9 +36,10 @@ int main()
 {
     std::cout << getpid() << std::endl;
 
-    TempClient client = TempClient::get_instance(host_pid_path, identifier);
     while(true)
     {
+        std::cout << client.send_to_host("abc") << std::endl;
+        sleep(1);
     }
     return 0;
 }
