@@ -37,7 +37,7 @@ bool ConnSocket::create_server_socket(int port) {
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = INADDR_ANY;
 
-  if (bind(socket_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+  if (bind(socket_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
     std::cerr << "Error binding socket\n";
     close();
     return false;
@@ -55,7 +55,7 @@ bool ConnSocket::create_server_socket(int port) {
 ConnSocket* ConnSocket::accept_connection() {
   sockaddr_in client_addr;
   socklen_t clientLen = sizeof(client_addr);
-  int client_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr, &clientLen);
+  int client_socket_fd = accept(socket_fd, (struct sockaddr*)&client_addr, &clientLen);
   if (client_socket_fd < 0) {
     std::cerr << "Error accepting connection\n";
     return new ConnSocket();
@@ -79,7 +79,7 @@ bool ConnSocket::connect_to_server(const std::string& address, int port) {
     return false;
   }
 
-  if (connect(socket_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+  if (connect(socket_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
     std::cerr << "Error connecting to server\n";
     close();
     return false;

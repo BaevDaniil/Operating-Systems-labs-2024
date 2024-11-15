@@ -101,7 +101,7 @@ void ChatWindow::read_msg() {
   }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
 
   ChatWindow window;

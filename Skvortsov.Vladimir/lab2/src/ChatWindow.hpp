@@ -14,7 +14,7 @@ class ChatWindow : public QMainWindow {
     Q_OBJECT
 
   public:
-    explicit ChatWindow(QWidget *parent = nullptr);
+    explicit ChatWindow(QWidget* parent = nullptr);
     ~ChatWindow();
 
   private slots:
