@@ -48,20 +48,24 @@ set(CLIENT_SOCKET_SRC_FILES
   src/conn_socket.cpp
 )
 
+set(GUI
+  src/ChatWindow.cpp
+)
+
 # Ensure Qt's moc is run on the ChatWindow header
 qt6_wrap_cpp(MOC_SOURCES src/ChatWindow.hpp)
 
 # Add executables for FIFO communication
-add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${MOC_SOURCES})
-add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES} ${MOC_SOURCES})
+add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})
+add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})
 
 # Add executables for Queue communication
-add_executable(host_queue ${HOST_QUEUE_SRC_FILES} ${MOC_SOURCES})
-add_executable(client_queue ${CLIENT_QUEUE_SRC_FILES} ${MOC_SOURCES})
+add_executable(host_queue ${HOST_QUEUE_SRC_FILES} ${GUI} ${MOC_SOURCES})
+add_executable(client_queue ${CLIENT_QUEUE_SRC_FILES} ${GUI} ${MOC_SOURCES})
 
 # Add executables for Socket communication
-add_executable(host_socket ${HOST_SOCKET_SRC_FILES} ${MOC_SOURCES})
-add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES} ${MOC_SOURCES})
+add_executable(host_socket ${HOST_SOCKET_SRC_FILES} ${GUI} ${MOC_SOURCES})
+add_executable(client_socket ${CLIENT_SOCKET_SRC_FILES} ${GUI} ${MOC_SOURCES})
 
 # Link Qt libraries to the GUI executable
 target_link_libraries(host_fifo Qt6::Widgets)
@@ -78,6 +82,5 @@ set_target_properties(host_queue PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BIN
 set_target_properties(client_queue PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(host_socket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(client_socket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
 # Custom target to build all
-add_custom_target(all_targets DEPENDS host_fifo client_fifo host_queue client_queue host_socket client_socket chat_gui)
+add_custom_target(all_targets DEPENDS host_fifo client_fifo host_queue client_queue host_socket client_socket)
