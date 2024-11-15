@@ -3,47 +3,46 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 
-ChatWindow::ChatWindow(QWidget *parent) : QMainWindow(parent) {
-  setupUi();
-}
+ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent) {
+  setup_ui();
+};
 
 ChatWindow::~ChatWindow() {
   // Здесь можно добавить код для очистки ресурсов, если необходимо
-}
+};
 
-void ChatWindow::setupUi() {
-  // Создаем центральный виджет и устанавливаем его в главное окно
-  QWidget *centralWidget = new QWidget(this);
-  setCentralWidget(centralWidget);
+void ChatWindow::setup_ui() {
+  QWidget* central_widget = new QWidget(this);
+  setCentralWidget(central_widget);
 
   // Создаем и настраиваем виджеты
-  chatDisplay = new QTextEdit(this);
-  chatDisplay->setReadOnly(true);
+  chat_display = new QTextEdit(this);
+  chat_display->setReadOnly(true);
 
-  messageInput = new QLineEdit(this);
+  msg_input = new QLineEdit(this);
 
-  sendButton = new QPushButton("Send", this);
+  send_btn = new QPushButton("Send", this);
 
   // Создаем и настраиваем компоновку
-  QVBoxLayout *mainLayout = new QVBoxLayout();
-  QHBoxLayout *inputLayout = new QHBoxLayout();
+  QVBoxLayout* mainLayout = new QVBoxLayout();
+  QHBoxLayout* inputLayout = new QHBoxLayout();
 
-  inputLayout->addWidget(messageInput);
-  inputLayout->addWidget(sendButton);
+  inputLayout->addWidget(msg_input);
+  inputLayout->addWidget(send_btn);
 
-  mainLayout->addWidget(chatDisplay);
+  mainLayout->addWidget(chat_display);
   mainLayout->addLayout(inputLayout);
 
-  centralWidget->setLayout(mainLayout);
+  central_widget->setLayout(mainLayout);
 
   // Подключаем сигнал нажатия кнопки к слоту отправки сообщения
-  connect(sendButton, &QPushButton::clicked, this, &ChatWindow::sendMessage);
+  connect(send_btn, &QPushButton::clicked, this, &ChatWindow::send_msg);
   // Также подключаем нажатие клавиши Enter в поле ввода к отправке сообщения
-  connect(messageInput, &QLineEdit::returnPressed, this, &ChatWindow::sendMessage);
+  connect(msg_input, &QLineEdit::returnPressed, this, &ChatWindow::send_msg);
 }
 
-void ChatWindow::sendMessage() {
-  QString message = messageInput->text().trimmed();
+void ChatWindow::send_msg() {
+  QString message = msg_input->text().trimmed();
   if (message.isEmpty()) {
     QMessageBox::warning(this, "Warning", "Cannot send an empty message.");
     return;
@@ -53,8 +52,8 @@ void ChatWindow::sendMessage() {
   // Например, через сокет, очередь сообщений или именованный канал
 
   // Отображаем отправленное сообщение в чате
-  chatDisplay->append("Me: " + message);
+  chat_display->append("Me: " + message);
 
   // Очищаем поле ввода
-  messageInput->clear();
+  msg_input->clear();
 }

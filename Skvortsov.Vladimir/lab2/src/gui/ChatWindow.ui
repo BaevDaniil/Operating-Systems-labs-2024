@@ -13,10 +13,10 @@
   <property name="windowTitle">
    <string>Chat Application</string>
   </property>
-  <widget class="QWidget" name="centralWidget">
+  <widget class="QWidget" name="central_widget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTextEdit" name="chatDisplay">
+     <widget class="QTextEdit" name="chat_display">
       <property name="readOnly">
        <bool>true</bool>
       </property>
@@ -25,10 +25,10 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLineEdit" name="messageInput"/>
+       <widget class="QLineEdit" name="msg_input" />
       </item>
       <item>
-       <widget class="QPushButton" name="sendButton">
+       <widget class="QPushButton" name="send_btn">
         <property name="text">
          <string>Send</string>
         </property>

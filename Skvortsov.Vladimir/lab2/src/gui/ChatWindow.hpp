@@ -16,14 +16,14 @@ public:
   ~ChatWindow();
 
 private slots:
-  void sendMessage();
+  void send_msg();
 
 private:
-  QTextEdit *chatDisplay; // Виджет для отображения чата
-  QLineEdit *messageInput; // Поле ввода сообщения
-  QPushButton *sendButton; // Кнопка отправки сообщения
+  QTextEdit* chat_display;
+  QLineEdit* msg_input;
+  QPushButton* send_btn;
 
-  void setupUi(); // Метод для настройки пользовательского интерфейса
+  void setup_ui();
 };
 
-#endif // CHATWINDOW_H
+#endif
