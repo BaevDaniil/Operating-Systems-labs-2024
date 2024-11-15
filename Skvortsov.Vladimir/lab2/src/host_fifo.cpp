@@ -12,6 +12,9 @@ void read_fifo(ConnFifo& fifo, pid_t pid) {
   while (true) {
     if (fifo.read(msg, max_size)) {
       std::cout << ">>> " << msg << std::endl;
+    } else {
+      std::cerr << "Client disconnected or error occurred\n";
+      break;
     }
   }
 };

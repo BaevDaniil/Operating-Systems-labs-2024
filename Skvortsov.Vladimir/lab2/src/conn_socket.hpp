@@ -21,17 +21,17 @@ class ConnSocket : public Conn {
     void close();
 
     bool operator != (const ConnSocket &other) const {
-        return this->sockfd != other.sockfd;
+      return this->socket_fd != other.socket_fd;
     };
     bool operator == (const ConnSocket &other) const {
-        return this->sockfd == other.sockfd;
+      return this->socket_fd == other.socket_fd;
     };
 
   private:
-    int sockfd;
+    int socket_fd;
     sockaddr_in addr;
 
-    ConnSocket(int sockfd, sockaddr_in addr);
+    ConnSocket(int socket_fd, sockaddr_in addr);
 };
 
 #endif

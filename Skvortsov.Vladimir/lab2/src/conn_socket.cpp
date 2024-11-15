@@ -5,41 +5,34 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-ConnSocket::ConnSocket() : sockfd(-1) {
+ConnSocket::ConnSocket() : socket_fd(-1) {
   memset(&addr, 0, sizeof(addr));
 };
 
-ConnSocket::ConnSocket(int sockfd, sockaddr_in addr) : sockfd(sockfd), addr(addr) {};
+ConnSocket::ConnSocket(int socket_fd, sockaddr_in addr) : socket_fd(socket_fd), addr(addr) {};
 
 ConnSocket::~ConnSocket() {
   close();
 };
 
 bool ConnSocket::create_server_socket(int port) {
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) {
+  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (socket_fd < 0) {
     std::cerr << "Error creating socket\n";
     return false;
   }
 
-  int opt = 1;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-    std::cerr << "Error setting socket options\n";
-    close();
-    return false;
-  }
-
   addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(port);
+  addr.sin_addr.s_addr = INADDR_ANY;
 
-  if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+  if (bind(socket_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     std::cerr << "Error binding socket\n";
     close();
     return false;
   }
 
-  if (listen(sockfd, SOMAXCONN) < 0) {
+  if (listen(socket_fd, 5) < 0) {
     std::cerr << "Error listening on socket\n";
     close();
     return false;
@@ -49,19 +42,19 @@ bool ConnSocket::create_server_socket(int port) {
 };
 
 ConnSocket ConnSocket::accept_connection() {
-  sockaddr_in clientAddr;
-  socklen_t clientLen = sizeof(clientAddr);
-  int clientSockfd = accept(sockfd, (struct sockaddr *)&clientAddr, &clientLen);
-  if (clientSockfd < 0) {
+  sockaddr_in client_addr;
+  socklen_t clientLen = sizeof(client_addr);
+  int client_socket_fd = accept(socket_fd, (struct sockaddr *)&client_addr, &clientLen);
+  if (client_socket_fd < 0) {
     std::cerr << "Error accepting connection\n";
     return ConnSocket();
   }
-  return ConnSocket(clientSockfd, clientAddr);
+  return ConnSocket(client_socket_fd, client_addr);
 }
 
-bool ConnSocket::connect_to_server(const std::string &address, int port) {
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd < 0) {
+bool ConnSocket::connect_to_server(const std::string& address, int port) {
+  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (socket_fd < 0) {
     std::cerr << "Error creating socket\n";
     return false;
   }
@@ -75,7 +68,7 @@ bool ConnSocket::connect_to_server(const std::string &address, int port) {
     return false;
   }
 
-  if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+  if (connect(socket_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     std::cerr << "Error connecting to server\n";
     close();
     return false;
@@ -90,7 +83,7 @@ bool ConnSocket::write(const std::string& msg) {
     return false;
   }
 
-  ssize_t bytes_written = send(sockfd, msg.c_str(), msg.size(), 0);
+  ssize_t bytes_written = send(socket_fd, msg.c_str(), msg.size(), 0);
   if (bytes_written < 0) {
     std::cerr << "Error sending msg\n";
     return false;
@@ -107,9 +100,11 @@ bool ConnSocket::read(std::string& msg, size_t max_size) {
   char buffer[max_size];
   memset(buffer, '\0', max_size);
 
-  ssize_t bytes_read = recv(sockfd, buffer, max_size - 1, 0);
-  if (bytes_read < 0) {
-    std::cerr << bytes_read << std::endl;
+  ssize_t bytes_read = recv(socket_fd, buffer, max_size - 1, 0);
+  if (bytes_read == 0) {
+    return false;
+  }
+  if (bytes_read == -1) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       std::cerr << "No msg available to read, try again later\n";
     } else if (errno == EINTR) {
@@ -120,17 +115,18 @@ bool ConnSocket::read(std::string& msg, size_t max_size) {
     }
     return false;
   }
+
   msg.assign(buffer, bytes_read);
   return true;
 };
 
 bool ConnSocket::is_valid() const {
-  return sockfd >= 0;
+  return socket_fd >= 0;
 };
 
 void ConnSocket::close() {
   if (is_valid()) {
-    ::close(sockfd);
-    sockfd = -1;
+    ::close(socket_fd);
+    socket_fd = -1;
   }
 };

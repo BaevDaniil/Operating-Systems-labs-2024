@@ -12,6 +12,9 @@ void read_queue(ConnQueue& queue, pid_t pid) {
   while (true) {
     if (queue.read(msg, max_size)) {
       std::cout << ">>> " << msg << std::endl;
+    } else {
+      std::cerr << "Client disconnected or error occurred\n";
+      break;
     }
   }
 };

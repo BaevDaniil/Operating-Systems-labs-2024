@@ -1,36 +1,45 @@
-#include <iostream>
+#include <unistd.h>
 #include <string>
+#include <iostream>
 #include <thread>
-#include <vector>
-#include <mutex>
-#include <algorithm> // For std::remove
-#include <unistd.h>  // For getpid()
 #include "conn_socket.hpp"
 
-const int PORT = 12345;
-std::vector<ConnSocket> clients;
-std::mutex clients_mutex;
+const int PORT = 8080;
 
-void handle_client(ConnSocket socket_client, pid_t host_pid) {
+void read_socket(ConnSocket& client_socket) {
   std::string msg;
   const size_t max_size = 1024;
 
   while (true) {
-    if (socket_client.read(msg, max_size)) {
+    if (client_socket.read(msg, max_size)) {
       std::cout << ">>> " << msg << std::endl;
+    } else {
+      std::cerr << "Client disconnected or error occurred\n";
+      break;
     }
-  }
-
-  socket_client.close();
-  {
-    std::lock_guard<std::mutex> lock(clients_mutex);
-    clients.erase(std::remove(clients.begin(), clients.end(), socket_client), clients.end());
   }
 }
 
-void write_to_clients(ConnSocket& serverSocket, pid_t host_pid) {
-  std::string msg;
+int main() {
+  pid_t pid = getpid();
 
+  ConnSocket server_socket;
+  if (!server_socket.create_server_socket(PORT)) {
+    std::cerr << "Error creating server socket\n";
+    return 1;
+  }
+
+  std::cout << "Server started on port " << PORT << " with PID: " << pid << std::endl;
+
+  ConnSocket client_socket = server_socket.accept_connection();
+  if (!client_socket.is_valid()) {
+    std::cerr << "Failed to accept a connection\n";
+    return 1;
+  }
+
+  std::thread reader(read_socket, std::ref(client_socket));
+
+  std::string msg;
   while (true) {
     std::getline(std::cin, msg);
 
@@ -38,46 +47,16 @@ void write_to_clients(ConnSocket& serverSocket, pid_t host_pid) {
       break;
     }
 
-    std::lock_guard<std::mutex> lock(clients_mutex);
-    for (auto &client : clients) {
-      if (client.is_valid()) {
-        if (!client.write(msg)) {
-          std::cerr << "Error sending message to client\n";
-        }
-      }
+    if (!client_socket.write(msg)) {
+      std::cerr << "Error sending message to client\n";
+      break;
     }
     std::cout << "<<< " << msg << std::endl;
   }
-}
 
-int main() {
-  pid_t pid = getpid();
+  reader.join();
 
-  ConnSocket serverSocket;
-  if (!serverSocket.create_server_socket(PORT)) {
-    std::cerr << "Error creating server socket\n";
-    return 1;
-  }
+  client_socket.close();
 
-  std::cout << "Server started on port " << PORT << " with PID: " << pid << std::endl;
-
-  std::thread writer(write_to_clients, std::ref(serverSocket), pid);
-
-  while (true) {
-    ConnSocket socket_client = serverSocket.accept_connection();
-    if (!socket_client.is_valid()) {
-      std::cerr << "Error accepting connection\n";
-      continue;
-    }
-
-    {
-      std::lock_guard<std::mutex> lock(clients_mutex);
-      clients.push_back(socket_client);
-    }
-
-    std::thread(handle_client, std::move(socket_client), pid).detach();
-  }
-
-  writer.join();
   return 0;
 }
