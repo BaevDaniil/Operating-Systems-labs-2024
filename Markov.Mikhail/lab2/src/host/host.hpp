@@ -34,4 +34,8 @@ public:
         static Host instance(pid_path, create);
         return instance;
     }
+    std::unordered_map<int, ClientInfo<T>>& get_table()
+    {
+        return table;
+    }
 };

@@ -9,17 +9,16 @@ class ClientInfo
 private: 
     int host_pid;
     int pid;
+    mutable std::shared_ptr<std::mutex> m_queue;
+    mutable std::shared_ptr<std::mutex> general_m_queue;
     // T host_to_client;
     // T client_to_host;
     // T host_to_client_general;
     // T client_to_host_general;
     std::vector<T> connections;
-    // std::atomic<int> message_count;
-    // std::atomic<int> general_message_count; // how much read actions
+
     std::queue<std::string> unwritten_messages;
     std::queue<std::string> general_unwritten_messages;
-    mutable std::shared_ptr<std::mutex> m_queue;
-    mutable std::shared_ptr<std::mutex> general_m_queue;
     std::chrono::time_point<std::chrono::steady_clock> time_point;
 
     bool pop_unwritten_message(std::string &msg)
@@ -46,7 +45,8 @@ private:
     }
 
 public:
-    ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid)
+    ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid), m_queue(std::make_shared<std::mutex>()),
+                                                            general_m_queue(std::make_shared<std::mutex>())
     {
         connections.emplace_back(T::make_filename(host_pid, pid), create);
         connections.emplace_back(T::make_filename(pid, host_pid), create);
@@ -67,7 +67,7 @@ public:
     {
         update_time();
         bool f = connections[0].Write(message);
-        kill(host_pid, SIGUSR1);
+        kill(pid, SIGUSR1);
         return f;
     }
 
@@ -81,7 +81,7 @@ public:
     {
         update_time();
         bool f = connections[2].Write(message);
-        kill(host_pid, SIGUSR2);
+        kill(pid, SIGUSR2);
         return f;
     }
 
@@ -102,7 +102,7 @@ public:
         std::lock_guard<std::mutex> m_lock(*general_m_queue);
         general_unwritten_messages.push(msg);
     }
-    std::future<bool> start()
+    void start()
     {   
         using namespace std::chrono_literals;
         auto func = [this]()
@@ -115,12 +115,14 @@ public:
                 f1 = pop_unwritten_message(msg);
                 if (f1)
                 {
+                    std::cout << "send_to_client" << std::endl;
                     send_to_client(msg);
                     msg.clear();
                 }
                 f2 = pop_general_unwritten_message(msg);
                 if (f2)
                 {
+                    std::cout << "send_to_client_general" << std::endl;
                     send_to_client_general(msg);
                     msg.clear();
                 }
@@ -131,10 +133,12 @@ public:
                         return true;
                     }
                 }
+                std::this_thread::sleep_for(100ms);
             }
-            std::this_thread::sleep_for(100ms);
+            return false;
         };
-        return std::async(std::launch::async, func);
+        std::thread(std::move(func)).detach();
+        return;
     }
 
     void update_time()

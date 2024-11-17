@@ -11,33 +11,41 @@ namespace
 
 void host_signal_handler(int sig, siginfo_t *info, void *context)
 {
+    try{
     std::cout << "signal was handled" << std::endl;
+    std::cout << "pid:" << info->si_pid << std::endl;
     if(!host.table.contains(info->si_pid))
     {
         host.table.emplace(info->si_pid, ClientInfo<NamedChannel>{getpid(), info->si_pid, identifier});
+        std::cout << "emplaced" << std::endl;
+        host.table[info->si_pid].start();
+        std::cout << "started" << std::endl;
         return;
     }
-    std::string msg = "a ";
-    std::string general_msg = "a ";
+    std::string msg = " ";
+    std::string general_msg = " ";
     bool f;
     demo_client_pid = info->si_pid;
     switch (sig)
     {
     case SIGUSR1:
-        std::cout << info->si_pid << std::endl;
+
         f = host.table[info->si_pid].read_from_client(msg);
         std::cout << msg <<"\nstatus: " << f<< std::endl;
         msg.clear();
         break;
     case SIGUSR2:
-        std::cout << info->si_pid << std::endl;
         f = host.table[info->si_pid].read_from_client_general(general_msg);
         std::cout << general_msg <<"\nstatus: " << f << std::endl;
         general_msg.clear();
         break;
     default : 
-        std::cout<< info->si_pid << std::endl;
         break;
+    }
+    }
+    catch(const std::exception& ex)
+    {
+        std::cout << ex.what() << std::endl;
     }
 }
 
@@ -46,7 +54,13 @@ int main()
     std::cout << getpid() << std::endl;
     while(true)
     {
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (host.get_table().contains(demo_client_pid))
+        {
+            std::cout << demo_client_pid << " : pid exist" << std::endl; 
+            host.get_table()[demo_client_pid].push_message("host_abc");
+            std::cout << demo_client_pid << " : push_message" << std::endl;
+        }
     }
     return 0;
 }

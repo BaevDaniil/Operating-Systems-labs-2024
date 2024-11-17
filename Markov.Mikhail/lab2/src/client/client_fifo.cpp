@@ -39,8 +39,8 @@ int main()
 
     while(true)
     {
-        std::cout << client.send_to_host("abc") << std::endl;
-        sleep(1);
+        std::cout <<"send to host: " <<  client.send_to_host("client_abc") << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     return 0;
 }
