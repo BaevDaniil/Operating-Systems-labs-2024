@@ -3,6 +3,7 @@
 namespace
 {
     using TempHost = Host<MessageQueue>;
+    using TempClientInfo = ClientInfo<MessageQueue>;
     const bool identifier = true;
     const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
@@ -15,7 +16,7 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     std::cout << "pid:" << info->si_pid << std::endl;
     if (!host.table.contains(info->si_pid))
     {
-        host.table.emplace(info->si_pid, ClientInfo<MessageQueue>{getpid(), info->si_pid, identifier});
+        host.table.emplace(info->si_pid, TempClientInfo{getpid(), info->si_pid, identifier});
         std::cout << "emplaced" << std::endl;
         host.table[info->si_pid].start();
         std::cout << "started" << std::endl;
