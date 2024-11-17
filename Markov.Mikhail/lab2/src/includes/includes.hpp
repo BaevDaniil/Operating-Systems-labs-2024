@@ -31,3 +31,8 @@
 #include <errno.h>
 #include <mqueue.h>
 #include <semaphore>
+#include <functional>
+#include <queue>
+#include <utility>
+#include <memory>
+#include <future>

@@ -25,6 +25,7 @@ void client_signal_handler(int sig, siginfo_t *info, void *context)
         client.read_from_host_general(msg_general);
         std::cout << msg_general << std::endl;
         msg_general.clear();
+        //TODO: receive message to all clients because of general chat
         break;
     default:
         std::cout << info->si_pid << std::endl;

@@ -6,6 +6,7 @@ namespace
     const bool identifier = true;
     const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
+    int demo_client_pid;
 }
 
 void host_signal_handler(int sig, siginfo_t *info, void *context)
@@ -13,12 +14,13 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     std::cout << "signal was handled" << std::endl;
     if(!host.table.contains(info->si_pid))
     {
-        host.table.insert({info->si_pid, ClientInfo<NamedChannel>{getpid(), info->si_pid, identifier}});
+        host.table.emplace(info->si_pid, ClientInfo<NamedChannel>{getpid(), info->si_pid, identifier});
         return;
     }
     std::string msg = "a ";
     std::string general_msg = "a ";
     bool f;
+    demo_client_pid = info->si_pid;
     switch (sig)
     {
     case SIGUSR1:
