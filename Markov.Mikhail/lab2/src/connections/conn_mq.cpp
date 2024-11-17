@@ -1,24 +1,37 @@
 #include "conn_mq.hpp"
 
-MessageQueue::MessageQueue(const std::string &id, bool create) : name(id)
+MessageQueue::MessageQueue(const std::string &id, bool create) : name("/queue_" + id), attr()
 {
-    std::filesystem::path path = std::filesystem::current_path() / "tmp" / id;
-    struct mq_attr attr;
     attr.mq_flags = 0;
     attr.mq_maxmsg = max_msg_count;
     attr.mq_msgsize = max_msg_size;
     attr.mq_curmsgs = 0;
-
-    mq = mq_open(path.c_str(), O_CREAT | O_RDWR, 0644, &attr);
+    std::cout << "start opening" << std::endl;
+    if (create)
+        mq = mq_open(name.c_str(), O_CREAT | O_RDWR | O_NONBLOCK, 0777, &attr);
+    else
+        mq = mq_open(name.c_str(), O_RDWR | O_NONBLOCK);
 
     if (mq == (mqd_t)-1)
+    {
+        std::cout << "Error opening message queue: " << strerror(errno) << std::endl;
         throw std::runtime_error("Error opening message queue");
+    }
+    std::cout << "end opening" << std::endl;
 }
 
 bool MessageQueue::Read(std::string& message)
 {
     char buffer[max_msg_size];
     memset(buffer, 0, sizeof(buffer));
+
+    mq = mq_open(name.c_str(), O_RDWR | O_NONBLOCK);
+
+    if (mq == (mqd_t)-1)
+    {
+        std::cout << "Error opening message queue: " << strerror(errno) << std::endl;
+        throw std::runtime_error("Error opening message queue");
+    }
 
     ssize_t bytesReceived = mq_receive(mq, buffer, sizeof(buffer), nullptr);
     if (bytesReceived == -1)
@@ -30,6 +43,14 @@ bool MessageQueue::Read(std::string& message)
 
 bool MessageQueue::Write(const std::string& message)
 {
+    mq = mq_open(name.c_str(), O_RDWR | O_NONBLOCK);
+
+    if (mq == (mqd_t)-1)
+    {
+        std::cout << "Error opening message queue: " << strerror(errno) << std::endl;
+        throw std::runtime_error("Error opening message queue");
+    }
+
     if (mq_send(mq, message.c_str(), message.size(), 0) == -1)
         return false;
     return true;

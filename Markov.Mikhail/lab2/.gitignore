@@ -5,3 +5,5 @@ local_chat
 tmp
 client_fifo
 host_fifo
+client_mq
+host_mq

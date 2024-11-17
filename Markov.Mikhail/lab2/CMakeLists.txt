@@ -6,3 +6,6 @@ project(local_chat VERSION 0.1.0 LANGUAGES C CXX)
 
 add_executable(client_fifo src/connections/conn_fifo.cpp src/client/client_fifo.cpp)
 add_executable(host_fifo src/connections/conn_fifo.cpp src/host/host_fifo.cpp)
+
+add_executable(client_mq src/connections/conn_mq.cpp src/client/client_mq.cpp)
+add_executable(host_mq src/connections/conn_mq.cpp src/host/host_mq.cpp)

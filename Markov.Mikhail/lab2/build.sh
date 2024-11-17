@@ -30,6 +30,10 @@ mv "$initial_dir/build/host_fifo" "$initial_dir/host_fifo"
 
 mv "$initial_dir/build/client_fifo" "$initial_dir/client_fifo"
 
+mv "$initial_dir/build/host_mq" "$initial_dir/host_mq"
+
+mv "$initial_dir/build/client_mq" "$initial_dir/client_mq"
+
 # rm -rf "$initial_dir/build"
 
 mkdir -p "$initial_dir/host"
@@ -39,8 +43,3 @@ rm -rf  "$initial_dir/tmp"
 mkdir "$initial_dir/tmp"
 
 touch "$initial_dir/host/host.txt"
-
-# "$initial_dir/host_main" 
-
-# "$initial_dir/client_main" 
-

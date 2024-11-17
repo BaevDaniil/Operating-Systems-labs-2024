@@ -5,6 +5,7 @@ class MessageQueue final : public Connection
 {
 private:
     std::string name;
+    struct mq_attr attr;
     const int max_msg_size = 1024;
     const int max_msg_count = 10;
     mqd_t mq;

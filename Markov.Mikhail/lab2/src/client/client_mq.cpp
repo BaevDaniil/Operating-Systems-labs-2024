@@ -2,7 +2,7 @@
 
 namespace
 {
-    using TempClient = Client<NamedChannel>;
+    using TempClient = Client<MessageQueue>;
     const bool identifier = false;
     const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
     TempClient client = TempClient::get_instance(host_pid_path, identifier);
@@ -36,9 +36,9 @@ int main()
 {
     std::cout << getpid() << std::endl;
 
-    while(true)
+    while (true)
     {
-        std::cout <<"send to host: " <<  client.send_to_host("client_abc") << std::endl;
+        std::cout << "send to host: " << client.send_to_host("client_abc") << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     return 0;
