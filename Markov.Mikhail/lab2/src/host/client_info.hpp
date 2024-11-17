@@ -20,7 +20,7 @@ private:
     std::queue<std::string> unwritten_messages;
     std::queue<std::string> general_unwritten_messages;
     std::chrono::time_point<std::chrono::steady_clock> time_point;
-
+    std::shared_ptr<std::jthread> worker;
     bool pop_unwritten_message(std::string &msg)
     {
         std::lock_guard<std::mutex> m_lock(*m_queue);
@@ -137,8 +137,7 @@ public:
             }
             return false;
         };
-        std::thread(std::move(func)).detach();
-        return;
+        worker = std::make_shared<std::jthread>(std::jthread(std::move(func)));
     }
 
     void update_time()
