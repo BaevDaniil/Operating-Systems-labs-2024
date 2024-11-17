@@ -1,11 +1,15 @@
+#ifdef USE_FIFO_FILE
+#include "fifo_names.hpp"
+#elif defined(USE_MQ_FILE)
 #include "mq_names.hpp"
+#endif
 
 using namespace host_namespace;
 
 namespace
 {
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
-    int demo_client_pid;// only for demo and testing
+    int demo_client_pid; // only for demo and testing
 }
 
 void host_signal_handler(int sig, siginfo_t *info, void *context)

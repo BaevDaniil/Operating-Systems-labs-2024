@@ -1,10 +1,9 @@
-#include "client.hpp"
+#include "mq_names.hpp"
+
+using namespace client_namespace;
 
 namespace
 {
-    using TempClient = Client<MessageQueue>;
-    const bool identifier = false;
-    const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
     TempClient client = TempClient::get_instance(host_pid_path, identifier);
 }
 void client_signal_handler(int sig, siginfo_t *info, void *context)

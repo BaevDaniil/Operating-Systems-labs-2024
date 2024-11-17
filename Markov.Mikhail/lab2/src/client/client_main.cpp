@@ -1,4 +1,8 @@
+#ifdef USE_FIFO_FILE
 #include "fifo_names.hpp"
+#elif defined(USE_MQ_FILE)
+#include "mq_names.hpp"
+#endif
 
 using namespace client_namespace;
 
@@ -35,9 +39,9 @@ int main()
 {
     std::cout << getpid() << std::endl;
 
-    while(true)
+    while (true)
     {
-        std::cout <<"send to host: " <<  client.send_to_host("client_abc") << std::endl;
+        std::cout << "send to host: " << client.send_to_host("client_abc") << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     return 0;

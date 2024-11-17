@@ -9,3 +9,8 @@ add_executable(host_fifo src/connections/conn_fifo.cpp src/host/host_fifo.cpp)
 
 add_executable(client_mq src/connections/conn_mq.cpp src/client/client_mq.cpp)
 add_executable(host_mq src/connections/conn_mq.cpp src/host/host_mq.cpp)
+
+# add_executable(host_mq src/connections/conn_mq.cpp src/connections/conn_fifo.cpp src/host/host_main.cpp)
+# target_compile_definitions(host_mq PRIVATE USE_MQ_FILE)
+# add_executable(host_fifo src/connections/conn_mq.cpp src/connections/conn_fifo.cpp src/host/host_main.cpp)
+# target_compile_definitions(host_fifo PRIVATE USE_FIFO_FILE)

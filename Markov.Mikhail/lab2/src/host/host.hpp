@@ -39,3 +39,9 @@ public:
         return table;
     }
 };
+
+namespace host_namespace
+{
+    const bool identifier = true;
+    const std::filesystem::path host_pid_path = std::filesystem::current_path() / "host/host.txt";
+}
