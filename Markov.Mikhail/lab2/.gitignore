@@ -7,3 +7,5 @@ client_fifo
 host_fifo
 client_mq
 host_mq
+client_shm
+host_shm
