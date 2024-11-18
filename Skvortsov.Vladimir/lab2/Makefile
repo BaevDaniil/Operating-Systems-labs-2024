@@ -7,11 +7,7 @@ QT_LIBS = `pkg-config --cflags --libs Qt5Widgets`
 
 # Исходные файлы
 SRC_DIR = src
-SRC_FILES = $(SRC_DIR)/host.cpp $(SRC_DIR)/client.cpp $(SRC_DIR)/conn_queue.cpp $(SRC_DIR)/conn_fifo.cpp $(SRC_DIR)/conn_socket.cpp
-
-# GUI файлы
-GUI_SRC_DIR = $(SRC_DIR)/gui
-GUI_SRC_FILES = $(GUI_SRC_DIR)/ChatWindow.cpp $(GUI_SRC_DIR)/main.cpp
+SRC_FILES = $(SRC_DIR)/host.cpp $(SRC_DIR)/client.cpp $(SRC_DIR)/conn_queue.cpp $(SRC_DIR)/conn_fifo.cpp $(SRC_DIR)/conn_socket.cpp $(SRC_DIR)/chat_window.cpp
 
 # Заголовочные файлы
 INCLUDE_DIR = include

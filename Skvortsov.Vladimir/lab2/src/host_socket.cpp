@@ -4,7 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include "conn_socket.hpp"
-#include "ChatWindow.hpp"
+#include "chat_window.hpp"
 
 const int PORT = 8080;
 

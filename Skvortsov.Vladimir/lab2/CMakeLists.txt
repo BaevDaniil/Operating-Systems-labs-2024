@@ -49,11 +49,11 @@ set(CLIENT_SOCKET_SRC_FILES
 )
 
 set(GUI
-  src/ChatWindow.cpp
+  src/chat_window.cpp
 )
 
 # Ensure Qt's moc is run on the ChatWindow header
-qt6_wrap_cpp(MOC_SOURCES src/ChatWindow.hpp)
+qt6_wrap_cpp(MOC_SOURCES src/chat_window.hpp)
 
 # Add executables for FIFO communication
 add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})

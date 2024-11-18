@@ -4,7 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include "conn_socket.hpp"
-#include "ChatWindow.hpp"
+#include "chat_window.hpp"
 
 const std::string SERVER_ADDRESS = "127.0.0.1";
 const int SERVER_PORT = 8080;

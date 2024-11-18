@@ -4,7 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include "conn_fifo.hpp"
-#include "ChatWindow.hpp"
+#include "chat_window.hpp"
 
 void ChatWindow::setup_conn() {
   pid_t pid = getpid();

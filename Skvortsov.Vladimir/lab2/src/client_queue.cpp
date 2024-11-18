@@ -4,7 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include "conn_queue.hpp"
-#include "ChatWindow.hpp"
+#include "chat_window.hpp"
 
 void ChatWindow::setup_conn() {
   std::ifstream pid_file("host_pid.txt");

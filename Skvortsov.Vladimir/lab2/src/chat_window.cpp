@@ -1,7 +1,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QTimer>
-#include "ChatWindow.hpp"
+#include "chat_window.hpp"
 
 ChatWindow::ChatWindow(QWidget* parent) : QMainWindow(parent), host_conn(nullptr), client_conn(nullptr) {
   setup_ui();
