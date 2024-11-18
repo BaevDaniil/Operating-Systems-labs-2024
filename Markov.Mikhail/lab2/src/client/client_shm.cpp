@@ -1,10 +1,4 @@
-#ifdef USE_FIFO_FILE
-#include "fifo_names.hpp"
-#elif defined(USE_MQ_FILE)
-#include "mq_names.hpp"
-#elif defined(USE_SHM_FILE)
 #include "shm_names.hpp"
-#endif
 
 using namespace client_namespace;
 

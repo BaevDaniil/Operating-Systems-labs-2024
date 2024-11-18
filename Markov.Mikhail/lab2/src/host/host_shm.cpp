@@ -1,10 +1,4 @@
-#ifdef USE_FIFO_FILE
-#include "fifo_names.hpp"
-#elif defined(USE_MQ_FILE)
-#include "mq_names.hpp"
-#elif defined(USE_SHM_FILE)
 #include "shm_names.hpp"
-#endif
 
 using namespace host_namespace;
 
@@ -33,7 +27,6 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     switch (sig)
     {
     case SIGUSR1:
-
         f = host.table[info->si_pid].read_from_client(msg);
         std::cout << msg << "\nstatus: " << f << std::endl;
         msg.clear();

@@ -124,11 +124,11 @@ public:
                     send_to_client_general(msg);
                     msg.clear();
                 }
-                if (std::chrono::steady_clock::now() - time_point > std::chrono::seconds(60))
-                {
-                    kill(pid, SIGKILL);
-                    return true;
-                }
+                // if (std::chrono::steady_clock::now() - time_point > std::chrono::seconds(60))
+                // {
+                //     kill(pid, SIGKILL);
+                //     return true;
+                // }
                 std::this_thread::sleep_for(100ms);
             }
             return false;

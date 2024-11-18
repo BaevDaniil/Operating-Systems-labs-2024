@@ -36,6 +36,10 @@ mv "$initial_dir/build/host_mq" "$initial_dir/host_mq"
 
 mv "$initial_dir/build/client_mq" "$initial_dir/client_mq"
 
+mv "$initial_dir/build/host_shm" "$initial_dir/host_shm"
+
+mv "$initial_dir/build/client_shm" "$initial_dir/client_shm"
+
 # rm -rf "$initial_dir/build"
 
 mkdir -p "$initial_dir/host"
