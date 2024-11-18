@@ -8,6 +8,8 @@ if ! command -v cmake &> /dev/null; then
     exit 1
 fi
 
+# sudo apt install qt6-base-dev libqt6gui6 libqt6widgets6 libqt6opengl6-dev
+
 mkdir -p "$initial_dir/build"
 
 cd "$initial_dir/build" || { echo "Failed to change to the build directory."; exit 1; }
