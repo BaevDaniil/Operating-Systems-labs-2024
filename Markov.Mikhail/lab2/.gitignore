@@ -1,7 +1,7 @@
 build
 local_chat
 .vscode
-./host
+host
 tmp
 client_fifo
 host_fifo
