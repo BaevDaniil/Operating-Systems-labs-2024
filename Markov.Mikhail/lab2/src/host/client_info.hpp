@@ -21,6 +21,7 @@ private:
     std::queue<std::string> general_unwritten_messages;
     std::chrono::time_point<std::chrono::steady_clock> time_point;
     std::shared_ptr<std::jthread> worker;
+    bool valid = true;
     bool pop_unwritten_message(std::string &msg)
     {
         std::lock_guard<std::mutex> m_lock(*m_queue);
@@ -56,12 +57,18 @@ public:
         if (semaphore == SEM_FAILED)
             throw std::runtime_error("Error to create a semaphore!");
         sem_post(semaphore);
+        update_time();
     }
     ClientInfo() = default;
     ClientInfo(const ClientInfo &) = default;
     ClientInfo &operator=(const ClientInfo &) = default;
     ClientInfo(ClientInfo &&) = default;
     ClientInfo &operator=(ClientInfo &&) = default;
+
+    bool is_valid()
+    {
+        return valid;
+    }
 
     bool send_to_client(const std::string &message)
     {
@@ -124,12 +131,13 @@ public:
                     send_to_client_general(msg);
                     msg.clear();
                 }
-                // if (std::chrono::steady_clock::now() - time_point > std::chrono::seconds(60))
-                // {
-                //     kill(pid, SIGKILL);
-                //     return true;
-                // }
-                std::this_thread::sleep_for(100ms);
+                if (std::chrono::steady_clock::now() - time_point > std::chrono::seconds(60))
+                {
+                    kill(pid, SIGKILL);
+                    valid = false;
+                    return true;
+                }
+                std::this_thread::sleep_for(10ms);
             }
             return false;
         };

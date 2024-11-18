@@ -18,12 +18,12 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
         std::cout << "emplaced" << std::endl;
         host.table[info->si_pid].start();
         std::cout << "started" << std::endl;
+        demo_client_pid = info->si_pid;
         return;
     }
     std::string msg = " ";
     std::string general_msg = " ";
     bool f;
-    demo_client_pid = info->si_pid;
     switch (sig)
     {
     case SIGUSR1:
@@ -48,12 +48,8 @@ int main()
     while (true)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        if (host.get_table().contains(demo_client_pid))
-        {
-            std::cout << demo_client_pid << " : pid exist" << std::endl;
-            host.get_table()[demo_client_pid].push_message("host_abc");
-            std::cout << demo_client_pid << " : push_message" << std::endl;
-        }
+        host.push_message(demo_client_pid , "host_abc");
+        std::cout << demo_client_pid << " : push_message" << std::endl;
     }
     return 0;
 }

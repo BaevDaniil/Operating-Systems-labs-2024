@@ -37,7 +37,7 @@ int main()
 
     while (true)
     {
-        std::cout << "send to host: " << client.send_to_host("client_abc") << std::endl;
+        std::cout << "send to host: " << client.send_to_host("client_abc") << std::endl; // comment to test client delete after 60 seconds
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     return 0;
