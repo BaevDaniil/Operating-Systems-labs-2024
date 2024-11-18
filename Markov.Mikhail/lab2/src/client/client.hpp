@@ -35,6 +35,10 @@ private:
         {
             throw std::runtime_error("Failed to register signal handler");
         }
+        if (sigaction(SIGUSR2, &signal_handler, nullptr) == -1)
+        {
+            throw std::runtime_error("Failed to register signal handler");
+        }
 
         kill(host_pid, SIGUSR1);
 

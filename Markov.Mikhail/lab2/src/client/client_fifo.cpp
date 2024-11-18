@@ -30,14 +30,12 @@ void client_signal_handler(int sig, siginfo_t *info, void *context)
         break;
     }
 }
-
 int main()
 {
     std::cout << getpid() << std::endl;
-
-    while(true)
+    while (true)
     {
-        std::cout <<"send to host: " <<  client.send_to_host("client_abc") << std::endl;
+        std::cout <<"send to host: " <<  client.send_to_host_general("client_abc") << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     return 0;

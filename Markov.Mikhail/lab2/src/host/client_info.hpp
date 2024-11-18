@@ -65,7 +65,6 @@ public:
 
     bool send_to_client(const std::string &message)
     {
-        update_time();
         bool f = connections[0].Write(message);
         kill(pid, SIGUSR1);
         return f;
@@ -79,7 +78,6 @@ public:
 
     bool send_to_client_general(const std::string &message)
     {
-        update_time();
         bool f = connections[2].Write(message);
         kill(pid, SIGUSR2);
         return f;
@@ -126,12 +124,10 @@ public:
                     send_to_client_general(msg);
                     msg.clear();
                 }
-                if (f1 || f2)
+                if (std::chrono::steady_clock::now() - time_point > std::chrono::seconds(60))
                 {
-                    if (std::chrono::steady_clock::now() - time_point > std::chrono::minutes(1))
-                    {
-                        return true;
-                    }
+                    kill(pid, SIGKILL);
+                    return true;
                 }
                 std::this_thread::sleep_for(100ms);
             }

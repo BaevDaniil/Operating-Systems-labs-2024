@@ -27,7 +27,6 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     switch (sig)
     {
     case SIGUSR1:
-
         f = host.table[info->si_pid].read_from_client(msg);
         std::cout << msg << "\nstatus: " << f << std::endl;
         msg.clear();
@@ -35,8 +34,8 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     case SIGUSR2:
         f = host.table[info->si_pid].read_from_client_general(general_msg);
         std::cout << general_msg << "\nstatus: " << f << std::endl;
+        host.send_message_to_all_clients_except_one(general_msg, info->si_pid);
         general_msg.clear();
-        // TODO: receive message to all clients because of general chat
         break;
     default:
         break;

@@ -10,7 +10,7 @@ class Host
 private:
     int pid;
     struct sigaction signal_handler;
-    std::unordered_map<int, ClientInfo<T>> table;
+    std::unordered_map<int, ClientInfo<T>> table; // TODO: add mutex to emplace into table
     friend void host_signal_handler(int, siginfo_t *, void *);
 
     Host(const std::string &pid_path, bool create) : pid(getpid()), table()
@@ -27,6 +27,10 @@ private:
         {
             throw std::runtime_error("Failed to register signal handler");
         }
+        if (sigaction(SIGUSR2, &signal_handler, nullptr) == -1)
+        {
+            throw std::runtime_error("Failed to register signal handler");
+        }
     }
 public:
     static Host &get_instance(const std::string &pid_path, bool create)
@@ -38,6 +42,19 @@ public:
     {
         return table;
     }
+
+    void send_message_to_all_clients_except_one(const std::string& msg, int except_pid)
+    {
+        for (auto&& [pid, client_info] : table)
+            if (pid != except_pid)
+                client_info.send_to_client_general(msg);
+    }
+
+    // ~Host()
+    // {
+    //     for (auto &&[pid, client_info] : table)
+    //         kill(pid, SIGKILL); // ctrl C <=> SIGINT does not call destructors. Needs another handler or GUI
+    // }
 };
 
 namespace host_namespace
