@@ -10,7 +10,7 @@ fi
 
 if ! command -v qmake6 &> /dev/null; then
     echo "qt6 is not installed. Please install qt6 and try again."
-    echo "try this: sudo apt install qt6-base-dev libqt6gui6 libqt6widgets6 libqt6opengl6-dev"
+    echo "try this: sudo apt install qt6-base-dev libqt6gui6 libqt6widgets6 libqt6opengl6-dev qt6-wayland"
     exit 1
 fi
 
@@ -53,3 +53,7 @@ rm -rf  "$initial_dir/tmp"
 mkdir "$initial_dir/tmp"
 
 touch "$initial_dir/host/host.txt"
+
+
+
+mv "$initial_dir/build/host_gui" "$initial_dir/host_gui"

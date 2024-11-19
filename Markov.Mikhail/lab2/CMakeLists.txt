@@ -6,7 +6,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Werror")
 set(CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake/Qt6")
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-
 add_executable(client_fifo src/connections/conn_fifo.cpp src/client/client_fifo.cpp)
 add_executable(host_fifo src/connections/conn_fifo.cpp src/host/host_fifo.cpp)
 
@@ -29,3 +28,8 @@ add_executable(host_shm src/connections/conn_shm.cpp src/host/host_shm.cpp)
 # target_compile_definitions(client_fifo PRIVATE USE_FIFO_FILE)
 # add_executable(client_shm src/connections/conn_shm.cpp src/client/client_main.cpp)
 # target_compile_definitions(client_shm PRIVATE USE_SHM_FILE)
+
+qt6_wrap_cpp(MOC_SOURCES src/host/host_gui.hpp)
+
+add_executable(host_gui src/host/host_gui.cpp  ${MOC_SOURCES})
+target_link_libraries(host_gui Qt6::Widgets)
