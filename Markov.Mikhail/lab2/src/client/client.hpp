@@ -42,7 +42,6 @@ private:
 
         kill(host_pid, SIGUSR1);
 
-        using namespace std::chrono_literals;
         sem_t *semaphore = sem_open((T::make_filename(host_pid, pid) + "_creation").c_str(), O_CREAT, 0777, 0);
         struct timespec tm;
         int s;
@@ -56,7 +55,7 @@ private:
         connections.emplace_back(T::make_filename(pid, host_pid), create);
         connections.emplace_back(T::make_general_filename(host_pid, pid), create);
         connections.emplace_back(T::make_general_filename(pid, host_pid), create);
-        
+
         sem_unlink(T::make_filename(host_pid, pid).c_str());
     }
 

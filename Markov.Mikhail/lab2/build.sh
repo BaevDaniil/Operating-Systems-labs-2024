@@ -8,7 +8,11 @@ if ! command -v cmake &> /dev/null; then
     exit 1
 fi
 
-# sudo apt install qt6-base-dev libqt6gui6 libqt6widgets6 libqt6opengl6-dev
+if ! command -v qmake6 &> /dev/null; then
+    echo "qt6 is not installed. Please install qt6 and try again."
+    echo "try this: sudo apt install qt6-base-dev libqt6gui6 libqt6widgets6 libqt6opengl6-dev"
+    exit 1
+fi
 
 mkdir -p "$initial_dir/build"
 
