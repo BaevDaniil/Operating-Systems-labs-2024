@@ -6,10 +6,16 @@ namespace
 {
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
     int demo_client_pid;
+    bool valid = true;
 }
 
 void host_signal_handler(int sig, siginfo_t *info, void *context)
 {
+    if(sig == SIGINT)
+    {
+        valid = false;
+        return;
+    }
     std::cout << "signal was handled" << std::endl;
     std::cout << "pid:" << info->si_pid << std::endl;
     if(!host.table.contains(info->si_pid))
@@ -46,11 +52,13 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
 int main()
 {
     std::cout << getpid() << std::endl;
-    while(true)
+    while(valid)
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         host.push_message(demo_client_pid, "host_abc");
         std::cout << demo_client_pid << " : push_message" << std::endl;
     }
+    host.stop();
+    std::cout << "END" << std::endl;
     return 0;
 }

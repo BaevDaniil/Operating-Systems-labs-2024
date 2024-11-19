@@ -12,6 +12,7 @@ private:
     struct sigaction signal_handler;
     std::unordered_map<int, ClientInfo<T>> table; // TODO: add mutex to emplace into table
     friend void host_signal_handler(int, siginfo_t *, void *);
+    friend void stop_host_signal_handler(int, siginfo_t *, void *);
 
     Host(const std::string &pid_path, bool create) : pid(getpid()), table()
     {
@@ -28,6 +29,10 @@ private:
             throw std::runtime_error("Failed to register signal handler");
         }
         if (sigaction(SIGUSR2, &signal_handler, nullptr) == -1)
+        {
+            throw std::runtime_error("Failed to register signal handler");
+        }
+        if (sigaction(SIGINT, &signal_handler, nullptr) == -1)
         {
             throw std::runtime_error("Failed to register signal handler");
         }
@@ -60,11 +65,7 @@ public:
                 client_info.send_to_client_general(msg);
     }
 
-    // ~Host()
-    // {
-    //     for (auto &&[pid, client_info] : table)
-    //         kill(pid, SIGKILL); // ctrl C <=> SIGINT does not call destructors. Needs another handler or GUI
-    // }
+    ~Host() = default;
 
     bool push_message(int pid, const std::string& msg)
     {
@@ -84,6 +85,15 @@ public:
             return true;
         }
         return false;
+    }
+
+    void stop()
+    {
+        for (auto &&[pid, client_info] : table)
+        {
+            kill(pid, SIGKILL);
+            client_info.stop();
+        }
     }
 };
 

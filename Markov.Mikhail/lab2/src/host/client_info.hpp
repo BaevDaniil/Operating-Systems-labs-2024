@@ -64,6 +64,7 @@ public:
     ClientInfo &operator=(const ClientInfo &) = default;
     ClientInfo(ClientInfo &&) = default;
     ClientInfo &operator=(ClientInfo &&) = default;
+    ~ClientInfo() = default;
 
     bool is_valid()
     {
@@ -115,7 +116,7 @@ public:
             std::string msg;
             bool f1;
             bool f2;
-            while(true)
+            while(valid)
             {
                 f1 = pop_unwritten_message(msg);
                 if (f1)
@@ -147,5 +148,12 @@ public:
     void update_time()
     {
         time_point = std::chrono::steady_clock::now();
+    }
+
+    void stop()
+    {
+        valid = false;
+        if (worker && (*worker).joinable())
+            (*worker).join();
     }
 };
