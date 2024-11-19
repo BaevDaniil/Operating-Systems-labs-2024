@@ -1,0 +1,3 @@
+/home/jeka/Рабочий стол/learning/labs/Operating-Systems-labs-2024/Romanchuk.Evgenii/build/CMakeFiles/daemon.dir
+/home/jeka/Рабочий стол/learning/labs/Operating-Systems-labs-2024/Romanchuk.Evgenii/build/CMakeFiles/edit_cache.dir
+/home/jeka/Рабочий стол/learning/labs/Operating-Systems-labs-2024/Romanchuk.Evgenii/build/CMakeFiles/rebuild_cache.dir
