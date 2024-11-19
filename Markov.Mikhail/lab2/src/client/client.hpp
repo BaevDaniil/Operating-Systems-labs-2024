@@ -44,11 +44,19 @@ private:
 
         using namespace std::chrono_literals;
         sem_t *semaphore = sem_open((T::make_filename(host_pid, pid) + "_creation").c_str(), O_CREAT, 0777, 0);
-        sem_wait(semaphore);
+        struct timespec tm;
+        int s;
+        if (clock_gettime(CLOCK_REALTIME, &tm) == -1)
+            throw std::runtime_error("Failed to get real time");
+        tm.tv_sec += 5;
+        while ((s = sem_timedwait(semaphore, &tm)) == -1 && errno == EINTR)
+            continue;
+
         connections.emplace_back(T::make_filename(host_pid, pid), create);
         connections.emplace_back(T::make_filename(pid, host_pid), create);
         connections.emplace_back(T::make_general_filename(host_pid, pid), create);
         connections.emplace_back(T::make_general_filename(pid, host_pid), create);
+        
         sem_unlink(T::make_filename(host_pid, pid).c_str());
     }
 
