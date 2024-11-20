@@ -33,3 +33,8 @@ qt6_wrap_cpp(MOC_SOURCES src/host/host_gui.hpp)
 
 add_executable(host_gui src/host/host_gui.cpp  ${MOC_SOURCES})
 target_link_libraries(host_gui Qt6::Widgets)
+
+qt6_wrap_cpp(MOC_SOURCES src/client/client_gui.hpp)
+
+add_executable(client_gui src/client/client_gui.cpp  ${MOC_SOURCES})
+target_link_libraries(client_gui Qt6::Widgets)

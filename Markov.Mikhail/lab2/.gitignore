@@ -9,3 +9,5 @@ client_mq
 host_mq
 client_shm
 host_shm
+host_gui
+client_gui
