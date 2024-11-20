@@ -27,7 +27,7 @@ bool GeneralFiles::Read(std::string &message)
 {
     char buffer[max_msg_size];
     memcpy(buffer, addr, max_msg_size);
-    message.assign(buffer, max_msg_size);
+    message.assign(buffer, strnlen(buffer, max_msg_size));
     return true;
 }
 
