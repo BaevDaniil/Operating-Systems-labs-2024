@@ -17,7 +17,6 @@ NamedChannel::NamedChannel(const std::string &name, bool create)
     }
 
     fd = open(pathname.c_str(), O_RDWR);
-    std::cout << "existence: " << std::filesystem::exists(pathname) << std::endl;
     if (fd == -1)
     {
         std::cout << pathname << " " << std::strerror(errno) << std::endl;

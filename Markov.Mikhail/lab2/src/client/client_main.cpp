@@ -17,7 +17,6 @@ namespace
 }
 void client_signal_handler(int sig, siginfo_t *info, void *context)
 {
-    std::cout << "signal was handled" << std::endl;
     static std::string msg;
     static std::string msg_general;
     if (!mainwindow_pointer)
@@ -25,21 +24,16 @@ void client_signal_handler(int sig, siginfo_t *info, void *context)
     switch (sig)
     {
     case SIGUSR1:
-        std::cout << info->si_pid << std::endl;
         client.read_from_host(msg);
-        std::cout << msg << std::endl;
         mainwindow_pointer->set_msg_to_chat(msg);
         msg.clear();
         break;
     case SIGUSR2:
-        std::cout << info->si_pid << std::endl;
         client.read_from_host_general(msg_general);
-        std::cout << "general: " << msg_general << std::endl;
         mainwindow_pointer->set_msg_to_general_chat(msg_general);
         msg_general.clear();
         break;
     default:
-        std::cout << info->si_pid << std::endl;
         break;
     }
 }

@@ -6,7 +6,6 @@ MessageQueue::MessageQueue(const std::string &id, bool create) : name("/queue_" 
     attr.mq_maxmsg = max_msg_count;
     attr.mq_msgsize = max_msg_size;
     attr.mq_curmsgs = 0;
-    std::cout << "start opening" << std::endl;
     if (create)
         mq = mq_open(name.c_str(), O_CREAT | O_RDWR | O_NONBLOCK, 0777, &attr);
     else
@@ -17,7 +16,6 @@ MessageQueue::MessageQueue(const std::string &id, bool create) : name("/queue_" 
         std::cout << "Error opening message queue: " << strerror(errno) << std::endl;
         throw std::runtime_error("Error opening message queue");
     }
-    std::cout << "end opening" << std::endl;
 }
 
 bool MessageQueue::Read(std::string& message)

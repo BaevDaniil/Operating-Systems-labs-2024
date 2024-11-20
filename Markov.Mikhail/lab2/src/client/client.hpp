@@ -22,9 +22,7 @@ private:
         std::fstream file(host_pid_path);
         if (!file)
             throw std::runtime_error("No config file" + std::string(std::filesystem::absolute(host_pid_path)));
-        std::cout << "File opened successfully." << std::endl;
         file >> host_pid;
-        std::cout << "Host PID: " << host_pid << std::endl;
         file.close();
         pid = getpid();
 

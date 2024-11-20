@@ -121,14 +121,12 @@ public:
                 f1 = pop_unwritten_message(msg);
                 if (f1)
                 {
-                    std::cout << "send_to_client" << std::endl;
                     send_to_client(msg);
                     msg.clear();
                 }
                 f2 = pop_general_unwritten_message(msg);
                 if (f2)
-                {
-                    std::cout << "send_to_client_general" << std::endl;
+                { 
                     send_to_client_general(msg);
                     msg.clear();
                 }

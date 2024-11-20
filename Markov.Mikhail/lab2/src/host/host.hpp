@@ -21,7 +21,6 @@ private:
             throw std::runtime_error("No config file: " + std::string(std::filesystem::absolute(pid_path)));
         file << pid;
         file.close();
-        std::cout << "file closed" << std::endl;
         signal_handler.sa_sigaction = host_signal_handler;
         signal_handler.sa_flags = SA_SIGINFO;
         if (sigaction(SIGUSR1, &signal_handler, nullptr) == -1)
@@ -41,7 +40,6 @@ private:
         if (!table[pid].is_valid())
         {
             table.erase(pid);
-            std::cout <<"delete client with pid: " << pid << std::endl; 
             return false;
         }
         return true;
@@ -75,7 +73,6 @@ public:
         for (auto &&[pid, client_info] : table)
             if (is_client_info_valid(pid))
             {
-                std::cout << "pushed to general msg " << msg << std::endl;
                 client_info.push_general_message(msg);
             }
             else
@@ -85,7 +82,6 @@ public:
 
     ~Host() 
     {
-        std::cout << "host destr" << std::endl;
         stop();
     }
 
