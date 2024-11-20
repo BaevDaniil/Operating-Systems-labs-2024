@@ -47,7 +47,7 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
         break;
     case SIGUSR2:
         f = host.table[info->si_pid].read_from_client_general(general_msg);
-        std::cout << general_msg << "\nstatus: " << f << std::endl;
+        std::cout << "general: " << general_msg << "\nstatus: " << f << std::endl;
         mainwindow_pointer->set_msg_to_general_chat(general_msg);
         host.send_message_to_all_clients_except_one(general_msg, info->si_pid);
         general_msg.clear();
@@ -59,13 +59,17 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
 
 void MainWindow::send_msg_to_all_clients(const std::string &msg)
 {
-    host.push_message_to_all_clients(msg);
+    std::vector<int> invalid_pids = host.push_message_to_all_clients(msg);
+    for (int i : invalid_pids)
+        remove_client(i);
 }
 
 void ChatWindow::send_msg(const std::string &msg)
 {
-    set_text(msg);
-    host.push_message(this->pid, msg);
+    set_text("my: " + msg);
+    bool f = host.push_message(this->pid, msg);
+    if (!f)
+        valid = false;
 }
 
 int main(int argc, char *argv[])

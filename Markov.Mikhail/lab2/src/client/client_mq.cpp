@@ -1,10 +1,13 @@
 #include "mq_names.hpp"
 
+#include "client_gui.hpp"
+
 using namespace client_namespace;
 
 namespace
 {
     TempClient client = TempClient::get_instance(host_pid_path, identifier);
+    ClientMainWindow *mainwindow_pointer;
 }
 void client_signal_handler(int sig, siginfo_t *info, void *context)
 {
@@ -17,12 +20,14 @@ void client_signal_handler(int sig, siginfo_t *info, void *context)
         std::cout << info->si_pid << std::endl;
         client.read_from_host(msg);
         std::cout << msg << std::endl;
+        mainwindow_pointer->set_msg_to_chat(msg);
         msg.clear();
         break;
     case SIGUSR2:
         std::cout << info->si_pid << std::endl;
         client.read_from_host_general(msg_general);
-        std::cout << msg_general << std::endl;
+        std::cout << "general: " << msg_general << std::endl;
+        mainwindow_pointer->set_msg_to_general_chat(msg_general);
         msg_general.clear();
         break;
     default:
@@ -31,14 +36,24 @@ void client_signal_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
-int main()
+void ClientMainWindow::send_msg_to_general_chat(const std::string &msg)
 {
-    std::cout << getpid() << std::endl;
+    client.send_to_host_general(msg);
+}
 
-    while (true)
-    {
-        std::cout << "send to host: " << client.send_to_host("client_abc") << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    return 0;
+void ClientMainWindow::send_msg_to_chat(const std::string &msg)
+{
+    client.send_to_host(msg);
+}
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+
+    ClientMainWindow window;
+    mainwindow_pointer = &window;
+
+    window.show();
+
+    return app.exec();
 }

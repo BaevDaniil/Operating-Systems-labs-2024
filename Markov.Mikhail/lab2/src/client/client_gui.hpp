@@ -73,7 +73,7 @@ public:
 
         QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
         mainLayout->addWidget(splitter);
-        setWindowTitle("Chat Application");
+        setWindowTitle("Client chat Application");
         resize(1200, 900);
         connect(SendButton, &QPushButton::clicked, this, [this]()
         {
