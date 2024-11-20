@@ -76,15 +76,17 @@ public:
         setWindowTitle("Chat Application");
         resize(1200, 900);
         connect(SendButton, &QPushButton::clicked, this, [this]()
-                {
+        {
             std::string msg = InputField->text().toStdString();
             set_msg_to_chat("my: " + msg);
-            send_msg_to_chat(msg); });
+            send_msg_to_chat(msg); 
+        });
         connect(generalSendButton, &QPushButton::clicked, this, [this]()
-                {
+        {
             std::string msg = generalInputField->text().toStdString();
             set_msg_to_general_chat("my: " + msg);
-            send_msg_to_general_chat(msg); });
+            send_msg_to_general_chat(msg); 
+        });
     }
     ClientMainWindow(int client_pid, QWidget *parent = nullptr) : ClientMainWindow(parent)
     {
@@ -118,9 +120,10 @@ public:
 
     void send_msg_to_general_chat(const std::string &msg)
     {
+        //skip
     }
     void send_msg_to_chat(const std::string &msg)
     {
-
+        //skip
     }
 };
