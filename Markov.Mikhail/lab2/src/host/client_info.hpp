@@ -45,6 +45,20 @@ private:
         return true;
     }
 
+    bool send_to_client(const std::string &message)
+    {
+        bool f = connections[0].Write(message);
+        kill(pid, SIGUSR1);
+        return f;
+    }
+
+    bool send_to_client_general(const std::string &message)
+    {
+        bool f = connections[2].Write(message);
+        kill(pid, SIGUSR2);
+        return f;
+    }
+
 public:
     ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid), m_queue(std::make_shared<std::mutex>()),
                                                             general_m_queue(std::make_shared<std::mutex>())
@@ -71,24 +85,10 @@ public:
         return valid;
     }
 
-    bool send_to_client(const std::string &message)
-    {
-        bool f = connections[0].Write(message);
-        kill(pid, SIGUSR1);
-        return f;
-    }
-
     bool read_from_client(std::string &message)
     {
         update_time();
         return connections[1].Read(message);
-    }
-
-    bool send_to_client_general(const std::string &message)
-    {
-        bool f = connections[2].Write(message);
-        kill(pid, SIGUSR2);
-        return f;
     }
 
     bool read_from_client_general(std::string &message)

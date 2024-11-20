@@ -53,9 +53,3 @@ rm -rf  "$initial_dir/tmp"
 mkdir "$initial_dir/tmp"
 
 touch "$initial_dir/host/host.txt"
-
-
-
-mv "$initial_dir/build/host_gui" "$initial_dir/host_gui"
-
-mv "$initial_dir/build/client_gui" "$initial_dir/client_gui"

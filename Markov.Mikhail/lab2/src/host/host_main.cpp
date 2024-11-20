@@ -5,14 +5,15 @@
 #elif defined(USE_SHM_FILE)
 #include "shm_names.hpp"
 #endif
+#include "host_gui.hpp"
 
 using namespace host_namespace;
 
 namespace
 {
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
-    int demo_client_pid; // only for demo and testing
     bool valid = true;
+    MainWindow *mainwindow_pointer;
 }
 
 void host_signal_handler(int sig, siginfo_t *info, void *context)
@@ -30,7 +31,7 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
         std::cout << "emplaced" << std::endl;
         host.table[info->si_pid].start();
         std::cout << "started" << std::endl;
-        demo_client_pid = info->si_pid;
+        mainwindow_pointer->add_client(info->si_pid);
         return;
     }
     std::string msg = " ";
@@ -39,14 +40,15 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     switch (sig)
     {
     case SIGUSR1:
-
         f = host.table[info->si_pid].read_from_client(msg);
         std::cout << msg << "\nstatus: " << f << std::endl;
+        mainwindow_pointer->set_msg_to_chat(info->si_pid, msg);
         msg.clear();
         break;
     case SIGUSR2:
         f = host.table[info->si_pid].read_from_client_general(general_msg);
         std::cout << general_msg << "\nstatus: " << f << std::endl;
+        mainwindow_pointer->set_msg_to_general_chat(general_msg);
         host.send_message_to_all_clients_except_one(general_msg, info->si_pid);
         general_msg.clear();
         break;
@@ -55,16 +57,25 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
-int main()
+void MainWindow::send_msg_to_all_clients(const std::string &msg)
 {
-    std::cout << getpid() << std::endl;
-    while (valid)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        host.push_message(demo_client_pid, "host_abc");
-        std::cout << demo_client_pid << " : push_message" << std::endl;
-    }
-    host.stop();
-    std::cout << "END" << std::endl;
-    return 0;
+    host.push_message_to_all_clients(msg);
+}
+
+void ChatWindow::send_msg(const std::string &msg)
+{
+    set_text(msg);
+    host.push_message(this->pid, msg);
+}
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+
+    MainWindow window;
+    mainwindow_pointer = &window;
+
+    window.show();
+
+    return app.exec();
 }

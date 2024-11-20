@@ -118,12 +118,6 @@ public:
         generalChatDisplay->append(QString::fromStdString(msg));
     }
 
-    void send_msg_to_general_chat(const std::string &msg)
-    {
-        //skip
-    }
-    void send_msg_to_chat(const std::string &msg)
-    {
-        //skip
-    }
+    void send_msg_to_general_chat(const std::string &msg);
+    void send_msg_to_chat(const std::string &msg);
 };

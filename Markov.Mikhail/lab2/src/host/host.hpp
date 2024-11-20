@@ -58,11 +58,29 @@ public:
         return instance;
     }
 
-    void send_message_to_all_clients_except_one(const std::string& msg, int except_pid)
+    std::vector<int> send_message_to_all_clients_except_one(const std::string& msg, int except_pid)
     {
+        std::vector<int> invalid_pids;
         for (auto&& [pid, client_info] : table)
             if (is_client_info_valid(pid) && pid != except_pid)
-                client_info.send_to_client_general(msg);
+                client_info.push_general_message(msg);
+            else    
+                invalid_pids.push_back(pid);
+        return invalid_pids;
+    }
+
+    std::vector<int> push_message_to_all_clients(const std::string& msg)
+    {
+        std::vector<int> invalid_pids;
+        for (auto &&[pid, client_info] : table)
+            if (is_client_info_valid(pid))
+            {
+                std::cout << "pushed to general msg " << msg << std::endl;
+                client_info.push_general_message(msg);
+            }
+            else
+                invalid_pids.push_back(pid);
+        return invalid_pids;
     }
 
     ~Host() = default;
@@ -72,16 +90,6 @@ public:
         if(is_client_info_valid(pid))
         {
             table[pid].push_message(msg);
-            return true;
-        }
-        return false;
-    }
-
-    bool push_general_message(int pid, const std::string &msg)
-    {
-        if (is_client_info_valid(pid))
-        {
-            table[pid].push_general_message(msg);
             return true;
         }
         return false;
