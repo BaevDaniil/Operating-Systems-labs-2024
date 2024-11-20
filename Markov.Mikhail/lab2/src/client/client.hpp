@@ -60,6 +60,12 @@ private:
     }
 
 public:
+    Client(const Client &) = delete;
+    Client &operator=(const Client &) = delete;
+    Client(Client &&) = delete;
+    Client &operator=(Client &&) = delete;
+    ~Client() = default;
+
     friend void client_signal_handler(int, siginfo_t *, void *);
     static Client& get_instance(const std::string &host_pid_path, bool create = false)
     {

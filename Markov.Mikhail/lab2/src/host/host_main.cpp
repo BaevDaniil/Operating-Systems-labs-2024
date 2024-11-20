@@ -11,7 +11,7 @@ using namespace host_namespace;
 
 namespace
 {
-    TempHost host = TempHost::get_instance(host_pid_path, identifier);
+    TempHost& host = TempHost::get_instance(host_pid_path, identifier);
     MainWindow *mainwindow_pointer;
 }
 

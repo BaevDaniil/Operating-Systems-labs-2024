@@ -12,7 +12,7 @@ using namespace client_namespace;
 
 namespace
 {
-    TempClient client = TempClient::get_instance(host_pid_path, identifier);
+    TempClient& client = TempClient::get_instance(host_pid_path, identifier);
     ClientMainWindow *mainwindow_pointer;
 }
 void client_signal_handler(int sig, siginfo_t *info, void *context)

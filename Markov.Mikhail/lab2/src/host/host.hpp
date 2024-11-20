@@ -48,6 +48,10 @@ private:
     }
 
 public:
+    Host(const Host &) = delete;
+    Host &operator=(const Host &) = delete;
+    Host(Host &&) = delete;
+    Host &operator=(Host &&) = delete;
     static Host &get_instance(const std::string &pid_path, bool create)
     {
         static Host instance(pid_path, create);
