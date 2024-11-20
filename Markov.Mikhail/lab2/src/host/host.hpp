@@ -32,10 +32,6 @@ private:
         {
             throw std::runtime_error("Failed to register signal handler");
         }
-        if (sigaction(SIGINT, &signal_handler, nullptr) == -1)
-        {
-            throw std::runtime_error("Failed to register signal handler");
-        }
     }
 
     bool is_client_info_valid(int pid)
@@ -83,7 +79,11 @@ public:
         return invalid_pids;
     }
 
-    ~Host() = default;
+    ~Host() 
+    {
+        std::cout << "host destr" << std::endl;
+        stop();
+    }
 
     bool push_message(int pid, const std::string& msg)
     {

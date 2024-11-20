@@ -12,17 +12,13 @@ using namespace host_namespace;
 namespace
 {
     TempHost host = TempHost::get_instance(host_pid_path, identifier);
-    bool valid = true;
     MainWindow *mainwindow_pointer;
 }
 
 void host_signal_handler(int sig, siginfo_t *info, void *context)
 {
-    if (sig == SIGINT)
-    {
-        valid = false;
+    if (!mainwindow_pointer)
         return;
-    }
     std::cout << "signal was handled" << std::endl;
     std::cout << "pid:" << info->si_pid << std::endl;
     if (!host.table.contains(info->si_pid))

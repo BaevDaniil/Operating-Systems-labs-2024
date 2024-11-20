@@ -20,6 +20,8 @@ void client_signal_handler(int sig, siginfo_t *info, void *context)
     std::cout << "signal was handled" << std::endl;
     static std::string msg;
     static std::string msg_general;
+    if (!mainwindow_pointer)
+        return;
     switch (sig)
     {
     case SIGUSR1:
