@@ -4,4 +4,26 @@ project(DamirAsanov)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
-add_executable(DamirAsanov main.cpp)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
+set(CMAKE_AUTOMOC ON) # for Q_OBJECT
+
+set(SOURCES_SOCK
+    host_sock.cpp
+    HostUtils/HostWindow.cpp
+    ClientUtils/ClientWindow.cpp
+    conn_sock.cpp
+    semaphore.cpp
+)
+
+set(HEADERS_SOCK
+    HostUtils/HostWindow.hpp
+    ClientUtils/ClientWindow.hpp
+    conn_sock.hpp
+    semaphore.hpp
+    logger.hpp
+)
+
+add_executable(host_sock ${SOURCES_SOCK} ${HEADERS_SOCK})
+target_link_libraries(host_sock Qt5::Widgets)
+target_include_directories(host_sock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
