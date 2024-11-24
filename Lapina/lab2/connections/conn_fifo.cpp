@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, Type type) {
-    return std::make_unique<ConnFifo>(hostPid, type);
+std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
+    return std::make_unique<ConnFifo>(hostPid, clientPid, type);
 }
 
-ConnFifo::ConnFifo(pid_t hostPid, Type type) : hostPid(hostPid), type(type) {
-    path = "/tmp/fifo" + std::to_string(hostPid);
+ConnFifo::ConnFifo(pid_t hostPid, pid_t clientPid, Type type) : hostPid(hostPid), clientPid(clientPid), type(type) {
+    path = "/tmp/fifo" + std::to_string(hostPid)+std::to_string(clientPid);
 }
 
 bool ConnFifo::Open() {

@@ -9,13 +9,14 @@
 class ConnMq : public Connection {
 private:
     pid_t hostPid;
+    pid_t clientPid;
     Type type;
     std::string path;
     mqd_t mqd;
     static constexpr int msgSize = 64;
 public:
     
-    ConnMq(pid_t hostPid, Type type);
+    ConnMq(pid_t hostPid, pid_t clientPid, Type type);
     
     virtual bool Open() override;
     virtual bool Read(void* buf, size_t count) override;

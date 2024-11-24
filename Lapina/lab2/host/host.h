@@ -4,8 +4,10 @@
 #include <atomic>
 #include <csignal>
 #include <sys/stat.h>
+#include <memory>
 
 #include "../utilsConfigurations/safeMap.h"
+#include "../utilsConfigurations/safeVector.h"
 #include "../utilsConfigurations/gameWorld.h"
 #include "goatHandler.h"
 
@@ -23,24 +25,25 @@ public:
 
     void HostSignalHandler(int signum, siginfo_t *si, void *data);
     void Terminate() noexcept;
+    void runHost();
     
 //public slots:
-    void wolfGame();
+    void wolfAndGoatGame();
 
 private:
     struct Wolf
     {
         int minNumber=1;
-        int maxNumber=100;
-        std::atomic<bool> isRandomNumber;
+        int maxNumber=101;
+        std::atomic<bool> isRandomNumber = true;
         std::atomic<int> wolfNumber;
 
-        int genRandomNumber();
+        void genRandomNumber();
     }
 
     Wolf wolfInstance;
-
-    SafeMap<pid_t, goatHandler> goats;
+    std::shared_ptr<GameWorld> gameW;
+    SafeMap<pid_t, std::shared_ptr<goatHandler>> goats;
 }
 
 #endif

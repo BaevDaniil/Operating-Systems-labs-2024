@@ -3,13 +3,14 @@
 #include <string>
 #include <unistd.h>
 
-std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, Type type) {
-    return std::make_unique<ConnSock>(hostPid, type);
+std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
+    return std::make_unique<ConnSock>(hostPid, clientPid, type);
 }
 
-ConnSock::ConnSock(pid_t hostPid, Type type) : hostPid(hostPid), type(type) {
+ConnSock::ConnSock(pid_t hostPid, pid_t clientPid, Type type) : hostPid(hostPid), clientPid(clientPid), type(type) 
+{
     addr.sun_family = AF_UNIX;
-    std::string sock_path = ("/tmp/socket" + std::to_string(hostPid)).c_str();
+    std::string sock_path = ("/tmp/socket" + std::to_string(hostPid)+std::to_string(clientPid)).c_str();
     strcpy(addr.sun_path, sock_path.c_str());
     addrLen = sizeof(addr);
 

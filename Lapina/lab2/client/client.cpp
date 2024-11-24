@@ -1,5 +1,40 @@
 #include "client.h"
 
+#include <sys/syslog.h>
+#include <csignal>
+#include <ctime>
+#include <thread>
+#include <chrono>
+#include <string>
+#include <semaphore.h>
+#include <fcntl.h>
+
+int main(int argc, char* argv[]) 
+{
+    openlog("lab2_client", LOG_PID | LOG_NDELAY | LOG_PERROR, LOG_USER);
+
+    pid_t hostPid;
+    if (argc != 2) {
+        std::cout << "Wrong number of arguments. Host pid required.\n";
+        return EXIT_FAILURE;
+    }
+    try {
+        hostPid = std::atoi(argv[1]);
+    }
+    catch (...) {
+        std::cout << "Wrong type of argument. Host pid must be integer number.\n";
+        return EXIT_FAILURE;
+    }
+
+    Client client(hostPid);
+    client.Run();
+
+    syslog(LOG_INFO, "End goat %d\n", getpid());
+    closelog();
+
+    return EXIT_SUCCESS;
+}
+
 
 Client::Client(pid_t HostPid) 
 {
@@ -8,7 +43,7 @@ Client::Client(pid_t HostPid)
 
     syslog(LOG_INFO, "Get connection for %d", int(hostPid));
     try {
-        connect = std::make_unique<Connection>(Conn::GetConn(hostPid, Conn::Type::CLIENT));
+        connect = std::make_unique<Connection>(Conn::GetConn(hostPid, getpid(); Conn::Type::CLIENT));
     }
     catch (std::exception &e) {
         syslog(LOG_ERR, "Connection getting error");
@@ -40,17 +75,17 @@ Client::Client(pid_t HostPid)
 void Client::signalHandler(int sig) {
     switch (sig) {
         case SIGTERM:
-            Client::terminate();
+            Client::Terminate();
             break;
         default:
             syslog(LOG_ERR, "Unknown signal");
     }
 }
 
-void Client::terminate() noexcept 
+void Client::Terminate() noexcept 
 {
-    if (!_isTerminated) {
-        _isTerminated = true;
+    if (!clientTerminated) {
+        clientTerminated = true;
         syslog(LOG_INFO, "Terminating client");
     }
 }
@@ -64,7 +99,7 @@ bool Client::openConnection(void)
     do {
         conn_status = conn->Open();
         t2 = time(nullptr);
-    } while (!conn_status && difftime(t1, t2) < connTimeout);
+    } while (!conn_status && difftime(t1, t2) < connTimeOut);
     return conn_status;
 }
 
@@ -93,7 +128,7 @@ void Client::run(void){
             syslog(LOG_ERR, "Could not get state. Terminate");
             exit(EXIT_FAILURE);
         }
-    } while(state != goatStatus::FINISH);
+    } while(state != goatStatus::FINISH || !clientTerminated);
 
     syslog(LOG_INFO, "Finish goat %d", getpid());
     conn->Close();
@@ -110,7 +145,7 @@ bool Client::getStatus(void)
 
     if (sem_timedwait(semRead, &ts) == -1)
         return false;
-    bool statusRead = conn->Read(reinterpret_cast<void *>(&state), sizeof(state));
+    bool statusRead = conn->Read(&state, sizeof(state));
     if (statusRead) {
         std::string stateStr = "Alive";
         if (state == State::DEAD)
@@ -125,7 +160,7 @@ bool Client::getStatus(void)
 
 int Client::randomGoatNumber(int a, int b)
 {
-    return int((1.0*rand() + 1) / (1.0*RAND_MAX + 1) * (b - a) + a);
+    return int((1.0*std::rand() + 1) / (1.0*RAND_MAX + 1) * (b - a) + a);
 }
 
 bool Client::sendNum(void) 
@@ -141,8 +176,9 @@ bool Client::sendNum(void)
         num(1, goatStatus.maxNumDead);
     }
     
-    syslog(LOG_INFO, "Sent goat number %i", num);
-    bool request = conn->Write(reinterpret_cast<void *>(&num), sizeof(num));
+    syslog(LOG_INFO, "Sent goat %d number is %i", int(getpid()), num);
+
+    bool request = conn->Write(&num, sizeof(num));
     sem_post(hostSemaphore);
     return request;
 }
@@ -151,3 +187,6 @@ void Client::closeConnection(void) {
     sem_close(clientSemaphore);
     sem_close(hostSemaphore);
 }
+
+
+

@@ -1,11 +1,11 @@
 #include "conn_mq.h"
 
-std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, Type type) {
-    return std::make_unique<ConnMq>(hostPid, type);
+std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
+    return std::make_unique<ConnMq>(hostPid, clientPid, type);
 }
 
-ConnMq::ConnMq(pid_t hostPid, Type type) : hostPid(hostPid), type(type){
-    path = "/mq" + std::to_string(hostPid);
+ConnMq::ConnMq(pid_t hostPid, pid_t clientPid, Type type) : hostPid(hostPid), clientPid(clientPid),type(type){
+    path = "/mq" + std::to_string(hostPid)+std::to_string(clientPid);
 }
 
 bool ConnMq::Open() {

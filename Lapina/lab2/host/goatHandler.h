@@ -1,6 +1,12 @@
 #ifndef GOAT_HANDLER_H
 #define GOAT_HANDLER_H
 
+
+#include <memory>
+#include <atomic>
+#include <sys/syslog.h>
+#include <mutex>
+
 #include "../utilsConfigurations/gameWorld.h"
 #include "../connections/connection.h"
 
@@ -20,13 +26,21 @@ public:
         syslog(LOG_INFO, "Delete goat Handler");
     }
 
+
     bool initGoat(pid_t goatPid);
 
-    void runRounds();
+    void stopGoat();
 
-    void stop();
+    bool sendGoatStatus(goatStatus stGoat);
+    bool getGoatNum(int *num);
+
+    bool runRounds();
+
+    void setStatusWolfNumber();
+
 private:
     const int timeInter = 5;
+    std::atomic<bool> statusWolfNumber;
 
     std::atomic<pid_t> hostPid = -1;
     std::atomic<pid_t> goatPid = -1;

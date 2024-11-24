@@ -13,8 +13,8 @@ class Client {
 public:
     struct GoatParameter
     {
-        const int maxNumAlive = 100;
-        const int maxNumDead = 50;
+        const int maxNumAlive = 101;
+        const int maxNumDead = 51;
         const int timeInter = 5;
     }
 
@@ -36,6 +36,7 @@ private:
     std::unique_ptr<Connection> connect;
     sem_t* hostSemaphore;
     sem_t* clientSemaphore;
+    int connTimeOut=5;
 
     static void clientSignalHandler(int sig);
 
