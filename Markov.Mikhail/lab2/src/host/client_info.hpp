@@ -11,6 +11,8 @@ private:
     int pid;
     mutable std::shared_ptr<std::mutex> m_queue;
     mutable std::shared_ptr<std::mutex> general_m_queue;
+    std::shared_ptr<std::atomic<int>> unread_messages;
+    std::shared_ptr<std::atomic<int>> general_unread_messages;
     // T host_to_client;
     // T client_to_host;
     // T host_to_client_general;
@@ -60,8 +62,10 @@ private:
     }
 
 public:
-    ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid), m_queue(std::make_shared<std::mutex>()),
-                                                            general_m_queue(std::make_shared<std::mutex>())
+    ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid),
+        m_queue(std::make_shared<std::mutex>()), general_m_queue(std::make_shared<std::mutex>()),
+        unread_messages(std::make_shared<std::atomic<int>>()),
+        general_unread_messages(std::make_shared<std::atomic<int>>())
     {
         connections.emplace_back(T::make_filename(host_pid, pid), create);
         connections.emplace_back(T::make_filename(pid, host_pid), create);
@@ -108,16 +112,30 @@ public:
         std::lock_guard<std::mutex> m_lock(*general_m_queue);
         general_unwritten_messages.push(msg);
     }
-    void start()
+    void start(auto&& mainwindow_pointer, auto&& f)
     {   
         using namespace std::chrono_literals;
-        auto func = [this]()
+        auto func = [this, &f, &mainwindow_pointer]()
         {
             std::string msg;
             bool f1;
             bool f2;
             while(valid)
             {
+                while(*unread_messages > 0)
+                {
+                    read_from_client(msg);
+                    --(*unread_messages);
+                    std::invoke(f, mainwindow_pointer, pid, msg, 0);
+                    msg.clear();
+                }
+                while (*general_unread_messages > 0)
+                {
+                    read_from_client_general(msg);
+                    --(*general_unread_messages);
+                    std::invoke(f, mainwindow_pointer, pid, msg, 1);
+                    msg.clear();
+                }
                 f1 = pop_unwritten_message(msg);
                 if (f1)
                 {
@@ -153,5 +171,13 @@ public:
         valid = false;
         if (worker && (*worker).joinable())
             (*worker).join();
+    }
+    void append_unread_counter()
+    {
+        ++(*unread_messages);
+    }
+    void append_general_unread_counter()
+    {
+        ++(*general_unread_messages);
     }
 };

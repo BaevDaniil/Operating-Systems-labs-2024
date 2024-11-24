@@ -13,7 +13,6 @@ NamedChannel::NamedChannel(const std::string &name, bool create)
                 throw std::runtime_error("Failed to create FIFO channel");
             }
         }
-        std::cout << "created: " << pathname << std::endl;
     }
 
     fd = open(pathname.c_str(), O_RDWR);
