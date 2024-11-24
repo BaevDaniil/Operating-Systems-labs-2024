@@ -51,13 +51,22 @@ int main(int argc, char* argv[]) {
             logger.log(Status::ERROR, "Failed to initialize client socket");
             return EXIT_FAILURE;
         }
-        return processClient(port, semaphore, clientSocket, books);
+        return processClient(semaphore, clientSocket, books);
 
     } else {
 
         // this is main process -> start host
+        ConnSock* conn = hostSocket.Accept(logger);
+        if (!conn)
+        {
+            logger.log(Status::ERROR, "Failed to accept connection");
+            return EXIT_FAILURE;
+        }
+
         QApplication app(argc, argv);
-        return processHost(port, semaphore, hostSocket, books, app, pid);
+        int res = processHost("Host Port: " + std::string(argv[1]), semaphore, *conn, books, app, pid);
+        delete conn;
+        return res;
 
     }
 }

@@ -7,14 +7,14 @@
 #include <thread>
 #include <signal.h>
 
-void listenForHostMessages(ConnSock& conn_sock, Semaphore& semaphore, ClientWindow& window, std::atomic<bool>& is_ranning) {
+void listenForHostMessages(conn& conn, Semaphore& semaphore, ClientWindow& window, std::atomic<bool>& is_ranning) {
     auto& logger = LoggerClient::get_instance();
 
     while (is_ranning) {
 
         semaphore.Wait(); // Start critical section
         char buffer[64] = {0};
-        if (conn_sock.Read(buffer, sizeof(buffer))) {
+        if (conn.Read(buffer, sizeof(buffer))) {
             std::string response(buffer);
 
             if (response == "YES") {
@@ -31,11 +31,11 @@ void listenForHostMessages(ConnSock& conn_sock, Semaphore& semaphore, ClientWind
         }
 
         semaphore.Post(); // End critical section
-        sleep(1);
+        sleep(0.1);
     }
 }
 
-int processClient(int port, Semaphore& semaphore, ConnSock& conn_sock, const std::vector<Book>& books) {
+int processClient(Semaphore& semaphore, conn& conn_sock, const std::vector<Book>& books) {
     auto& logger = LoggerClient::get_instance();
 
     int argc = 0;
@@ -56,7 +56,6 @@ int processClient(int port, Semaphore& semaphore, ConnSock& conn_sock, const std
         else {
             logger.log(Status::ERROR, "Failed to request the book: " + bookName.toStdString());
         }
-        
     });
 
     QObject::connect(&window, &ClientWindow::bookReturned, [&conn_sock, &logger](const QString& bookName) {

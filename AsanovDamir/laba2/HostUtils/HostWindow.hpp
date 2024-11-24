@@ -16,7 +16,7 @@ class HostWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    HostWindow(int port, const std::vector<Book>& books, QWidget* parent = nullptr);
+    HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent = nullptr);
     virtual ~HostWindow();
 
     void updateBooks(const std::vector<Book>& books);
@@ -32,5 +32,4 @@ private:
     QListWidget* bookList;
     QPushButton* terminateClientButton;
     QPushButton* terminateHostButton;
-    int hostPort;
 };

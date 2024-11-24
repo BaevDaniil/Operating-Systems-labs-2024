@@ -5,13 +5,13 @@
 #include <cstdlib>
 #include <signal.h>
 
-HostWindow::HostWindow(int port, const std::vector<Book>& books, QWidget* parent)
-    : QMainWindow(parent), hostPort(port) {
+HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent)
+    : QMainWindow(parent) {
 
     QWidget* centralWidget = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(centralWidget);
 
-    portLabel = new QLabel("Host Port: " + QString::number(port), this);
+    portLabel = new QLabel(QString::fromStdString(hostTitle), this);
     layout->addWidget(portLabel);
 
     bookList = new QListWidget(this);

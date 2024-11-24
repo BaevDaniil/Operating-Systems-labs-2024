@@ -4,8 +4,9 @@
 #include <netinet/in.h>
 #include <string>
 #include "logger.hpp"
+#include "conn.hpp"
 
-class ConnSock {
+class ConnSock : public conn {
 public:
     ConnSock(int hostPort, LoggerHost& logger);
     ConnSock(int hostPort, LoggerClient& logger);
