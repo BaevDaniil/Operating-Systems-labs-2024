@@ -12,7 +12,6 @@ private:
     mutable std::shared_ptr<std::mutex> m_queue;
     mutable std::shared_ptr<std::mutex> general_m_queue;
     std::shared_ptr<std::atomic<int>> unread_messages;
-    std::shared_ptr<std::atomic<int>> general_unread_messages;
     // T host_to_client;
     // T client_to_host;
     // T host_to_client_general;
@@ -64,8 +63,7 @@ private:
 public:
     ClientInfo(int host_pid, int pid, bool create = true) : host_pid(host_pid), pid(pid),
         m_queue(std::make_shared<std::mutex>()), general_m_queue(std::make_shared<std::mutex>()),
-        unread_messages(std::make_shared<std::atomic<int>>()),
-        general_unread_messages(std::make_shared<std::atomic<int>>())
+        unread_messages(std::make_shared<std::atomic<int>>())
     {
         connections.emplace_back(T::make_filename(host_pid, pid), create);
         connections.emplace_back(T::make_filename(pid, host_pid), create);
@@ -126,14 +124,7 @@ public:
                 {
                     read_from_client(msg);
                     --(*unread_messages);
-                    std::invoke(f, mainwindow_pointer, pid, msg, 0);
-                    msg.clear();
-                }
-                while (*general_unread_messages > 0)
-                {
-                    read_from_client_general(msg);
-                    --(*general_unread_messages);
-                    std::invoke(f, mainwindow_pointer, pid, msg, 1);
+                    std::invoke(f, mainwindow_pointer, pid, msg);
                     msg.clear();
                 }
                 f1 = pop_unwritten_message(msg);
@@ -175,9 +166,5 @@ public:
     void append_unread_counter()
     {
         ++(*unread_messages);
-    }
-    void append_general_unread_counter()
-    {
-        ++(*general_unread_messages);
     }
 };

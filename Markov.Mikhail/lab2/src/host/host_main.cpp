@@ -22,17 +22,9 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
     if (!host.table.contains(info->si_pid))
     {
         host.table.emplace(info->si_pid, TempClientInfo{getpid(), info->si_pid, identifier});
-        auto f = [](MainWindow *mainwindow_pointer, int pid, const std::string &msg, int type)
+        auto f = [](MainWindow *mainwindow_pointer, int pid, const std::string &msg)
         {
-            switch (type)
-            {
-            case 0 :
-                mainwindow_pointer->set_msg_to_chat(pid, msg);
-                break;
-            case 1:
-                mainwindow_pointer->set_msg_to_general_chat(msg);
-                break;
-            }
+            mainwindow_pointer->set_msg_to_chat(pid, msg);
         };
         host.table[info->si_pid].start(mainwindow_pointer, f);
         mainwindow_pointer->add_client(info->si_pid);
@@ -45,7 +37,8 @@ void host_signal_handler(int sig, siginfo_t *info, void *context)
         host.table[info->si_pid].append_unread_counter();
         break;
     case SIGUSR2:
-        host.table[info->si_pid].append_general_unread_counter();
+        host.table[info->si_pid].read_from_client_general(general_msg);
+        mainwindow_pointer->set_msg_to_general_chat(general_msg);
         host.send_message_to_all_clients_except_one(general_msg, info->si_pid);
         general_msg.clear();
         break;
