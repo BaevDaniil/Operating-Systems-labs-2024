@@ -1,10 +1,10 @@
-#include <conn_fifo.h>
+#include "conn_fifo.h"
 
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 
-std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
+std::unique_ptr<Connection> Connection::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
     return std::make_unique<ConnFifo>(hostPid, clientPid, type);
 }
 

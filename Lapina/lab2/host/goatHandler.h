@@ -6,6 +6,7 @@
 #include <atomic>
 #include <sys/syslog.h>
 #include <mutex>
+#include <semaphore.h>
 
 #include "../utilsConfigurations/gameWorld.h"
 #include "../connections/connection.h"
@@ -27,14 +28,14 @@ public:
     }
 
 
-    bool initGoat(pid_t goatPid);
+    bool initGoat(pid_t goatPid, std::shared_ptr<GameWorld> gameW);
 
     void stopGoat();
 
     bool sendGoatStatus(goatStatus stGoat);
     bool getGoatNum(int *num);
 
-    bool runRounds();
+    void runRounds();
 
     void setStatusWolfNumber();
 
@@ -54,6 +55,6 @@ private:
 
     bool openSemaphores();
     bool openConnection();
-}
+};
 
 #endif

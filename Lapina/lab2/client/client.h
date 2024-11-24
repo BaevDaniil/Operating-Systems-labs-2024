@@ -6,18 +6,12 @@
 #include <semaphore.h>
 #include <cstdlib>
 
-#include "../connection/connection.h"
-#include "../utilsConfigurations"
+#include "../connections/connection.h"
+#include "../utilsConfigurations/gameWorld.h"
+
 
 class Client {
 public:
-    struct GoatParameter
-    {
-        const int maxNumAlive = 101;
-        const int maxNumDead = 51;
-        const int timeInter = 5;
-    }
-
     Client(pid_t hostPid);
     ~Client(void) = default; 
     Client(const Client&) = delete;
@@ -26,12 +20,17 @@ public:
     bool init(pid_t hostPid, int seed);
     void run(void);
 
-    static void terminate(void) noexcept;
+    static void Terminate(void) noexcept;
+    static void signalHandler(int sig);
 
 private:
+    const int maxGoatNumAlive = 101;
+    const int maxGoatNumDead = 51;
+    const int timeInter = 5;
+
     pid_t hostPid = -1;
-    static bool clientTerminated = false;
-    goatStatus isAlive = goatStatus::ALIVE;
+    static bool clientTerminated;
+    goatStatus state = goatStatus::ALIVE;
 
     std::unique_ptr<Connection> connect;
     sem_t* hostSemaphore;

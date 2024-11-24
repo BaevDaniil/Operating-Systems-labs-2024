@@ -16,7 +16,7 @@ find_library (LIBRT rt)
 find_package (Threads)
 #find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 
-file(GLOB CONNS connections/conn_*.h connections/conn_*.cpp)
+file(GLOB CONNS connections/conn_*.h)
 file(GLOB CLIENT client/*.cpp client/*.h)
 #file(GLOB GUI gui/*.ui gui/*.cpp gui/*.h )
 file(GLOB HOST host/*.cpp host/*.h)
@@ -30,7 +30,7 @@ foreach(PATH_TO_CONN ${CONNS})
     connections/conn_${CONN_NAME}.h connections/conn_${CONN_NAME}.cpp)
     target_link_libraries(host_${CONN_NAME} PUBLIC pthread rt)
 
-    add_executable(client_${CONN_NAME} ${CLIENT} connections/connections.h
+    add_executable(client_${CONN_NAME} ${CLIENT} connections/connection.h
         connections/conn_${CONN_NAME}.cpp connections/conn_${CONN_NAME}.h)
     target_link_libraries(client_${CONN_NAME} PUBLIC pthread rt)
 endforeach()

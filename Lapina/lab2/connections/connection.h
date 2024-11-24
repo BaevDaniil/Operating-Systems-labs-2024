@@ -11,7 +11,7 @@ public:
         CLIENT
     };
     
-    static std::unique_ptr<Conn> GetConn(pid_t hostPid, pid_t clientPid, Type type);
+    static std::unique_ptr<Connection> GetConn(pid_t hostPid, pid_t clientPid, Type type);
 
     virtual bool Open() = 0;
     virtual bool Read(void* buf, size_t count) = 0;

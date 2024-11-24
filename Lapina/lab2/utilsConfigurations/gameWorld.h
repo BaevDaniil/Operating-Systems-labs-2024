@@ -5,9 +5,6 @@
 #include <string>
 #include <../utilsConfigurations/safeMap.h>
 
-std::string semWolfName = "/hostWolf"
-std::string semGoatName = "/clientGoat"
-
 enum connectState
 {
     CONNECTION,
@@ -34,8 +31,8 @@ struct GameWorld
     std::atomic<int> wolfNumber;
     std::atomic<int> aliveGoatNumber;
     std::atomic<int> deadGoatNumder;
-    safeMap<pid_t, std::shared_ptr<Goat>> goatMap;
+    SafeMap<pid_t, std::shared_ptr<Goat>> goatMap;
     std::atomic<int> time;
-}
+};
 
 #endif

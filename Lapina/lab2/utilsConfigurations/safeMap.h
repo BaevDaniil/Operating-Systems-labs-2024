@@ -4,7 +4,8 @@
 #include <map>
 #include <mutex>
 #include <iostream>
-#include "safeVector.h"
+#include <vector>
+//#include "safeVector.h"
 
 
 template <class K, class V, class Compare = std::less<K>, class Allocator = std::allocator<std::pair<const K, V> > >
@@ -36,13 +37,13 @@ class SafeMap {
             return size;
         }
 
-        safeVector<K> getAllKeys()
+        std::vector<K> getAllKeys()
         {
             std::lock_guard<std::mutex> lk(this->mut);
-            safeVector<K> keys = {};
+            std::vector<K> keys = {};
             for (auto const& element : this->safe_map) 
             {
-                keys.push(element.first);
+                keys.push_back(element.first);
             }
             return keys;
         }

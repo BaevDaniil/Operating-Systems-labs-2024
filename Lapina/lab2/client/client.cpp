@@ -9,6 +9,9 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
+
+bool Client::clientTerminated = false;
+
 int main(int argc, char* argv[]) 
 {
     openlog("lab2_client", LOG_PID | LOG_NDELAY | LOG_PERROR, LOG_USER);
@@ -27,7 +30,7 @@ int main(int argc, char* argv[])
     }
 
     Client client(hostPid);
-    client.Run();
+    client.run();
 
     syslog(LOG_INFO, "End goat %d\n", getpid());
     closelog();
@@ -38,35 +41,33 @@ int main(int argc, char* argv[])
 
 Client::Client(pid_t HostPid) 
 {
+    clientTerminated=false;
+
     hostPid = HostPid;
     std::signal(SIGTERM, signalHandler);
 
     syslog(LOG_INFO, "Get connection for %d", int(hostPid));
     try {
-        connect = std::make_unique<Connection>(Conn::GetConn(hostPid, getpid(); Conn::Type::CLIENT));
+        connect = Connection::GetConn(hostPid, getpid(), Connection::Type::CLIENT);
     }
     catch (std::exception &e) {
         syslog(LOG_ERR, "Connection getting error");
-        return false;
     }
     catch (const char *e) {
         syslog(LOG_ERR, "Connection getting error");
-        return false;
     }
 
-    std::string semRead = semGoatName + std::to_string(hostPid) + std::to_string(goatPid);
+    std::string semRead = "/clientGoat" + std::to_string(hostPid) + std::to_string(getpid());
     clientSemaphore = sem_open(semRead.c_str(), O_CREAT | O_EXCL, 0777, 0);
     if (clientSemaphore == SEM_FAILED) {
         syslog(LOG_ERR, "Semaphore creation error %s", semRead.c_str());
-        return false;
     }
 
-    std::string semWrite = semWolfName + std::to_string(hostPid) + std::to_string(goatPid);
+    std::string semWrite = "/hostWolf" + std::to_string(hostPid) + std::to_string(getpid());
     hostSemaphore = sem_open(semWrite.c_str(), O_CREAT | O_EXCL, 0777, 0);
     if (hostSemaphore == SEM_FAILED) {
         syslog(LOG_ERR, "Semaphore creation error %s", semWrite.c_str());
         sem_close(clientSemaphore);
-        return false;
     }
 
     syslog(LOG_INFO, "Connection opened");
@@ -97,7 +98,7 @@ bool Client::openConnection(void)
     bool conn_status = false;
     syslog(LOG_INFO, "Try open connection");
     do {
-        conn_status = conn->Open();
+        conn_status = connect->Open();
         t2 = time(nullptr);
     } while (!conn_status && difftime(t1, t2) < connTimeOut);
     return conn_status;
@@ -112,7 +113,7 @@ void Client::run(void){
     }
 
 
-    if (!OpenConnection()) {
+    if (!openConnection()) {
         syslog(LOG_ERR, "Could not connect host. Terminate");
         exit(EXIT_FAILURE);
     }
@@ -124,33 +125,33 @@ void Client::run(void){
             exit(EXIT_FAILURE);
         }
 
-        if (!getStatus()) {
+        if (!getStatusGoat()) {
             syslog(LOG_ERR, "Could not get state. Terminate");
             exit(EXIT_FAILURE);
         }
     } while(state != goatStatus::FINISH || !clientTerminated);
 
     syslog(LOG_INFO, "Finish goat %d", getpid());
-    conn->Close();
+    connect->Close();
 
     closeConnection();
 }
 
-bool Client::getStatus(void)
+bool Client::getStatusGoat(void)
 {
     struct timespec ts;
 
     clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += GoatParameter.timeInter;
+    ts.tv_sec += timeInter;
 
-    if (sem_timedwait(semRead, &ts) == -1)
+    if (sem_timedwait(clientSemaphore, &ts) == -1)
         return false;
-    bool statusRead = conn->Read(&state, sizeof(state));
+    bool statusRead = connect->Read(&state, sizeof(state));
     if (statusRead) {
         std::string stateStr = "Alive";
-        if (state == State::DEAD)
+        if (state == goatStatus::DEAD)
             stateStr = "Dead";
-        else if (state == State::FINISH)
+        else if (state == goatStatus::FINISH)
             stateStr = "Finish";
 
         syslog(LOG_INFO, "Goat state is: %s", stateStr.c_str());
@@ -163,22 +164,22 @@ int Client::randomGoatNumber(int a, int b)
     return int((1.0*std::rand() + 1) / (1.0*RAND_MAX + 1) * (b - a) + a);
 }
 
-bool Client::sendNum(void) 
+bool Client::sendNumGoat(void) 
 {
     int num = 0;
 
     if (state==goatStatus::ALIVE)
     {
-        num(1, GoatParameter.maxNumAlive);
+        num=randomGoatNumber(1, maxGoatNumAlive);
     }
     else if (state==goatStatus::DEAD)
     {
-        num(1, goatStatus.maxNumDead);
+        num=randomGoatNumber(1, maxGoatNumDead);
     }
     
     syslog(LOG_INFO, "Sent goat %d number is %i", int(getpid()), num);
 
-    bool request = conn->Write(&num, sizeof(num));
+    bool request = connect->Write(&num, sizeof(num));
     sem_post(hostSemaphore);
     return request;
 }

@@ -9,32 +9,49 @@
 #include <semaphore.h>
 #include <cstring>
 #include <fcntl.h>
+#include <vector>
+#include <mutex>
 
+
+Host Host::instance;
+Host* Host::GetInstance() {
+    return &instance;
+}
 
 int main(int argc, char *argv[]) 
 {
     openlog("lab2_host", LOG_PID | LOG_NDELAY | LOG_PERROR, LOG_USER);
 
-    Host host;
     int status = EXIT_SUCCESS;
     pid_t hostPid = getpid();
 
-    host.init(clientNum);
     if (getpid() == hostPid){
-        status = host.runHost();
+        status = Host::GetInstance()->runHost();
     }
 
-    syslog(LOG_INFO, "End process %d\n", getpid());
+    syslog(LOG_INFO, "End process %d\n", hostPid);
     closelog();
     return status;
 }
 
+void Host::HostSignalHandler(int signum, siginfo_t *si, void *data) {
+  switch (signum) {
+  case SIGTERM:
+      Host::GetInstance()->Terminate();
+      break;
+  case SIGUSR1:
+      Host::GetInstance()->GoatStartInit(si->si_pid);
+      break;
+  default:
+    break;
+  }
+}
 
 Host::Host()
 {
     struct sigaction sig{};
     memset(&sig, 0, sizeof(sig));
-    sig.sa_sigaction = SignalHandler;
+    sig.sa_sigaction = HostSignalHandler;
     sig.sa_flags = SA_SIGINFO;
 
     if (sigaction(SIGTERM, &sig, nullptr)==-1)
@@ -48,46 +65,15 @@ Host::Host()
 
     openlog("lab2_host", LOG_NDELAY | LOG_PID | LOG_PERROR, LOG_USER);
 
-    syslog("Host pid = %d", int(getpid()));
+    syslog(LOG_INFO, "Host pid = %d", int(getpid()));
 
-    gameW = std::make_shared<GameState>();
-    gameW->deadGoatNumber = 0;
+    gameW = std::make_shared<GameWorld>();
+    gameW->deadGoatNumder = 0;
     gameW->aliveGoatNumber = 0;
 
 }
 
-void Host::SignalHandler(int signum, siginfo_t *si, void *data) {
-  switch (signum) {
-  case SIGTERM:
-      Terminate();
-      break;
-  case SIGUSR1:
-      try
-      {
-        goatHandler goatH = std::make_shared<goatHandler>();
-        bool initStatus = goatH->initGoat(si->si_pid, gameW);
-        if (initSatus)
-        {
-          std::thread clientHandlerThread(&ClientHandler::runRounds, goatH);
-          clientHandlerThread.detach();
-          goats.set(si->si_pid, goatH);
-          syslog(LOG_INFO, "Open goat in thread");
-        }
-        else
-        {
-          break;
-        }
-      }
-      catch (std::exception &e) {
-            syslog(LOG_ERR, "Error: %s", e.what());
-        }
-      
-  default:
-    break;
-  }
-}
-
-void Host::runHost()
+int Host::runHost()
 {
     syslog(LOG_INFO, "Host started");
 
@@ -101,7 +87,7 @@ void Host::runHost()
         //syslog(LOG_INFO, "Create_window");
         //GUI window(_gst);
 
-        gameWorld->time = 3;
+        gameW->time = 3;
         //_timer = std::make_unique<QTimer>(this);
         //QObject::connect(_timer.get(), SIGNAL(timeout()), this, SLOT(updateTimer()));
         //_timer->start(1000);
@@ -122,7 +108,26 @@ void Host::runHost()
     return EXIT_SUCCESS;
 }
 
-void Host::Terminate()
+void Host::GoatStartInit(pid_t goatPid)
+{
+    try
+      {
+        std::shared_ptr<goatHandler> goatH = std::make_shared<goatHandler>();
+        bool initStatus = goatH->initGoat(goatPid, gameW);
+        if (initStatus)
+        {
+          std::thread goatHandlerThread(&goatHandler::runRounds, goatH);
+          goatHandlerThread.detach();
+          goats.set(goatPid, goatH);
+          syslog(LOG_INFO, "Open goat in thread");
+        }
+      }
+      catch (std::exception &e) {
+            syslog(LOG_ERR, "Error: %s", e.what());
+        }
+}
+
+void Host::Terminate() noexcept
 {
     if (!hostTerminated.load())
     {
@@ -137,8 +142,9 @@ void Host::wolfAndGoatGame()
     std::srand(std::time(0));
 
     bool allDied = false;
+    std::this_thread::sleep_for(std::chrono::seconds(120));
 
-    while (!Terminated.load())
+    while (!hostTerminated.load())
     {
         if (gameW->aliveGoatNumber.load() == 0){
             if (allDied == true)
@@ -158,31 +164,38 @@ void Host::wolfAndGoatGame()
         }
 
         if (wolfInstance.isRandomNumber.load()){
-            wolfInstance.getRandomNumber();
+            wolfInstance.genRandomNumber();
         }
         gameW->wolfNumber = wolfInstance.wolfNumber.load();
 
-        safeVector<pid_t> keysGoat = goats.getAllKeys();  
-        for (size_t i = 0; i < keysGoat.len(); i++)
+        std::vector<pid_t> keysGoat = goats.getAllKeys();  
+
+        std::mutex mut1;
+        std::unique_lock<std::mutex> lk(mut1);
+        for (size_t i = 0; i < keysGoat.size(); i++)
         {
             goats.get(keysGoat[i]) -> setStatusWolfNumber();
         }
+        lk.unlock();
 
         wolfInstance.isRandomNumber = true;
         std::this_thread::sleep_for(std::chrono::seconds(3));
         gameW->time = 3;
     }
 
-    safeVector<pid_t> keysGoat = goats.getAllKeys();  
-    for (size_t i = 0; i < keysGoat.len(); i++)
+    std::vector<pid_t> keysGoat = goats.getAllKeys();  
+    std::mutex mut2;
+    std::unique_lock<std::mutex> lk2(mut2);
+    for (size_t i = 0; i < keysGoat.size(); i++)
     {
         syslog(LOG_INFO, "Close goat: %d", int(keysGoat[i]));
-        goats.get(keysGoat[i]) -> stop();
+        goats.get(keysGoat[i]) -> stopGoat();
     }
+    lk2.unlock();
 }
 
 void Host::Wolf::genRandomNumber()
 {
     wolfNumber = int((1.0*std::rand() + 1) / (1.0*RAND_MAX + 1) * (maxNumber - minNumber) + minNumber);
-    syslog("WolfNumber = %d", wolfNumber.load())
+    syslog(LOG_INFO, "WolfNumber = %d", wolfNumber.load());
 }

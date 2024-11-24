@@ -7,25 +7,18 @@
 #include <memory>
 
 #include "../utilsConfigurations/safeMap.h"
-#include "../utilsConfigurations/safeVector.h"
-#include "../utilsConfigurations/gameWorld.h"
 #include "goatHandler.h"
 
-class HOST_H
+class Host
 {
 public:
-    Host();
-    Host(const Host&)=delete;
-    Host& operator=(const Host&)=delete;
-    Host(const Host&&)=delete;
-    Host&& operator=(const Host&&)=delete;
-    ~Host()=default;
-
+    static Host* GetInstance();
     std::atomic<bool> hostTerminated=false;
 
-    void HostSignalHandler(int signum, siginfo_t *si, void *data);
+    static void HostSignalHandler(int signum, siginfo_t *si, void *data);
     void Terminate() noexcept;
-    void runHost();
+    void GoatStartInit(pid_t goatPid);
+    int runHost();
     
 //public slots:
     void wolfAndGoatGame();
@@ -39,11 +32,20 @@ private:
         std::atomic<int> wolfNumber;
 
         void genRandomNumber();
-    }
+    };
 
     Wolf wolfInstance;
     std::shared_ptr<GameWorld> gameW;
     SafeMap<pid_t, std::shared_ptr<goatHandler>> goats;
-}
+
+    static Host instance;
+
+    Host();
+    Host(const Host&)=delete;
+    Host& operator=(const Host&)=delete;
+    Host(const Host&&)=delete;
+    Host&& operator=(const Host&&)=delete;
+    ~Host()=default;
+};
 
 #endif

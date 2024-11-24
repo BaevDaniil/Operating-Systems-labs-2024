@@ -3,7 +3,7 @@
 #include <string>
 #include <unistd.h>
 
-std::unique_ptr<Conn> Conn::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
+std::unique_ptr<Connection> Connection::GetConn(pid_t hostPid, pid_t clientPid, Type type) {
     return std::make_unique<ConnSock>(hostPid, clientPid, type);
 }
 
