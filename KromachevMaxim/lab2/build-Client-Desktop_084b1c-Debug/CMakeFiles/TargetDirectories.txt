@@ -1,0 +1,3 @@
+/home/maxonic/Operating-Systems-labs-2024/KromachevMaxim/lab2/build-Client-Desktop_084b1c-Debug/CMakeFiles/Client.dir
+/home/maxonic/Operating-Systems-labs-2024/KromachevMaxim/lab2/build-Client-Desktop_084b1c-Debug/CMakeFiles/edit_cache.dir
+/home/maxonic/Operating-Systems-labs-2024/KromachevMaxim/lab2/build-Client-Desktop_084b1c-Debug/CMakeFiles/rebuild_cache.dir
