@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>guiHostWindow</class>
+ <widget class="QMainWindow" name="guiHostWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>guiHostWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidgetGame">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>800</width>
+      <height>600</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="InitGame">
+     <attribute name="title">
+      <string>Инициализация игры</string>
+     </attribute>
+     <widget class="QLabel" name="numGoats">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>161</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Введите число козлят</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="numGoatsEnter">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>10</y>
+        <width>81</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="remainsGoat">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>221</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Осталось подключить козлят:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="remainsGoatEdit">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>90</y>
+        <width>81</width>
+        <height>26</height>
+       </rect>
+      </property>
+       <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="hostPid">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>50</y>
+        <width>311</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>hostPid для подключения козлят:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="hostPidSet">
+      <property name="geometry">
+       <rect>
+        <x>321</x>
+        <y>50</y>
+        <width>113</width>
+        <height>26</height>
+       </rect>
+      </property>
+       <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="LogEdit">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>771</width>
+        <height>421</height>
+       </rect>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="runGame">
+    <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <attribute name="title">
+      <string>WolfAndGoats</string>
+     </attribute>
+<widget class="QLabel" name="YourNum">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>161</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Введите число волка</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="YouTimer">
+      <property name="geometry">
+       <rect>
+        <x>520</x>
+        <y>10</y>
+        <width>131</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>На ввод осталось:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="wolfNumber">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>10</y>
+        <width>113</width>
+        <height>26</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="YouEnter">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>161</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Вы ввели</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="yourWolfNumber">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>50</y>
+        <width>113</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLCDNumber" name="Timer">
+      <property name="geometry">
+       <rect>
+        <x>680</x>
+        <y>10</y>
+        <width>71</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QTableView" name="tableRound">
+      <property name="geometry">
+       <rect>
+        <x>345</x>
+        <y>100</y>
+        <width>421</width>
+        <height>431</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="validWolfNumL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>141</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Число волка:</string>
+      </property>
+     </widget>
+     <widget class="QLCDNumber" name="validWolfNumber">
+      <property name="geometry">
+       <rect>
+        <x>165</x>
+        <y>140</y>
+        <width>64</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="AliveGoatL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>141</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Спрятавшихся:</string>
+      </property>
+     </widget>
+     <widget class="QLCDNumber" name="AliveGoat">
+      <property name="geometry">
+       <rect>
+        <x>165</x>
+        <y>190</y>
+        <width>64</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="DeadGoatL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>250</y>
+        <width>141</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Мёртвых:</string>
+      </property>
+     </widget>
+     <widget class="QLCDNumber" name="DeadGoat">
+      <property name="geometry">
+       <rect>
+        <x>165</x>
+        <y>250</y>
+        <width>64</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="caughtGoatL">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>310</y>
+        <width>141</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Пойманных:</string>
+      </property>
+     </widget>
+     <widget class="QLCDNumber" name="CaughtGoat">
+      <property name="geometry">
+       <rect>
+        <x>165</x>
+        <y>310</y>
+        <width>64</width>
+        <height>23</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="gameOver">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>500</y>
+        <width>261</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+</ui>

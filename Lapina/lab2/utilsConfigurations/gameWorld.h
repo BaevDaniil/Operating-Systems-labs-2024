@@ -9,7 +9,6 @@ enum connectState
 {
     CONNECTION,
     DISCONNECTION,
-    LOAD,
 };
 
 enum goatStatus
@@ -28,8 +27,10 @@ struct Goat
 struct GameWorld
 {
     std::atomic<int> wolfNumber;
+    
     std::atomic<int> aliveGoatNumber;
     std::atomic<int> deadGoatNumder;
+
     SafeMap<pid_t, std::shared_ptr<Goat>> goatMap;
     std::atomic<int> time;
 };

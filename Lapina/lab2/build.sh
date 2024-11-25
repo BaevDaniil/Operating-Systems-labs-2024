@@ -4,6 +4,9 @@ cd build
 cmake -S ../ -B ./
 make
 
+rm -r host*autogen
+rm -r client*autogen
+
 mv host* ../
 mv client* ../
 

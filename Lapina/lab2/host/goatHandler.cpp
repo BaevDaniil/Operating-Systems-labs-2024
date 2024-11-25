@@ -18,20 +18,19 @@ bool goatHandler::initGoat(pid_t goatPid, std::shared_ptr<GameWorld> gameW)
 
     gameWorld = gameW;
     auto goat = std::make_shared<Goat>();
-    gameWorld->goatMap.set(goatPid, goat);
+    
 
     if (!openSemaphores()){
-        gameWorld->goatMap.get(goatPid)->stateClient = DISCONNECTION;
-        isOpenSem = false;
+        kill(goatPid, SIGTERM);
         return true;
     };
     
     if (!openConnection()){
-        gameWorld->goatMap.get(goatPid)->stateClient = DISCONNECTION;
-        isOpenSem = false;
+        kill(goatPid, SIGTERM);
         return true;
     }
 
+    gameWorld->goatMap.set(goatPid, goat);
     isOpenSem = true;
     syslog(LOG_INFO, "Connect goat: %d", int(goatPid));
     gameWorld->goatMap.get(goatPid)->stateClient = CONNECTION;
@@ -159,7 +158,6 @@ void goatHandler::runRounds()
      while (isOpenSem){
         if (statusWolfNumber.load())
         {
-            gameWorld->goatMap.get(goatPid)->stateClient = LOAD;
 
             int hostNum = gameWorld->wolfNumber.load();
 

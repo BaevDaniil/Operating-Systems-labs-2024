@@ -23,9 +23,7 @@ public:
     goatHandler (goatHandler&&) = default;
     goatHandler& operator = (goatHandler&&) = default;
 
-    ~goatHandler(){
-        syslog(LOG_INFO, "Delete goat Handler");
-    }
+    ~goatHandler(){}
 
 
     bool initGoat(pid_t goatPid, std::shared_ptr<GameWorld> gameW);

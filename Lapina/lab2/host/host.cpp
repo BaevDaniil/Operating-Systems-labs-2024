@@ -1,4 +1,5 @@
 #include "host.h"
+#include "../gui/guiHost.h"
 
 #include <sys/syslog.h>
 #include <thread>
@@ -13,28 +14,15 @@
 #include <condition_variable>
 #include <mutex>
 
+
 Host Host::instance;
 Host* Host::GetInstance() {
     return &instance;
 }
 
-int Host::GoatsNumber=0;
-
 int main(int argc, char *argv[]) 
 {
     openlog("lab2_host", LOG_PID | LOG_NDELAY | LOG_PERROR, LOG_USER);
-
-    if (argc != 2) {
-        std::cout << "Wrong number of arguments. Number goats required.\n";
-        return EXIT_FAILURE;
-    }
-    try {
-        Host::GoatsNumber = std::atoi(argv[1]);
-    }
-    catch (...) {
-        std::cout << "Wrong type of argument. Number goats must be integer number.\n";
-        return EXIT_FAILURE;
-    }
 
     int status = EXIT_SUCCESS;
     pid_t hostPid = getpid();
@@ -94,25 +82,27 @@ int Host::runHost()
 
         std::thread connectionThread(&Host::wolfAndGoatGame, this);
 
-        //int argc = 1;
-        //char* args[] = { (char*)"WolfAndGoat" };
-        //QApplication app(argc, args);
+        int argc = 1;
+        char* args[] = { (char*)"WolfAndGoat" };
+        QApplication app(argc, args);
 
-        //syslog(LOG_INFO, "Create_window");
-        //GUI window(_gst);
+        syslog(LOG_INFO, "Create_window");
+        guiHost window(gameW, int(getpid()));
 
         gameW->time = 3;
-        //_timer = std::make_unique<QTimer>(this);
-        //QObject::connect(_timer.get(), SIGNAL(timeout()), this, SLOT(updateTimer()));
-        //_timer->start(1000);
+        wolfTimer = std::make_unique<QTimer>(this);
+        QObject::connect(wolfTimer.get(), SIGNAL(timeout()), this, SLOT(updateWolfTimer()));
 
-        //QObject::connect(&window, SIGNAL(wolfNumberSend(int)), this, SLOT(wolfNumberEnter(int)));
-        //QObject::connect(this, SIGNAL(gameover()), &window, SLOT(gameover()));
-        //window.SetTitle(args[0]);
-        //window.show();
-        //app.exec();
+        QObject::connect(&window, SIGNAL(countGoatsSend(int)), this, SLOT(countGoats(int)));
+        QObject::connect(this, SIGNAL(countRemainsGoats(int)), &window, SLOT(countGoatsRSend(int)));
+        QObject::connect(this, SIGNAL(connectionGoatLog(std::string)), &window, SLOT(writeLog(std::string)));
+        QObject::connect(&window, SIGNAL(wolfNumberSend(int)), this, SLOT(wolfNumberEnter(int)));
+        QObject::connect(this, SIGNAL(setGameOver()), &window, SLOT(gameover()));
+        
+        window.show();
+        app.exec();
 
-        //Terminate();
+        Terminate();
         connectionThread.join();
     }
     catch (std::exception &e) {
@@ -120,6 +110,21 @@ int Host::runHost()
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
+}
+
+void Host::countGoats(int countGoats)
+{
+    GoatsNumber=countGoats;
+    cv.notify_one();
+}
+
+void Host::wolfNumberEnter(int number){
+    wolfInstance.isRandomNumber = false;
+    wolfInstance.wolfNumber = number;
+}
+
+void Host::updateWolfTimer(){
+    gameW->time--;
 }
 
 void Host::GoatStartInit(pid_t goatPid)
@@ -141,6 +146,7 @@ void Host::GoatStartInit(pid_t goatPid)
           goatHandlerThread.detach();
           goats.set(goatPid, goatH);
           syslog(LOG_INFO, "Open goat in thread");
+          emit connectionGoatLog("Connect goat: " + std::to_string(int(goatPid)));
         }
         cv.notify_one();
       }
@@ -162,6 +168,7 @@ void Host::Terminate() noexcept
         for (size_t i = 0; i < keysGoat.size(); i++)
         {
             syslog(LOG_INFO, "Close goat: %d", int(keysGoat[i]));
+            emit connectionGoatLog("Close goat: " + std::to_string(int(keysGoat[i])));
             goats.get(keysGoat[i]) -> stopGoat();
         }
         mut2.unlock();
@@ -175,14 +182,28 @@ void Host::wolfAndGoatGame()
 
     bool allDied = false;
 
+    std::mutex mut;
+    std::unique_lock lock(mut);
+    while(GoatsNumber<0)
+    {
+        syslog(LOG_INFO, "Wait goats count");
+        cv.wait(lock);
+    }
+    lock.unlock();
+
     std::mutex m;
     std::unique_lock lk(m);
     while(int(goats.len())!=GoatsNumber)
     {
+        emit countRemainsGoats(GoatsNumber-int(goats.len()));
         syslog(LOG_INFO, "Wait goats: %d", GoatsNumber-int(goats.len()));
         cv.wait(lk);
     }
     lk.unlock();
+    emit connectionGoatLog("All goat connections");
+    emit countRemainsGoats(GoatsNumber-int(goats.len()));
+    wolfTimer->start(360);
+    std::this_thread::sleep_for(std::chrono::seconds(6));
 
     std::vector<pid_t> keysGoat = goats.getAllKeys();  
 
@@ -201,8 +222,7 @@ void Host::wolfAndGoatGame()
             if (allDied == true)
             {
                 syslog(LOG_INFO, "Gameover");
-                //emit gameover();
-                //std::this_thread::sleep_for(std::chrono::seconds(3));
+                emit setGameOver();
                 Terminate();
                 continue;
             }
