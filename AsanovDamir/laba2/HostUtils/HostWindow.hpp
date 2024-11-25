@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <QWidget>
+#include <QTimer>
 #include "Book.hpp"
 
 class HostWindow : public QMainWindow {
@@ -20,16 +21,24 @@ public:
     virtual ~HostWindow();
 
     void updateBooks(const std::vector<Book>& books);
+    void signalResetTimer();
 
     pid_t clientPid; // for kill
+
+signals:
+    void resetSignalTimer();
 
 private slots:
     void terminateClient();
     void terminateHost();
+    void resetTimer();
 
 private:
     QLabel* portLabel;
     QListWidget* bookList;
     QPushButton* terminateClientButton;
     QPushButton* terminateHostButton;
+
+    QTimer* clientTimer;
+    QLabel* timerLabel;
 };

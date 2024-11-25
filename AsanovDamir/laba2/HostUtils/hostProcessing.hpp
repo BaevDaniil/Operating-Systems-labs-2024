@@ -49,6 +49,7 @@ void listenForClientMessages(conn& conn, Semaphore& semaphore, std::vector<Book>
 
         char buffer[1024] = {0};
         if (conn.Read(buffer, sizeof(buffer))) {
+            window.signalResetTimer();
             std::string request(buffer);
             logger.log(Status::INFO, "Request is recieved: " + request);
 

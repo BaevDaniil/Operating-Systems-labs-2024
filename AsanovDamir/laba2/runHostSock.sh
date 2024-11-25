@@ -1,2 +1,2 @@
 #!/bin/bash
-./build/host_sock 10104
+./build/host_sock 10106

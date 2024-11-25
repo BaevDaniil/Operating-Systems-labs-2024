@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <signal.h>
 
+static int secondsLeft = 5;
+
 HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent)
     : QMainWindow(parent) {
 
@@ -26,12 +28,30 @@ HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& bo
     terminateHostButton = new QPushButton("Terminate Host", this);
     layout->addWidget(terminateHostButton);
 
+    timerLabel = new QLabel("Time left: 5 seconds", this);
+    layout->addWidget(timerLabel);
+
+    clientTimer = new QTimer(this);
+    clientTimer->setInterval(1000);
+    connect(clientTimer, &QTimer::timeout, this, [this]() {
+        if (!clientTimer->isActive()) return;
+
+        if (--secondsLeft <= 0) {
+            terminateClient();
+        } else {
+            timerLabel->setText(QString("Time left: %1 seconds").arg(secondsLeft));
+        }
+    });
+
     connect(terminateClientButton, &QPushButton::clicked, this, &HostWindow::terminateClient);
     connect(terminateHostButton, &QPushButton::clicked, this, &HostWindow::terminateHost);
+    connect(this, &HostWindow::resetSignalTimer, this, &HostWindow::resetTimer);
 
     setCentralWidget(centralWidget);
     setWindowTitle("Host Control Panel");
     resize(400, 300);
+
+    clientTimer->start();
 }
 
 HostWindow::~HostWindow() {}
@@ -44,6 +64,8 @@ void HostWindow::updateBooks(const std::vector<Book>& books) {
 }
 
 void HostWindow::terminateClient() {
+    clientTimer->stop();
+    timerLabel->setText("Client terminated");
     QMessageBox::information(this, "Terminate Client", "Client terminated.");
     LoggerHost::get_instance().log(Status::INFO, "Terminate Client");
     kill(clientPid, SIGKILL);
@@ -53,4 +75,14 @@ void HostWindow::terminateHost() {
     QMessageBox::information(this, "Terminate Host", "Host terminated.");
     LoggerHost::get_instance().log(Status::INFO, "Terminate Host");
     std::exit(0);
+}
+
+void HostWindow::resetTimer() {
+    secondsLeft = 5;
+    timerLabel->setText("Time left: 5 seconds");
+    clientTimer->start();
+}
+
+void HostWindow::signalResetTimer() {
+    emit resetSignalTimer();
 }

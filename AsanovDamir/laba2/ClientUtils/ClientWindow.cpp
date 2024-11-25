@@ -34,15 +34,15 @@ void ClientWindow::createBookView(const std::vector<Book>& books) {
     selectButton->setEnabled(false);
     layout->addWidget(selectButton);
 
-    terminateClientButton = new QPushButton("Terminate Client", this);
-    layout->addWidget(terminateClientButton);
+    //terminateClientButton = new QPushButton("Terminate Client", this);
+    //layout->addWidget(terminateClientButton);
 
     // Enable button if book is choosed
     connect(bookList, &QListWidget::itemSelectionChanged, [this]() {
         selectButton->setEnabled(bookList->currentItem() != nullptr);
     });
     connect(selectButton, &QPushButton::clicked, this, &ClientWindow::selectBook);
-    connect(terminateClientButton, &QPushButton::clicked, this, &ClientWindow::terminateClient);
+    //connect(terminateClientButton, &QPushButton::clicked, this, &ClientWindow::terminateClient);
 
     stackedWidget->addWidget(bookView);
 }

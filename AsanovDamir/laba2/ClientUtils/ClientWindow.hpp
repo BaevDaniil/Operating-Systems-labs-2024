@@ -44,5 +44,5 @@ private:
     QLabel* readingLabel;
     QPushButton* cancelReadingButton;
 
-    QPushButton* terminateClientButton;
+    // QPushButton* terminateClientButton;
 };
