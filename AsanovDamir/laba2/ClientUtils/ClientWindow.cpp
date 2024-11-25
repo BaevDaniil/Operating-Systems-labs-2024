@@ -1,5 +1,7 @@
 #include "ClientWindow.hpp"
 #include <QMessageBox>
+#include <QDockWidget>
+#include <QDateTime>
 #include <iostream>
 #include "logger.hpp"
 
@@ -9,9 +11,10 @@ ClientWindow::ClientWindow(const std::vector<Book>& books, QWidget* parent)
 
     createBookView(books);
     createReadingView();
+    createHistoryView();
 
     setCentralWidget(stackedWidget);
-    setWindowTitle("Client Control Panel");
+    setWindowTitle("Client Window");
     resize(400, 300);
 
     // Set started window
@@ -62,6 +65,14 @@ void ClientWindow::createReadingView() {
     stackedWidget->addWidget(readingView);
 }
 
+void ClientWindow::createHistoryView() {
+    historyList = new QListWidget(this);
+    historyList->setFixedWidth(350);
+    auto* widget = new QDockWidget("History", this);
+    widget->setWidget(historyList);
+    addDockWidget(Qt::LeftDockWidgetArea, widget);
+}
+
 void ClientWindow::selectBook() {
     if (bookList->currentItem()) {
         QString bookName = bookList->currentItem()->text().split(" - ").first();
@@ -77,17 +88,29 @@ void ClientWindow::cancelReading() {
 
     // Set started window
     stackedWidget->setCurrentIndex(0);
+
+    addHistory("Cancelled reading: ", bookName, true);
+}
+
+void ClientWindow::addHistory(const QString& action, const QString& bookName, bool success) {
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+    QString status = success ? "SUCCESS" : "FAIL";
+    historyList->addItem(QString("[%1] %2 \"%3\": %4").arg(timestamp, action, bookName, status));
 }
 
 void ClientWindow::onSuccessTakeBook() {
     // Set reading window
     stackedWidget->setCurrentIndex(1);
+
+    addHistory("TAKE book: ", bookList->currentItem()->text().split(" - ").first(), true);
 }
 
 void ClientWindow::onFailedTakeBook() {
     // Cannot display this window....
     // QMessageBox::warning(nullptr, "FAIL", "Failed to take book");
     LoggerClient::get_instance().log(Status::ERROR, "Failed to take book");
+
+    addHistory("TAKE book: ", bookList->currentItem()->text().split(" - ").first(), false);
 }
 
 void ClientWindow::terminateClient() {

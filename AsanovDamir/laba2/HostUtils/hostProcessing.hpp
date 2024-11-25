@@ -49,14 +49,15 @@ void listenForClientMessages(conn& conn, Semaphore& semaphore, std::vector<Book>
 
         char buffer[1024] = {0};
         if (conn.Read(buffer, sizeof(buffer))) {
-            window.signalResetTimer();
             std::string request(buffer);
             logger.log(Status::INFO, "Request is recieved: " + request);
 
             if (request.rfind("TAKE ", 0) == 0) {
                 std::string bookName = request.substr(5);
-                if (takeBook(books, bookName, logger))
+                bool res = takeBook(books, bookName, logger);
+                if (res)
                 {
+                    window.signalStopTimer();
                     std::string response = "YES";
                     if (conn.Write(response.c_str(), response.size())) {
                         logger.log(Status::INFO, "Host response successfully");
@@ -67,6 +68,7 @@ void listenForClientMessages(conn& conn, Semaphore& semaphore, std::vector<Book>
                 }
                 else
                 {
+                    window.signalResetTimer();
                     std::string response = "NO";
                     if (conn.Write(response.c_str(), response.size())) {
                         logger.log(Status::INFO, "Host response successfully");
@@ -75,16 +77,21 @@ void listenForClientMessages(conn& conn, Semaphore& semaphore, std::vector<Book>
                         logger.log(Status::ERROR, "Failed to response");
                     }
                 }
+
+                window.addHistory("TAKE book: ", QString::fromStdString(bookName), res);
             } else if (request.rfind("RETURN ", 0) == 0) {
+                window.signalResetTimer();
                 std::string bookName = request.substr(7);
-                returnBook(books, bookName, logger); // client unexpected any response on this request
+                bool res = returnBook(books, bookName, logger); // client unexpected any response on this request
+
+                window.addHistory("RETURN book: ", QString::fromStdString(bookName), res);
             }
 
             window.updateBooks(books);
         }
 
         semaphore.Post(); // End critical section
-        sleep(0.1);
+        sleep(0.01);
     }
 }
 

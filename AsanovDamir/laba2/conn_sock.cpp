@@ -13,7 +13,7 @@ ConnSock::ConnSock(int hostPort, LoggerHost& logger) : sock_fd(-1) {
     }
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(hostPort); // Порт
+    addr.sin_port = htons(hostPort);
     addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sock_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
@@ -79,6 +79,10 @@ ConnSock* ConnSock::Accept(LoggerHost& logger) {
 }
 
 bool ConnSock::Read(void* buf, size_t count) {
+    if (!IsInitialized()) {
+        return false;
+    }
+
     ssize_t bytes_read = recv(sock_fd, buf, count, 0);
     if (bytes_read <= 0) {
         return false;
@@ -87,6 +91,10 @@ bool ConnSock::Read(void* buf, size_t count) {
 }
 
 bool ConnSock::Write(const void* buf, size_t count) {
+    if (!IsInitialized()) {
+        return false;
+    }
+
     ssize_t bytes_sent = send(sock_fd, buf, count, 0);
     if (bytes_sent <= 0) {
         return false;

@@ -22,11 +22,15 @@ public:
 
     void updateBooks(const std::vector<Book>& books);
     void signalResetTimer();
+    void signalStopTimer();
+    
+    void addHistory(const QString& action, const QString& bookName, bool success);
 
     pid_t clientPid; // for kill
 
 signals:
     void resetSignalTimer();
+    void stopSignalTimer();
 
 private slots:
     void terminateClient();
@@ -36,6 +40,7 @@ private slots:
 private:
     QLabel* portLabel;
     QListWidget* bookList;
+    QListWidget* historyList;
     QPushButton* terminateClientButton;
     QPushButton* terminateHostButton;
 

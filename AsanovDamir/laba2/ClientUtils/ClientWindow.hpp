@@ -22,6 +22,7 @@ public:
 
     void onSuccessTakeBook();
     void onFailedTakeBook();
+    void addHistory(const QString& action, const QString& bookName, bool success);
 
 signals:
     void bookSelected(const QString& bookName);
@@ -35,9 +36,11 @@ private slots:
 private:
     void createBookView(const std::vector<Book>& books);
     void createReadingView();
+    void createHistoryView();
 
     QStackedWidget* stackedWidget; // For switch windows (started <-> reading)
 
+    QListWidget* historyList;
     QListWidget* bookList;
     QPushButton* selectButton;
 

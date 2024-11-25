@@ -31,11 +31,11 @@ void listenForHostMessages(conn& conn, Semaphore& semaphore, ClientWindow& windo
         }
 
         semaphore.Post(); // End critical section
-        sleep(0.1);
+        sleep(0.01);
     }
 }
 
-int processClient(Semaphore& semaphore, conn& conn_sock, const std::vector<Book>& books) {
+int processClient(Semaphore& semaphore, conn& conn, const std::vector<Book>& books) {
     auto& logger = LoggerClient::get_instance();
 
     int argc = 0;
@@ -46,11 +46,11 @@ int processClient(Semaphore& semaphore, conn& conn_sock, const std::vector<Book>
     std::atomic<bool> is_running(true);
 
     // Start thread with listenning socket
-    std::thread listenerThread(listenForHostMessages, std::ref(conn_sock), std::ref(semaphore), std::ref(window), std::ref(is_running));
+    std::thread listenerThread(listenForHostMessages, std::ref(conn), std::ref(semaphore), std::ref(window), std::ref(is_running));
 
-    QObject::connect(&window, &ClientWindow::bookSelected, [&conn_sock, &logger](const QString& bookName) {
+    QObject::connect(&window, &ClientWindow::bookSelected, [&semaphore, &conn, &logger](const QString& bookName) {
         std::string request = "TAKE " + bookName.toStdString();
-        if (conn_sock.Write(request.c_str(), request.size())) {
+        if (conn.Write(request.c_str(), request.size())) {
             logger.log(Status::INFO, "Requested book: " + bookName.toStdString());
         }
         else {
@@ -58,9 +58,9 @@ int processClient(Semaphore& semaphore, conn& conn_sock, const std::vector<Book>
         }
     });
 
-    QObject::connect(&window, &ClientWindow::bookReturned, [&conn_sock, &logger](const QString& bookName) {
+    QObject::connect(&window, &ClientWindow::bookReturned, [&conn, &logger](const QString& bookName) {
         std::string request = "RETURN " + bookName.toStdString();
-        if (conn_sock.Write(request.c_str(), request.size())) {
+        if (conn.Write(request.c_str(), request.size())) {
             logger.log(Status::INFO, "Returned book: " + bookName.toStdString());
         }
         else {

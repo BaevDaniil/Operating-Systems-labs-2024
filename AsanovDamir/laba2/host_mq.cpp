@@ -22,7 +22,6 @@ int main(int argc, char* argv[]) {
 
     auto& logger = LoggerHost::get_instance();
 
-    // TODO: replace after create child proccess
     ConnMq hostMq(key, logger);
     if (!hostMq.IsInitialized()) {
         logger.log(Status::ERROR, "Failed to initialize host queue");

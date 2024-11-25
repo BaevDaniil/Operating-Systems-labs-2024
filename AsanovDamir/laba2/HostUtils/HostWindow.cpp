@@ -2,6 +2,8 @@
 #include "logger.hpp"
 #include <QMessageBox>
 #include <QApplication>
+#include <QDockWidget>
+#include <QDateTime>
 #include <cstdlib>
 #include <signal.h>
 
@@ -46,10 +48,19 @@ HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& bo
     connect(terminateClientButton, &QPushButton::clicked, this, &HostWindow::terminateClient);
     connect(terminateHostButton, &QPushButton::clicked, this, &HostWindow::terminateHost);
     connect(this, &HostWindow::resetSignalTimer, this, &HostWindow::resetTimer);
+    connect(this, &HostWindow::stopSignalTimer, this, [this]() {
+        timerLabel->setText("Client reading");
+        clientTimer->stop();
+    });
+
+    historyList = new QListWidget(this);
+    QDockWidget* historyDock = new QDockWidget("History", this);
+    historyDock->setWidget(historyList);
+    addDockWidget(Qt::RightDockWidgetArea, historyDock);
 
     setCentralWidget(centralWidget);
-    setWindowTitle("Host Control Panel");
-    resize(400, 300);
+    setWindowTitle("Host Window");
+    resize(600, 450);
 
     clientTimer->start();
 }
@@ -63,6 +74,12 @@ void HostWindow::updateBooks(const std::vector<Book>& books) {
     }
 }
 
+void HostWindow::addHistory(const QString& action, const QString& bookName, bool success) {
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+    QString status = success ? "SUCCESS" : "FAIL";
+    historyList->addItem(QString("[%1] Client ID: 1, %2 \"%3\": %4").arg(timestamp, action, bookName, status));
+}
+
 void HostWindow::terminateClient() {
     clientTimer->stop();
     timerLabel->setText("Client terminated");
@@ -74,6 +91,7 @@ void HostWindow::terminateClient() {
 void HostWindow::terminateHost() {
     QMessageBox::information(this, "Terminate Host", "Host terminated.");
     LoggerHost::get_instance().log(Status::INFO, "Terminate Host");
+    kill(clientPid, SIGKILL); // and kill client too
     std::exit(0);
 }
 
@@ -85,4 +103,8 @@ void HostWindow::resetTimer() {
 
 void HostWindow::signalResetTimer() {
     emit resetSignalTimer();
+}
+
+void HostWindow::signalStopTimer() {
+    emit stopSignalTimer();
 }
