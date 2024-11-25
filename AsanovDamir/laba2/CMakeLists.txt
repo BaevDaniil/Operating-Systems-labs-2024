@@ -49,3 +49,25 @@ set(HEADERS_MQ
 add_executable(host_mq ${SOURCES_MQ} ${HEADERS_MQ})
 target_link_libraries(host_mq Qt5::Widgets)
 target_include_directories(host_mq PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+############ fifo ############
+set(SOURCES_FIFO
+    host_fifo.cpp
+    HostUtils/HostWindow.cpp
+    ClientUtils/ClientWindow.cpp
+    conn_fifo.cpp
+    semaphore.cpp
+)
+
+set(HEADERS_FIFO
+    HostUtils/HostWindow.hpp
+    ClientUtils/ClientWindow.hpp
+    conn_fifo.hpp
+    semaphore.hpp
+    logger.hpp
+)
+
+add_executable(host_fifo ${SOURCES_FIFO} ${HEADERS_FIFO})
+target_link_libraries(host_fifo Qt5::Widgets)
+target_include_directories(host_fifo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
