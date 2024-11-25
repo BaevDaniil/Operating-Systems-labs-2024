@@ -36,6 +36,7 @@ public:
     bool getGoatNum(int *num);
 
     void runRounds();
+    void sendStartGame();
 
     void setStatusWolfNumber();
 

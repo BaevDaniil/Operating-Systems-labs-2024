@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <cstdlib>
+#include <memory>
+#include <sys/stat.h>
 
 #include "../connections/connection.h"
 #include "../utilsConfigurations/gameWorld.h"
@@ -17,11 +19,12 @@ public:
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;
 
-    bool init(pid_t hostPid, int seed);
-    void run(void);
+    bool init();
+    void run();
 
-    static void Terminate(void) noexcept;
+    static void Terminate() noexcept;
     static void signalHandler(int sig);
+    static bool isRunGame;
 
 private:
     const int maxGoatNumAlive = 101;

@@ -16,7 +16,6 @@ enum goatStatus
 {
     ALIVE,
     DEAD,
-    FINISH,
 };
 
 struct Goat

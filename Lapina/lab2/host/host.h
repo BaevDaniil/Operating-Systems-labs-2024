@@ -5,14 +5,19 @@
 #include <csignal>
 #include <sys/stat.h>
 #include <memory>
+#include <condition_variable>
+#include <mutex>
 
 #include "../utilsConfigurations/safeMap.h"
+#include "../utilsConfigurations/gameWorld.h"
 #include "goatHandler.h"
 
 class Host
 {
 public:
     static Host* GetInstance();
+    static int GoatsNumber;
+
     std::atomic<bool> hostTerminated=false;
 
     static void HostSignalHandler(int signum, siginfo_t *si, void *data);
@@ -24,6 +29,7 @@ public:
     void wolfAndGoatGame();
 
 private:
+    std::condition_variable cv;
     struct Wolf
     {
         int minNumber=1;

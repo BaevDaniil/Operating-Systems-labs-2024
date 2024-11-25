@@ -9,10 +9,12 @@
 #include <string>
 #include <thread>
 #include <csignal>
+#include <sys/syslog.h>
 
 bool goatHandler::initGoat(pid_t goatPid, std::shared_ptr<GameWorld> gameW)
 {
-    hostPid = getpid();
+    this->hostPid = getpid();
+    this->goatPid = goatPid;
 
     gameWorld = gameW;
     auto goat = std::make_shared<Goat>();
@@ -39,25 +41,27 @@ bool goatHandler::initGoat(pid_t goatPid, std::shared_ptr<GameWorld> gameW)
 }
 
 
-bool goatHandler::openSemaphores(){
+bool goatHandler::openSemaphores()
+{
     std::string semNameHost = "/hostWolf" + std::to_string(hostPid) + std::to_string(goatPid);
-    hostSemaphore = sem_open(semNameHost.c_str(), O_CREAT | O_EXCL, 0777, 0);
+    errno=0;
+    hostSemaphore = sem_open(semNameHost.c_str(), 0);
     if (hostSemaphore == SEM_FAILED) {
-        syslog(LOG_ERR, "Semaphore creation error %s", semNameHost.c_str());
+        syslog(LOG_ERR, "Semaphore creation error %s %d", semNameHost.c_str(), errno);
         return false;
     }
 
     std::string semNameClient = "/clientGoat" + std::to_string(hostPid) + std::to_string(goatPid);
-    clientSemaphore = sem_open(semNameClient.c_str(), O_CREAT | O_EXCL, 0777, 0);
+    clientSemaphore = sem_open(semNameClient.c_str(), 0);
     if (clientSemaphore == SEM_FAILED) {
         syslog(LOG_ERR, "Semaphore creation error %s", semNameClient.c_str());
         sem_close(hostSemaphore);
         return false;
     }
 
-    sem_post(clientSemaphore);
+    sem_post(hostSemaphore);
 
-    syslog(LOG_INFO, "Semaphore created %s %s", semNameHost.c_str(), semNameClient.c_str());
+    syslog(LOG_INFO, "Semaphore opened %s %s", semNameHost.c_str(), semNameClient.c_str());
     return true;
 }
 
@@ -65,6 +69,7 @@ bool goatHandler::openConnection(){
     syslog(LOG_INFO, "Creating connection for goat %d", int(goatPid));
     try {
         connect = Connection::GetConn(hostPid, goatPid, Connection::Type::HOST);
+        connect->Open();
     }
     catch (std::exception &e) {
         syslog(LOG_ERR, "Connection creation error for goat %d", int(goatPid));
@@ -82,14 +87,14 @@ bool goatHandler::openConnection(){
 
 void goatHandler::stopGoat()
 {
-    sem_close(hostSemaphore);
-    sem_close(clientSemaphore);
-    isOpenSem=false;
-
     if (goatPid != -1)
     {
         kill(goatPid, SIGTERM);
     }
+    
+    sem_close(clientSemaphore);
+    sem_close(hostSemaphore);
+    isOpenSem=false;
 }
 
 
@@ -144,6 +149,11 @@ bool goatHandler::getGoatNum(int* num)
     return true;
 }
 
+void goatHandler::sendStartGame()
+{
+    sem_post(clientSemaphore);
+}
+
 void goatHandler::runRounds()
 {
      while (isOpenSem){
@@ -152,34 +162,35 @@ void goatHandler::runRounds()
             gameWorld->goatMap.get(goatPid)->stateClient = LOAD;
 
             int hostNum = gameWorld->wolfNumber.load();
-            
-            int clientNum;
-            if (!getGoatNum(&clientNum)) {
+
+            int goatNum;
+            if (!getGoatNum(&goatNum)) {
                 break;
             }
+            
+            gameWorld->goatMap.get(goatPid)->goatNumber=goatNum;
 
             int diffForAlive = int(70 / gameWorld->goatMap.len());
             int diffForDead = int(20 / gameWorld->goatMap.len());
 
-            if (gameWorld->goatMap.get(goatPid)->status.load() == goatStatus::ALIVE && abs(clientNum - hostNum) > diffForAlive) 
+            if (gameWorld->goatMap.get(goatPid)->status.load() == goatStatus::ALIVE && abs(goatNum - hostNum) > diffForAlive) 
             {
                 gameWorld->goatMap.get(goatPid)->status = goatStatus::DEAD;
                 gameWorld->aliveGoatNumber--;
                 gameWorld->deadGoatNumder++;
                 syslog(LOG_INFO,"Goat dead %d", int(goatPid));
             }
-            else if (gameWorld->goatMap.get(goatPid)->status.load() == goatStatus::DEAD && abs(clientNum - hostNum) <= diffForDead) {
+            else if (gameWorld->goatMap.get(goatPid)->status.load() == goatStatus::DEAD && abs(goatNum - hostNum) <= diffForDead) {
                 gameWorld->goatMap.get(goatPid)->status = goatStatus::ALIVE;
                 gameWorld->aliveGoatNumber++;
                 gameWorld->deadGoatNumder--;
                 syslog(LOG_INFO,"Goat alive %d", int(goatPid));
             }
-
+            
             if (!sendGoatStatus(gameWorld->goatMap.get(goatPid)->status.load())) 
             {
                 break;
             }
-
             gameWorld->goatMap.get(goatPid)->stateClient = CONNECTION;
             statusWolfNumber = false;
         }

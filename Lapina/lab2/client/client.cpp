@@ -8,6 +8,8 @@
 #include <string>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <cstring>
+#include <unistd.h>
 
 
 bool Client::clientTerminated = false;
@@ -30,7 +32,10 @@ int main(int argc, char* argv[])
     }
 
     Client client(hostPid);
-    client.run();
+    if (client.init())
+    {
+        client.run();
+    }
 
     syslog(LOG_INFO, "End goat %d\n", getpid());
     closelog();
@@ -41,36 +46,9 @@ int main(int argc, char* argv[])
 
 Client::Client(pid_t HostPid) 
 {
-    clientTerminated=false;
-
     hostPid = HostPid;
+
     std::signal(SIGTERM, signalHandler);
-
-    syslog(LOG_INFO, "Get connection for %d", int(hostPid));
-    try {
-        connect = Connection::GetConn(hostPid, getpid(), Connection::Type::CLIENT);
-    }
-    catch (std::exception &e) {
-        syslog(LOG_ERR, "Connection getting error");
-    }
-    catch (const char *e) {
-        syslog(LOG_ERR, "Connection getting error");
-    }
-
-    std::string semRead = "/clientGoat" + std::to_string(hostPid) + std::to_string(getpid());
-    clientSemaphore = sem_open(semRead.c_str(), O_CREAT | O_EXCL, 0777, 0);
-    if (clientSemaphore == SEM_FAILED) {
-        syslog(LOG_ERR, "Semaphore creation error %s", semRead.c_str());
-    }
-
-    std::string semWrite = "/hostWolf" + std::to_string(hostPid) + std::to_string(getpid());
-    hostSemaphore = sem_open(semWrite.c_str(), O_CREAT | O_EXCL, 0777, 0);
-    if (hostSemaphore == SEM_FAILED) {
-        syslog(LOG_ERR, "Semaphore creation error %s", semWrite.c_str());
-        sem_close(clientSemaphore);
-    }
-
-    syslog(LOG_INFO, "Connection opened");
 }
 
 void Client::signalHandler(int sig) {
@@ -85,7 +63,8 @@ void Client::signalHandler(int sig) {
 
 void Client::Terminate() noexcept 
 {
-    if (!clientTerminated) {
+    if (!clientTerminated) 
+    {
         clientTerminated = true;
         syslog(LOG_INFO, "Terminating client");
     }
@@ -104,8 +83,42 @@ bool Client::openConnection(void)
     return conn_status;
 }
 
+bool Client::init()
+{
+    syslog(LOG_INFO, "Get connection for %d", int(hostPid));
+    try {
+        connect = Connection::GetConn(hostPid, getpid(), Connection::Type::CLIENT);
+    }
+    catch (std::exception &e) {
+        syslog(LOG_ERR, "Connection getting error");
+    }
+    catch (const char *e) {
+        syslog(LOG_ERR, "Connection getting error");
+    }
+
+    std::string semRead = "/clientGoat" + std::to_string(hostPid) + std::to_string(getpid());
+    clientSemaphore = sem_open(semRead.c_str(), O_CREAT | O_EXCL, 0777, 0);
+    if (clientSemaphore == SEM_FAILED) {
+        syslog(LOG_ERR, "Semaphore creation error %s", semRead.c_str());
+        return false;
+    }
+
+    std::string semWrite = "/hostWolf" + std::to_string(hostPid) + std::to_string(getpid());
+    hostSemaphore = sem_open(semWrite.c_str(), O_CREAT | O_EXCL, 0777, 0);
+    if (hostSemaphore == SEM_FAILED) {
+        syslog(LOG_ERR, "Semaphore creation error %s", semWrite.c_str());
+        sem_close(clientSemaphore);
+        return false;
+    }
+
+    syslog(LOG_INFO, "Semaphore created %s %s", semRead.c_str(), semWrite.c_str());
+    return true;
+}
+
 void Client::run(void){
     syslog(LOG_INFO, "Client run goat %d", int(getpid()));
+
+    std::srand(std::time(0));
 
     if (kill(hostPid, SIGUSR1) < 0) {
         syslog(LOG_ERR, "Wrong host pid. Terminate.");
@@ -118,18 +131,24 @@ void Client::run(void){
         exit(EXIT_FAILURE);
     }
 
+    sem_wait(clientSemaphore);
+
     syslog(LOG_INFO, "Start game");
-    do {
+    while(!clientTerminated)
+    {
+
         if (!sendNumGoat()) {
             syslog(LOG_ERR, "Could not send number. Terminate");
-            exit(EXIT_FAILURE);
+            break;
         }
-
-        if (!getStatusGoat()) {
+        
+        if (!getStatusGoat()) 
+        {
             syslog(LOG_ERR, "Could not get state. Terminate");
-            exit(EXIT_FAILURE);
+            break;
         }
-    } while(state != goatStatus::FINISH || !clientTerminated);
+        sleep(3);
+    }
 
     syslog(LOG_INFO, "Finish goat %d", getpid());
     connect->Close();
@@ -146,13 +165,12 @@ bool Client::getStatusGoat(void)
 
     if (sem_timedwait(clientSemaphore, &ts) == -1)
         return false;
+    
     bool statusRead = connect->Read(&state, sizeof(state));
     if (statusRead) {
         std::string stateStr = "Alive";
         if (state == goatStatus::DEAD)
             stateStr = "Dead";
-        else if (state == goatStatus::FINISH)
-            stateStr = "Finish";
 
         syslog(LOG_INFO, "Goat state is: %s", stateStr.c_str());
     }
@@ -172,7 +190,7 @@ bool Client::sendNumGoat(void)
     {
         num=randomGoatNumber(1, maxGoatNumAlive);
     }
-    else if (state==goatStatus::DEAD)
+    else
     {
         num=randomGoatNumber(1, maxGoatNumDead);
     }

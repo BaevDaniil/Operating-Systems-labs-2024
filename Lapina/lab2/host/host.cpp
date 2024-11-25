@@ -10,17 +10,31 @@
 #include <cstring>
 #include <fcntl.h>
 #include <vector>
+#include <condition_variable>
 #include <mutex>
-
 
 Host Host::instance;
 Host* Host::GetInstance() {
     return &instance;
 }
 
+int Host::GoatsNumber=0;
+
 int main(int argc, char *argv[]) 
 {
     openlog("lab2_host", LOG_PID | LOG_NDELAY | LOG_PERROR, LOG_USER);
+
+    if (argc != 2) {
+        std::cout << "Wrong number of arguments. Number goats required.\n";
+        return EXIT_FAILURE;
+    }
+    try {
+        Host::GoatsNumber = std::atoi(argv[1]);
+    }
+    catch (...) {
+        std::cout << "Wrong type of argument. Number goats must be integer number.\n";
+        return EXIT_FAILURE;
+    }
 
     int status = EXIT_SUCCESS;
     pid_t hostPid = getpid();
@@ -63,8 +77,6 @@ Host::Host()
         throw std::runtime_error("Failed to register SIGUSR1");
     }
 
-    openlog("lab2_host", LOG_NDELAY | LOG_PID | LOG_PERROR, LOG_USER);
-
     syslog(LOG_INFO, "Host pid = %d", int(getpid()));
 
     gameW = std::make_shared<GameWorld>();
@@ -77,7 +89,9 @@ int Host::runHost()
 {
     syslog(LOG_INFO, "Host started");
 
-    try {
+    try 
+    {   
+
         std::thread connectionThread(&Host::wolfAndGoatGame, this);
 
         //int argc = 1;
@@ -112,6 +126,13 @@ void Host::GoatStartInit(pid_t goatPid)
 {
     try
       {
+        if (int(goats.len())==GoatsNumber)
+        {
+            syslog(LOG_INFO, "All goats in game. Wait next game");
+            kill(goatPid, SIGTERM);
+            return;
+        }
+
         std::shared_ptr<goatHandler> goatH = std::make_shared<goatHandler>();
         bool initStatus = goatH->initGoat(goatPid, gameW);
         if (initStatus)
@@ -121,6 +142,7 @@ void Host::GoatStartInit(pid_t goatPid)
           goats.set(goatPid, goatH);
           syslog(LOG_INFO, "Open goat in thread");
         }
+        cv.notify_one();
       }
       catch (std::exception &e) {
             syslog(LOG_ERR, "Error: %s", e.what());
@@ -133,6 +155,16 @@ void Host::Terminate() noexcept
     {
         hostTerminated=true;
         syslog(LOG_INFO, "Terminating host");
+        
+        std::vector<pid_t> keysGoat = goats.getAllKeys(); 
+        std::mutex mut2;
+        mut2.lock();
+        for (size_t i = 0; i < keysGoat.size(); i++)
+        {
+            syslog(LOG_INFO, "Close goat: %d", int(keysGoat[i]));
+            goats.get(keysGoat[i]) -> stopGoat();
+        }
+        mut2.unlock();
     }
 }
 
@@ -142,7 +174,26 @@ void Host::wolfAndGoatGame()
     std::srand(std::time(0));
 
     bool allDied = false;
-    std::this_thread::sleep_for(std::chrono::seconds(120));
+
+    std::mutex m;
+    std::unique_lock lk(m);
+    while(int(goats.len())!=GoatsNumber)
+    {
+        syslog(LOG_INFO, "Wait goats: %d", GoatsNumber-int(goats.len()));
+        cv.wait(lk);
+    }
+    lk.unlock();
+
+    std::vector<pid_t> keysGoat = goats.getAllKeys();  
+
+    std::mutex mut1;
+    mut1.lock();
+    for (size_t i = 0; i < keysGoat.size(); i++)
+    {
+        goats.get(keysGoat[i]) -> sendStartGame();
+    }
+    mut1.unlock();
+
 
     while (!hostTerminated.load())
     {
@@ -151,7 +202,7 @@ void Host::wolfAndGoatGame()
             {
                 syslog(LOG_INFO, "Gameover");
                 //emit gameover();
-                std::this_thread::sleep_for(std::chrono::seconds(3));
+                //std::this_thread::sleep_for(std::chrono::seconds(3));
                 Terminate();
                 continue;
             }
@@ -167,35 +218,23 @@ void Host::wolfAndGoatGame()
             wolfInstance.genRandomNumber();
         }
         gameW->wolfNumber = wolfInstance.wolfNumber.load();
-
-        std::vector<pid_t> keysGoat = goats.getAllKeys();  
+        syslog(LOG_INFO, "WolfNumber = %d", gameW->wolfNumber.load());
 
         std::mutex mut1;
-        std::unique_lock<std::mutex> lk(mut1);
+        mut1.lock();
         for (size_t i = 0; i < keysGoat.size(); i++)
         {
             goats.get(keysGoat[i]) -> setStatusWolfNumber();
         }
-        lk.unlock();
+        mut1.unlock();
 
         wolfInstance.isRandomNumber = true;
         std::this_thread::sleep_for(std::chrono::seconds(3));
         gameW->time = 3;
     }
-
-    std::vector<pid_t> keysGoat = goats.getAllKeys();  
-    std::mutex mut2;
-    std::unique_lock<std::mutex> lk2(mut2);
-    for (size_t i = 0; i < keysGoat.size(); i++)
-    {
-        syslog(LOG_INFO, "Close goat: %d", int(keysGoat[i]));
-        goats.get(keysGoat[i]) -> stopGoat();
-    }
-    lk2.unlock();
 }
 
 void Host::Wolf::genRandomNumber()
 {
     wolfNumber = int((1.0*std::rand() + 1) / (1.0*RAND_MAX + 1) * (maxNumber - minNumber) + minNumber);
-    syslog(LOG_INFO, "WolfNumber = %d", wolfNumber.load());
 }
