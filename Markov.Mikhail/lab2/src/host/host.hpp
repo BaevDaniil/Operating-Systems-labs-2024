@@ -10,9 +10,8 @@ class Host
 private:
     int pid;
     struct sigaction signal_handler;
-    std::unordered_map<int, ClientInfo<T>> table; // TODO: add mutex to emplace into table
+    std::unordered_map<int, ClientInfo<T>> table;
     friend void host_signal_handler(int, siginfo_t *, void *);
-    friend void stop_host_signal_handler(int, siginfo_t *, void *);
 
     Host(const std::string &pid_path, bool create) : pid(getpid()), table()
     {
