@@ -28,7 +28,7 @@ bool MessageQueue::Read(std::string& message)
     if (mq == (mqd_t)-1)
     {
         std::cout << "Error opening message queue: " << strerror(errno) << std::endl;
-        throw std::runtime_error("Error opening message queue");
+        return false;
     }
 
     ssize_t bytesReceived = mq_receive(mq, buffer, sizeof(buffer), nullptr);
@@ -46,7 +46,7 @@ bool MessageQueue::Write(const std::string& message)
     if (mq == (mqd_t)-1)
     {
         std::cout << "Error opening message queue: " << strerror(errno) << std::endl;
-        throw std::runtime_error("Error opening message queue");
+        return false;
     }
 
     if (mq_send(mq, message.c_str(), message.size(), 0) == -1)
@@ -57,4 +57,5 @@ bool MessageQueue::Write(const std::string& message)
 MessageQueue::~MessageQueue()
 {
     mq_close(mq);
+    mq_unlink(name.c_str());
 }

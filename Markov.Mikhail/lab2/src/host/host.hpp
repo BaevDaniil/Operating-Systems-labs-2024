@@ -34,14 +34,7 @@ private:
 
     bool is_client_info_valid(int pid)
     {
-        if (!table.contains(pid))
-            return false;
-        if (!table[pid].is_valid())
-        {
-            table.erase(pid);
-            return false;
-        }
-        return true;
+        return table[pid].is_valid();
     }
 
 public:
@@ -59,10 +52,17 @@ public:
     {
         std::vector<int> invalid_pids;
         for (auto&& [pid, client_info] : table)
-            if (is_client_info_valid(pid) && pid != except_pid)
-                client_info.push_general_message(msg);
-            else    
+        {
+            if (is_client_info_valid(pid))
+            {
+                if (pid != except_pid)
+                    client_info.push_general_message(msg);
+            }
+            else
                 invalid_pids.push_back(pid);
+        }
+        for (int i : invalid_pids)
+            table.erase(i);
         return invalid_pids;
     }
 
@@ -70,12 +70,14 @@ public:
     {
         std::vector<int> invalid_pids;
         for (auto &&[pid, client_info] : table)
+        {
             if (is_client_info_valid(pid))
-            {
                 client_info.push_general_message(msg);
-            }
             else
                 invalid_pids.push_back(pid);
+        }
+        for(int i : invalid_pids)
+            table.erase(i);
         return invalid_pids;
     }
 
@@ -86,10 +88,18 @@ public:
 
     bool push_message(int pid, const std::string& msg)
     {
-        if(is_client_info_valid(pid))
+        if(table.contains(pid))
         {
-            table[pid].push_message(msg);
-            return true;
+            if(is_client_info_valid(pid))
+            {
+                table[pid].push_message(msg);
+                return true;
+            }
+            else
+            {
+                table.erase(pid);
+                return false;
+            }
         }
         return false;
     }

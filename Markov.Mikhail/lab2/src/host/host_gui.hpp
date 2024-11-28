@@ -128,6 +128,7 @@ public:
             else
                 remove_client(item->text().toStdString());
         });
+        counter = 0;
     }
 
     ~MainWindow() = default;
@@ -146,6 +147,7 @@ private:
     std::unordered_map<std::string, int> name_pid_table;
     QLineEdit *generalInputField;
     QPushButton *generalSendButton;
+    int counter;
 
     void remove_client_by(int client_pid, const std::string& name)
     {
@@ -170,7 +172,8 @@ private:
 public : 
     void add_client(int client_pid)
     {
-        QListWidgetItem *newClientItem = new QListWidgetItem("Client " + QString::number(clientList->count() + 1));
+        ++counter;
+        QListWidgetItem *newClientItem = new QListWidgetItem("Client " + QString::number(counter));
         clientList->addItem(newClientItem);
         ChatWindow *chatWindow = new ChatWindow(client_pid, this);
         chatWindow->setWindowTitle(newClientItem->text());
@@ -182,14 +185,20 @@ public :
 
     void remove_client(int client_pid)
     {
-        std::string name = pid_name_table[client_pid];
-        remove_client_by(client_pid, name);
+        if(pid_name_table.contains(client_pid))
+        {
+            std::string name = pid_name_table[client_pid];
+            remove_client_by(client_pid, name);
+        }
     }
 
     void remove_client(const std::string& name)
     {
-        int client_pid = name_pid_table[name];
-        remove_client_by(client_pid, name);
+        if(name_pid_table.contains(name))
+        {
+            int client_pid = name_pid_table[name];
+            remove_client_by(client_pid, name);
+        }
     }
 
     void set_msg_to_chat(int client_pid, const std::string& msg)

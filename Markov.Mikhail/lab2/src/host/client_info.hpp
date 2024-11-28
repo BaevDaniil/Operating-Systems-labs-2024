@@ -80,7 +80,10 @@ public:
     ClientInfo &operator=(const ClientInfo &) = default;
     ClientInfo(ClientInfo &&) = default;
     ClientInfo &operator=(ClientInfo &&) = default;
-    ~ClientInfo() = default;
+    ~ClientInfo() 
+    {
+        stop();
+    }
 
     bool is_valid()
     {
@@ -90,25 +93,33 @@ public:
     bool read_from_client(std::string &message)
     {
         update_time();
-        return connections[1].Read(message);
+        valid = connections[1].Read(message);
+        return valid;
     }
 
     bool read_from_client_general(std::string &message)
-    {
+    {   
         update_time();
-        return connections[3].Read(message);
+        valid =  connections[3].Read(message);
+        return valid;
     }
 
     void push_message(const std::string& msg)
     {
-        std::lock_guard<std::mutex> m_lock(*m_queue);
-        unwritten_messages.push(msg);
+        if(valid)
+        {
+            std::lock_guard<std::mutex> m_lock(*m_queue);
+            unwritten_messages.push(msg);
+        }
     }
 
     void push_general_message(const std::string &msg)
     {
-        std::lock_guard<std::mutex> m_lock(*general_m_queue);
-        general_unwritten_messages.push(msg);
+        if(valid)
+        {
+            std::lock_guard<std::mutex> m_lock(*general_m_queue);
+            general_unwritten_messages.push(msg);
+        }
     }
     void start(auto&& mainwindow_pointer, auto&& f)
     {   
@@ -130,13 +141,17 @@ public:
                 f1 = pop_unwritten_message(msg);
                 if (f1)
                 {
-                    send_to_client(msg);
+                    valid = send_to_client(msg);
+                    if(!valid)
+                        return true;
                     msg.clear();
                 }
                 f2 = pop_general_unwritten_message(msg);
                 if (f2)
                 { 
-                    send_to_client_general(msg);
+                    valid = send_to_client_general(msg);
+                    if(!valid)
+                        return true;
                     msg.clear();
                 }
                 if (std::chrono::steady_clock::now() - time_point > std::chrono::seconds(60))
@@ -165,6 +180,7 @@ public:
     }
     void append_unread_counter()
     {
-        ++(*unread_messages);
+        if(valid)
+            ++(*unread_messages);
     }
 };

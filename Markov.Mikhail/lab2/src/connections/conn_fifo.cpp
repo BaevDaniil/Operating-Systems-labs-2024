@@ -31,7 +31,7 @@ bool NamedChannel::Read(std::string &message)
     if (fd == -1)
     {
         std::cout << pathname << " " << std::strerror(errno) << std::endl;
-        throw std::runtime_error("Failed to open FIFO channel");
+        return false;
     }
     ssize_t bytes_read = read(fd, buffer, max_msg_size - 1);
     if (bytes_read == -1)
@@ -47,7 +47,7 @@ bool NamedChannel::Write(const std::string &message)
     if (fd == -1)
     {
         std::cout << pathname << " " << std::strerror(errno) << std::endl;
-        throw std::runtime_error("Failed to open FIFO channel");
+        return false;
     }
     ssize_t bytesWritten = write(fd, message.c_str(), message.size());
     if (bytesWritten == -1)
