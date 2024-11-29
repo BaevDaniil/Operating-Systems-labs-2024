@@ -1,0 +1,14 @@
+build
+local_chat
+.vscode
+./host
+tmp
+client_fifo
+host_fifo
+client_mq
+host_mq
+client_shm
+host_shm
+host_gui
+client_gui
+junk
