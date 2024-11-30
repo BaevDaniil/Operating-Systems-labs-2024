@@ -1,18 +1,33 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 
-project(Lab2 LANGUAGES CXX)
+project(local_chat)
 
-set(CMAKE_CXX_STANDARD 11)
+# Устанавливаем стандарт C++ для всего проекта
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(Lab2 main.cpp)
+# Включаем автоматическую обработку moc, uic и rcc (если нужно)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "KPDA")
-    set(INSTALL_DESTDIR "/tmp")
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-    install(TARGETS Lab2
-        RUNTIME DESTINATION "${INSTALL_DESTDIR}"
-        BUNDLE DESTINATION "${INSTALL_DESTDIR}"
-        LIBRARY DESTINATION "${INSTALL_DESTDIR}"
-    )
-endif()
+set(FIFO_FILES
+    src/host_fifo.cpp
+    src/client_fifo.cpp
+    src/conn_fifo.cpp
+)
+
+set(GUI_FILES
+    src/host_window.cpp
+    src/client_window.cpp
+    src/input_dialog.cpp
+)
+
+add_executable(conn_fifo
+    ${FIFO_FILES}
+    ${GUI_FILES}
+)
+
+target_link_libraries(conn_fifo PRIVATE Qt6::Widgets)
