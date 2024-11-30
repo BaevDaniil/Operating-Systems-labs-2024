@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Client LANGUAGES CXX)
+project(Lab2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(Client main.cpp)
+add_executable(Lab2 main.cpp)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "KPDA")
     set(INSTALL_DESTDIR "/tmp")
 
-    install(TARGETS Client
+    install(TARGETS Lab2
         RUNTIME DESTINATION "${INSTALL_DESTDIR}"
         BUNDLE DESTINATION "${INSTALL_DESTDIR}"
         LIBRARY DESTINATION "${INSTALL_DESTDIR}"
