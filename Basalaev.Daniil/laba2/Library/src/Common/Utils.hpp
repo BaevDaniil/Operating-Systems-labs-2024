@@ -1,33 +1,16 @@
 #pragma once
 
+#include "Http.hpp"
+
 #include <QString>
 #include <QDateTime>
 #include <string>
 
 namespace utils
 {
-
-enum class OperationType_e : bool
-{
-    POST, // Take book
-    PUT // Return book
-};
-
-enum class OperationStatus_e : bool
-{
-    OK,
-    FAIL
-};
-
-struct operation
-{
-    OperationType_e type;
-    OperationStatus_e status;
-};
-
 struct HistoryBookInfo
 {
-    QString toQString();
+    QString toQString() const;
 
     QDateTime timeStamp;
     int clientId;
@@ -35,7 +18,7 @@ struct HistoryBookInfo
     operation op;
 };
 
-HistoryBookInfo::toQString()
+QString HistoryBookInfo::toQString() const
 {
     QString timeStr = timestamp.toString("yyyy-MM-dd HH:mm:ss");
     QString clientIdStr = QString::number(clientId);

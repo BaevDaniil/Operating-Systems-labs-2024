@@ -1,12 +1,12 @@
 #pragma once
 
-#include "conn.hpp"
+#include "connImpl.hpp"
 #include "Common/Alias.hpp"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-class ConnSock : public conn
+class ConnSock : public connImpl
 {
 public:
     using namespace alias;

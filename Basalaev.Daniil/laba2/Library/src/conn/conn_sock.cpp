@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <string>
 
-std::unique_ptr<ConnSock*> crateHostSocket(port_t hostPort)
+std::unique_ptr<ConnSock*> ConnSock::crateHostSocket(port_t hostPort)
 {
     ConnSock socket = new ConnSock();
     socket->m_socketFileDesriptor = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,7 +39,7 @@ std::unique_ptr<ConnSock*> crateHostSocket(port_t hostPort)
     return socket;
 }
 
-std::unique_ptr<ConnSock*> crateClientSocket(port_t hostPort)
+std::unique_ptr<ConnSock*> ConnSock::crateClientSocket(port_t hostPort)
 {
     ConnSock socket = new ConnSock();
     socket->m_socketFileDesriptor = socket(AF_INET, SOCK_STREAM, 0);

@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-std::unique_ptr<ConnFifo*> crateHostFifo(std::string const& fifoPath)
+std::unique_ptr<ConnFifo*> ConnFifo::crateHostFifo(std::string const& fifoPath)
 {
     ConnFifo* fifo = new ConnFifo();
 
@@ -37,7 +37,7 @@ std::unique_ptr<ConnFifo*> crateHostFifo(std::string const& fifoPath)
     return fifo;
 }
 
-std::unique_ptr<ConnFifo*> crateClientFifo(std::string const& fifoPath)
+std::unique_ptr<ConnFifo*> ConnFifo::crateClientFifo(std::string const& fifoPath)
 {
     ConnFifo* fifo = new ConnFifo();
 

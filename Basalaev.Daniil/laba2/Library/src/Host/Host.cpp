@@ -1,0 +1,139 @@
+#include "Host.hpp"
+#include "HostWindow.hpp"
+#include "Common/Http.hpp"
+
+#include <QApplication>
+#include <thread>
+
+namespace details
+{
+
+auto findBook(alias::book_container_t const& books, std::string const& bookName)
+{
+    for (auto bookIt = books.begin(); bookIt != books.end(); ++bookIt)
+    {
+        if (bookIt->name == bookName)
+        {
+            return bookIt;
+        }
+    }
+
+    return books.end();
+}
+
+} // namespace details
+
+static int argc = 0;
+
+Host::Host(Semaphore& semaphore, conn& connection, alias::book_container_t const& books, QObject* parent)
+    : NetWorkElementImpl(semaphore, connection, parent)
+    , m_app(argc, nullptr)
+    , m_window(books)
+    , m_books(books)
+{
+    QObject::connect(&m_window, &HostWindow::bookSelected, this, handleBookSelected);
+    QObject::connect(&m_window, &HostWindow::bookReturned, this, handleBookReturned);
+}
+
+Host::~Host() = default;
+
+int Host::start()
+{
+    std::thread listener(listen(), this) // start listen messages from clients
+
+    m_window.show();
+    int res = m_app.exec();
+
+    m_isRanning = false; // TODO: make stop
+    if (listener.joinable()) { listener.join(); }
+
+    return res;
+}
+
+void Host::listen()
+{
+    while (m_isRunning)
+    {
+        m_semaphore.wait();
+
+        char buffer[1024] = {0};
+        if (m_connection.read(buffer, sizeof(buffer)))
+        {
+            if (auto req = http::respons::parse(std::string(buffer)))
+            {
+                if (req->type == http::OperationType_e::POST)
+                {
+                    handleBookSelected(req->bookName);
+                }
+                else
+                {
+                    handleBookReturned(req->bookName);
+                }
+            }
+        }
+
+        m_semaphore.post(); // End critical section
+        sleep(0.01);
+    }
+}
+
+Host::handleBookSelected(const std::string& bookName)
+{
+    http::response rsp{.id = alias::HOST_ID};
+
+    if (auto book = findBook(m_books, bookName); book != m_books.end())
+    {
+        if (book->count > 0)
+        {
+            --book->count;
+            rsp.status = http::OperationStatus_e::OK;
+        }
+        else
+        {
+            rsp.status = http::OperationStatus_e::FAIL;
+        }
+    }
+    else
+    {
+        rsp.status = http::OperationStatus_e::FAIL;
+    }
+
+    std::string const rspStr = rsp.toString();
+    if (m_connection.write(rspStr.c_str(), rspStr.size()))
+    {
+        // TODO: log
+    }
+    else
+    {
+        // TODO: log
+    }
+
+    // TODO: update window
+}
+
+Host::handleBookReturned(const std::string& bookName)
+{
+    http::response rsp{.id = alias::HOST_ID};
+
+    if (auto book = findBook(m_books, bookName); book != m_books.end())
+    {
+        ++book->count;
+        rsp.status = http::OperationStatus_e::OK;
+    }
+    else
+    {
+        rsp.status = http::OperationStatus_e::FAIL;
+    }
+
+    std::string const rspStr = rsp.toString();
+    if (m_connection.Write(rspStr.c_str(), rspStr.size()))
+    {
+        // TODO: log
+    }
+    else
+    {
+        // TODO: log
+    }
+
+    // TODO: update window
+}

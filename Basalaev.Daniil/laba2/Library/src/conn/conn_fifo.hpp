@@ -1,11 +1,11 @@
 #pragma once
 
-#include "conn.hpp"
+#include "connImpl.hpp"
 #include "Common/Alias.hpp"
 
 #include <string>
 
-class ConnFifo : public conn
+class ConnFifo : public connImpl
 {
 public:
     ~ConnFifo() override;

@@ -15,4 +15,4 @@ set(SRC_LIST_TESTS ut.cpp)
 add_executable(test ${SRC_LIST_TESTS})
 
 target_include_directories(test PRIVATE ${SOURCE_DIR})
-target_link_libraries(test PRIVATE Catch2::Catch2WithMain DemonLib)
+target_link_libraries(test PRIVATE Catch2::Catch2WithMain LibraryLib)
