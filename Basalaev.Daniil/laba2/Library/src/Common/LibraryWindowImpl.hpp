@@ -1,47 +1,37 @@
 #pragma once
 
-#include <QMainWindow>
-#include <QLabel>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QScrollArea>
-#include <QListWidget>
-#include <QStackedWidget>
-#include <QString>
-#include <vector>
+#include "Alias.hpp"
+#include "Utils.hpp"
+
 #include <string>
+#include <QMainWindow>
+#include <QListWidget>
 #include <QWidget>
-#include "Book.hpp"
 
 class LibraryWindowImpl : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    LibraryWindowImpl(alias::book_container_t const&, QWidget* parent = nullptr);
+    LibraryWindowImpl(alias::id_t, alias::book_container_t const&, QWidget* parent = nullptr);
     virtual ~LibraryWindowImpl() = default;
 
-    virtual void onSuccessPostBook() = 0;
-    virtual void onFailedPostBook() = 0;
-    virtual void onSuccessPutBook() = 0;
-    virtual void onFailedPutBook() = 0;
-    virtual void addHistoryEntry(utils::HistoryBookInfo const&) = 0;
+    void updateBooks(alias::book_container_t const&);
+    void addHistoryEntry(utils::HistoryBookInfo const&);
+
+    virtual void onSuccessTakeBook() = 0;
+    virtual void onFailedTakeBook() = 0;
+    virtual void onSuccessReturnBook() = 0;
+    virtual void onFailedReturnBook() = 0;
 
 signals:
-    void bookSelected(const QString& bookName);
-    void bookReturned(const QString& bookName);
+    void bookSelected(const std::string& bookName);
+    void bookReturned(const std::string& bookName);
 
-private:
-    void createBookView(const std::vector<Book>& books);
-    void createReadingView();
+protected:
     void createHistoryView();
 
-    QListWidget* historyList;
-    QListWidget* bookList;
+    QListWidget* m_historyList;
+    QListWidget* m_bookList;
+    alias::id_t m_id;
 };
-
-LibraryWindowImpl::LibraryWindowImpl(alias::book_container_t const& books, QWidget* parent)
-    : QMainWindow(parent)
-{
-    // TODO
-}

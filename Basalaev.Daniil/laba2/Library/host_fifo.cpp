@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     //     {"Book 3", 20},
     //     {"Book 4", 0}
     // };
-    // Semaphore semaphore(1);
+    // SemaphoreLocal semaphore(1);
 
     // auto& logger = LoggerHost::get_instance();
 

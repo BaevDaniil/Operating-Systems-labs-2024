@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Common/Book.hpp"
+#include "Common/LibraryWindowImpl.hpp"
+
 #include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
@@ -11,22 +14,19 @@
 #include <vector>
 #include <string>
 #include <QWidget>
-#include "Book.hpp"
 
-class ClientWindow : public QMainWindow {
+class ClientWindow : public LibraryWindowImpl
+{
     Q_OBJECT
 
 public:
-    ClientWindow(const std::vector<Book>& books, QWidget* parent = nullptr);
-    ~ClientWindow();
+    ClientWindow(alias::id_t, alias::book_container_t const&, QWidget* parent = nullptr);
+    ~ClientWindow() override;
 
-    void onSuccessTakeBook();
-    void onFailedTakeBook();
-    void addHistory(const QString& action, const QString& bookName, bool success);
-
-signals:
-    void bookSelected(const QString& bookName);
-    void bookReturned(const QString& bookName);
+    void onSuccessTakeBook() override;
+    void onFailedTakeBook() override;
+    void onSuccessReturnBook()override;
+    void onFailedReturnBook() override;
 
 private slots:
     void selectBook();
@@ -34,18 +34,13 @@ private slots:
     void terminateClient();
 
 private:
-    void createBookView(const std::vector<Book>& books);
+    void createBookView(alias::book_container_t const&);
     void createReadingView();
-    void createHistoryView();
 
-    QStackedWidget* stackedWidget; // For switch windows (started <-> reading)
-
-    QListWidget* historyList;
-    QListWidget* bookList;
+    // For switch windows (started <-> reading)
+    QStackedWidget* stackedWidget; 
     QPushButton* selectButton;
 
     QLabel* readingLabel;
     QPushButton* cancelReadingButton;
-
-    // QPushButton* terminateClientButton;
 };

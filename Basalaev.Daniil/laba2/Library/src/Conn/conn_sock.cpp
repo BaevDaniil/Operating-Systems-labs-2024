@@ -1,15 +1,17 @@
 #include "conn_sock.hpp"
-#include "Logger.hpp"
+#include "Common/Logger.hpp"
 
 #include <unistd.h>
 #include <cstring>
 #include <arpa/inet.h>
 #include <string>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
-std::unique_ptr<ConnSock*> ConnSock::crateHostSocket(port_t hostPort)
+std::unique_ptr<ConnSock> ConnSock::crateHostSocket(alias::port_t hostPort)
 {
-    ConnSock socket = new ConnSock();
-    socket->m_socketFileDesriptor = socket(AF_INET, SOCK_STREAM, 0);
+    ConnSock* socket = new ConnSock();
+    socket->m_socketFileDesriptor = ::socket(AF_INET, SOCK_STREAM, 0);
 
     if (!socket->IsInitialized())
     {
@@ -36,13 +38,13 @@ std::unique_ptr<ConnSock*> ConnSock::crateHostSocket(port_t hostPort)
         return nullptr;
     }
 
-    return socket;
+    return std::unique_ptr<ConnSock>(socket);
 }
 
-std::unique_ptr<ConnSock*> ConnSock::crateClientSocket(port_t hostPort)
+std::unique_ptr<ConnSock> ConnSock::crateClientSocket(alias::port_t hostPort)
 {
-    ConnSock socket = new ConnSock();
-    socket->m_socketFileDesriptor = socket(AF_INET, SOCK_STREAM, 0);
+    ConnSock* socket = new ConnSock();
+    socket->m_socketFileDesriptor = ::socket(AF_INET, SOCK_STREAM, 0);
 
     if (!socket->IsInitialized())
     {
@@ -69,14 +71,14 @@ std::unique_ptr<ConnSock*> ConnSock::crateClientSocket(port_t hostPort)
         return nullptr;
     }
 
-    return socket;
+    return std::unique_ptr<ConnSock>(socket);
 }
 
-std::unique_ptr<ConnSock*> ConnSock::Accept()
+std::unique_ptr<ConnSock> ConnSock::Accept()
 {
-    address_t clientAddr;
+    alias::address_t clientAddr;
     socklen_t clientLen = sizeof(clientAddr);
-    desriptor_t clientFd = accept(m_socketFileDesriptor, (struct sockaddr*)&clientAddr, &clientLen);
+    alias::desriptor_t clientFd = accept(m_socketFileDesriptor, (struct sockaddr*)&clientAddr, &clientLen);
     if (clientFd == -1)
     {
         LOG_ERROR("ConnSock", "Host failed to accept connection");
@@ -86,7 +88,7 @@ std::unique_ptr<ConnSock*> ConnSock::Accept()
     ConnSock* socket = new ConnSock();
     socket->m_socketFileDesriptor = clientFd;
     socket->m_address = clientAddr;
-    return socket;
+    return std::unique_ptr<ConnSock>(socket);
 }
 
 bool ConnSock::Read(void* buf, size_t count)

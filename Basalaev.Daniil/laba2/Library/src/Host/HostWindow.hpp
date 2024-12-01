@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Common/Book.hpp"
+#include "Common/LibraryWindowImpl.hpp"
+
 #include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
@@ -11,20 +14,22 @@
 #include <string>
 #include <QWidget>
 #include <QTimer>
-#include "Book.hpp"
 
-class HostWindow : public QMainWindow {
+class HostWindow : public LibraryWindowImpl
+{
     Q_OBJECT
 
 public:
     HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent = nullptr);
-    virtual ~HostWindow();
+    ~HostWindow() override;
 
-    void updateBooks(const std::vector<Book>& books);
+    void onSuccessTakeBook() override;
+    void onFailedTakeBook() override;
+    void onSuccessReturnBook()override;
+    void onFailedReturnBook() override;
+
     void signalResetTimer();
     void signalStopTimer();
-    
-    void addHistory(const QString& action, const QString& bookName, bool success);
 
     pid_t clientPid; // for kill
 
@@ -39,8 +44,6 @@ private slots:
 
 private:
     QLabel* portLabel;
-    QListWidget* bookList;
-    QListWidget* historyList;
     QPushButton* terminateClientButton;
     QPushButton* terminateHostButton;
 

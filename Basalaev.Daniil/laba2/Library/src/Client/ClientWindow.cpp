@@ -1,56 +1,48 @@
 #include "ClientWindow.hpp"
+#include "Common/Logger.hpp"
+
 #include <QMessageBox>
 #include <QDockWidget>
 #include <QDateTime>
-#include <iostream>
-#include "logger.hpp"
 
-ClientWindow::ClientWindow(const std::vector<Book>& books, QWidget* parent)
-    : QMainWindow(parent) {
+ClientWindow::ClientWindow(alias::id_t id, alias::book_container_t const& books, QWidget* parent)
+    : LibraryWindowImpl(id, books, parent)
+{
     stackedWidget = new QStackedWidget(this);
 
     createBookView(books);
     createReadingView();
-    createHistoryView();
 
     setCentralWidget(stackedWidget);
     setWindowTitle("Client Window");
     resize(400, 300);
 
-    // Set started window
     stackedWidget->setCurrentIndex(0);
 }
 
-ClientWindow::~ClientWindow() {}
+ClientWindow::~ClientWindow() = default;
 
-void ClientWindow::createBookView(const std::vector<Book>& books) {
+void ClientWindow::createBookView(alias::book_container_t const& books)
+{
     QWidget* bookView = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(bookView);
 
-    bookList = new QListWidget(this);
-    for (const auto& book : books) {
-        bookList->addItem(QString::fromStdString(book.name) + " - " + QString::number(book.count) + " copies");
-    }
-    layout->addWidget(bookList);
+    layout->addWidget(m_bookList);
 
     selectButton = new QPushButton("Select Book", this);
     selectButton->setEnabled(false);
     layout->addWidget(selectButton);
 
-    //terminateClientButton = new QPushButton("Terminate Client", this);
-    //layout->addWidget(terminateClientButton);
-
-    // Enable button if book is choosed
-    connect(bookList, &QListWidget::itemSelectionChanged, [this]() {
-        selectButton->setEnabled(bookList->currentItem() != nullptr);
+    connect(m_bookList, &QListWidget::itemSelectionChanged, [this]() {
+        selectButton->setEnabled(m_bookList->currentItem() != nullptr);
     });
     connect(selectButton, &QPushButton::clicked, this, &ClientWindow::selectBook);
-    //connect(terminateClientButton, &QPushButton::clicked, this, &ClientWindow::terminateClient);
 
     stackedWidget->addWidget(bookView);
 }
 
-void ClientWindow::createReadingView() {
+void ClientWindow::createReadingView()
+{
     QWidget* readingView = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(readingView);
 
@@ -65,55 +57,85 @@ void ClientWindow::createReadingView() {
     stackedWidget->addWidget(readingView);
 }
 
-void ClientWindow::createHistoryView() {
-    historyList = new QListWidget(this);
-    historyList->setFixedWidth(350);
-    auto* widget = new QDockWidget("History", this);
-    widget->setWidget(historyList);
-    addDockWidget(Qt::LeftDockWidgetArea, widget);
-}
-
-void ClientWindow::selectBook() {
-    if (bookList->currentItem()) {
-        QString bookName = bookList->currentItem()->text().split(" - ").first();
+void ClientWindow::selectBook()
+{
+    if (m_bookList->currentItem())
+    {
+        QString bookName = m_bookList->currentItem()->text().split(": ").first();
         readingLabel->setText("Reading book: " + bookName);
 
-        emit bookSelected(bookName);
+        emit bookSelected(bookName.toStdString());
     }
 }
 
-void ClientWindow::cancelReading() {
+void ClientWindow::cancelReading()
+{
     QString bookName = readingLabel->text().split(": ").last();
-    emit bookReturned(bookName);
+    emit bookReturned(bookName.toStdString());
 
-    // Set started window
     stackedWidget->setCurrentIndex(0);
-
-    addHistory("Cancelled reading: ", bookName, true);
 }
 
-void ClientWindow::addHistory(const QString& action, const QString& bookName, bool success) {
-    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
-    QString status = success ? "SUCCESS" : "FAIL";
-    historyList->addItem(QString("[%1] %2 \"%3\": %4").arg(timestamp, action, bookName, status));
-}
-
-void ClientWindow::onSuccessTakeBook() {
-    // Set reading window
+void ClientWindow::onSuccessTakeBook()
+{
     stackedWidget->setCurrentIndex(1);
 
-    addHistory("TAKE book: ", bookList->currentItem()->text().split(" - ").first(), true);
+    utils::HistoryBookInfo bookInfo
+    {
+        .timeStamp = QDateTime::currentDateTime(),
+        .clientId = m_id,
+        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
+        .op = {.type = http::OperationType_e::POST, .status = http::OperationStatus_e::OK}
+    };
+
+    addHistoryEntry(bookInfo);
 }
 
-void ClientWindow::onFailedTakeBook() {
-    // Cannot display this window....
-    // QMessageBox::warning(nullptr, "FAIL", "Failed to take book");
-    LoggerClient::get_instance().log(Status::ERROR, "Failed to take book");
+void ClientWindow::onFailedTakeBook()
+{
+    LOG_ERROR(CLIENT_LOG, "Failed to take book");
 
-    addHistory("TAKE book: ", bookList->currentItem()->text().split(" - ").first(), false);
+    utils::HistoryBookInfo bookInfo
+    {
+        .timeStamp = QDateTime::currentDateTime(),
+        .clientId = m_id,
+        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
+        .op = {.type = http::OperationType_e::POST, .status = http::OperationStatus_e::FAIL}
+    };
+
+    addHistoryEntry(bookInfo);
 }
 
-void ClientWindow::terminateClient() {
+void ClientWindow::onSuccessReturnBook()
+{
+    utils::HistoryBookInfo bookInfo
+    {
+        .timeStamp = QDateTime::currentDateTime(),
+        .clientId = m_id,
+        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
+        .op = {.type = http::OperationType_e::PUT, .status = http::OperationStatus_e::OK}
+    };
+
+    addHistoryEntry(bookInfo);
+}
+
+void ClientWindow::onFailedReturnBook()
+{
+    LOG_ERROR(CLIENT_LOG, "Failed to return book");
+
+    utils::HistoryBookInfo bookInfo
+    {
+        .timeStamp = QDateTime::currentDateTime(),
+        .clientId = m_id,
+        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
+        .op = {.type = http::OperationType_e::PUT, .status = http::OperationStatus_e::FAIL}
+    };
+
+    addHistoryEntry(bookInfo);
+}
+
+void ClientWindow::terminateClient()
+{
     QMessageBox::information(this, "Terminate Client", "Client terminated.");
     std::exit(0); // TODO: exit only qapp, but don't whole process
 }

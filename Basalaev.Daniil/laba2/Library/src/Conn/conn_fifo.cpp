@@ -1,12 +1,12 @@
 #include "conn_fifo.hpp"
-#include "Logger.hpp"
+#include "Common/Logger.hpp"
 
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
-std::unique_ptr<ConnFifo*> ConnFifo::crateHostFifo(std::string const& fifoPath)
+std::unique_ptr<ConnFifo> ConnFifo::crateHostFifo(std::string const& fifoPath)
 {
     ConnFifo* fifo = new ConnFifo();
 
@@ -34,10 +34,10 @@ std::unique_ptr<ConnFifo*> ConnFifo::crateHostFifo(std::string const& fifoPath)
         return nullptr;
     }
 
-    return fifo;
+    return std::unique_ptr<ConnFifo>(fifo);
 }
 
-std::unique_ptr<ConnFifo*> ConnFifo::crateClientFifo(std::string const& fifoPath)
+std::unique_ptr<ConnFifo> ConnFifo::crateClientFifo(std::string const& fifoPath)
 {
     ConnFifo* fifo = new ConnFifo();
 
@@ -56,7 +56,7 @@ std::unique_ptr<ConnFifo*> ConnFifo::crateClientFifo(std::string const& fifoPath
         return nullptr;
     }
 
-    return fifo;
+    return std::unique_ptr<ConnFifo>(fifo);
 }
 
 bool ConnFifo::IsInitialized() const

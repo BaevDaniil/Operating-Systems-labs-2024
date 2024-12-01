@@ -1,17 +1,21 @@
 #pragma once
 
-#include "conn_impl.hpp"
-#include "Semaphore.hpp"
-#include "Common/Alias.hpp"
+#include "Alias.hpp"
+#include "Conn/conn_impl.hpp"
+#include "SemaphoreLocal.hpp"
 
 #include <QObject>
 
 class NetWorkElementImpl : public QObject
 {
-    Q_OBJECT
-
 public:
-    NetWorkElementImpl(alias::id_t, Semaphore&, conn&, QObject* parent = nullptr);
+    NetWorkElementImpl(alias::id_t id, SemaphoreLocal& semaphore, connImpl& connection, QObject* parent = nullptr)
+        : QObject(parent)
+        , m_id(id)
+        , m_semaphore(semaphore)
+        , m_connection(connection)
+    {}
+
     virtual ~NetWorkElementImpl() = default;
 
     virtual int start() = 0;
@@ -25,13 +29,6 @@ private slots:
 
 protected:
     alias::id_t m_id;
-    Semaphore& m_semaphore;
-    conn& m_connection;
+    SemaphoreLocal& m_semaphore;
+    connImpl& m_connection;
 };
-
-NetWorkElementImpl::NetWorkElementImpl(alias::id_t id, Semaphore& semaphore, conn& connection, QObject* parent)
-    : QObject(parent)
-    , m_id(id);
-    , m_semaphore(semaphore)
-    , m_connection(connection)
-{}

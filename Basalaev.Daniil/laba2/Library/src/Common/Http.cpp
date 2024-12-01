@@ -25,7 +25,7 @@ std::optional<request> request::parse(std::string const& reqMsg)
 
     // parse id
     auto idxOfLastSlash = reqMsg.rfind('/');
-    if (idxOfLastSlash == -1) { return {}; }
+    if (idxOfLastSlash == std::string::npos) { return {}; }
     req.id = std::stoi(reqMsg.substr(idx, idxOfLastSlash));
 
     // parse book name
@@ -50,7 +50,7 @@ std::optional<response> response::parse(std::string const& rspMsg)
 
     // parse id
     auto idxOfLastSlash = rspMsg.rfind('/');
-    if (idxOfLastSlash == -1) { return {}; }
+    if (idxOfLastSlash == std::string::npos) { return {}; }
     rsp.id = std::stoi(rspMsg.substr(13, idxOfLastSlash));
 
     // parse book name

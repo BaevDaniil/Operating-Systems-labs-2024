@@ -9,12 +9,16 @@
 class HostWindow;
 class QApplication;
 
+// TODO: remove
+#include <QApplication>
+#include "HostWindow.hpp"
+
 class Host : public NetWorkElementImpl
 {
     Q_OBJECT
 
 public:
-    Host(Semaphore&, conn&, alias::book_container_t const&, QObject* parent = nullptr);
+    Host(SemaphoreLocal&, connImpl&, alias::book_container_t const&, QObject* parent = nullptr);
     ~Host() override;
 
     int start() override;
@@ -27,6 +31,6 @@ private slots:
 private:
     QApplication m_app;
     HostWindow m_window;
-    std::atomic<bool> m_isRunning(true);
+    std::atomic<bool> m_isRunning{true};
     alias::book_container_t m_books;
 };

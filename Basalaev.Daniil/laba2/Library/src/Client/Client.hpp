@@ -9,12 +9,16 @@
 class ClientWindow;
 class QApplication;
 
+// TODO: remove
+#include <QApplication>
+#include "ClientWindow.hpp"
+
 class Client : public NetWorkElementImpl
 {
     Q_OBJECT
 
 public:
-    Client(alias::id_t, Semaphore&, conn&, alias::book_container_t const&, QObject* parent = nullptr);
+    Client(alias::id_t, SemaphoreLocal&, connImpl&, alias::book_container_t const&, QObject* parent = nullptr);
     ~Client() override;
 
     int start() override;
@@ -27,5 +31,5 @@ private slots:
 private:
     QApplication m_app;
     ClientWindow m_window;
-    std::atomic<bool> m_isRunning(true);
+    std::atomic<bool> m_isRunning{true};
 };
