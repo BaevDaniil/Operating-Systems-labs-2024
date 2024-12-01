@@ -1,12 +1,17 @@
 #include "host_window.h"
 #include "input_dialog.h"
+#include "client_window.h"
 
 
-HostChatWindow::HostChatWindow(QWidget *parent)
-    : QMainWindow(parent)
+HostChatWindow::HostChatWindow(const std::vector<std::string>& clients_path, QWidget *parent)
+    : QMainWindow(parent), clients_path(clients_path)
 {
-    newClient.setText("Добавить нового клиента(fifo)");
+    init_gui();
+}
 
+
+void HostChatWindow::init_gui()
+{
     QScrollArea *scrollArea = new QScrollArea(&privateChatsWidget);
     scrollArea->setWidgetResizable(true);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -14,19 +19,15 @@ HostChatWindow::HostChatWindow(QWidget *parent)
 
     QVBoxLayout *scrollLayout = new QVBoxLayout(&privateChatsWidget);
     scrollLayout->addWidget(scrollArea);
-    scrollLayout->addWidget(&newClient);
 
-    for (int i = 0; i < 20; ++i) {
-        auto itemText = QStringLiteral("Элемент %1").arg(i + 1);
+    for(auto& client_path : clients_path)
+    {
+        int client_pid;
+        sscanf(client_path.c_str(), "/tmp/client_fifo%d", &client_pid);
+        auto itemText = QStringLiteral("Клиент: %1").arg(client_pid);
         auto *item = new QListWidgetItem(itemText, &clientListWidget);
         dialogHash[item] = std::make_unique<InputDialog>();
     }
-
-    QObject::connect(&clientListWidget, &QListWidget::itemClicked, [this](QListWidgetItem *item) {
-        if (dialogHash.contains(item)) {
-            dialogHash[item]->show();
-        }
-    });
 
     tabWidget.addTab(&generalChat, "Общий чат");
     tabWidget.addTab(&privateChatsWidget, "Личный чат");
@@ -39,5 +40,12 @@ HostChatWindow::HostChatWindow(QWidget *parent)
 
     setGeometry(100, 100, 800, 600);
     setWindowTitle("Сервер");
+
+
+    QObject::connect(&clientListWidget, &QListWidget::itemClicked, [this](QListWidgetItem *item) {
+        if (dialogHash.contains(item)) {
+            dialogHash[item]->show();
+        }
+    });
 }
 

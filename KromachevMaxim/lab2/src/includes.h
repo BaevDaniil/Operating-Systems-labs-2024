@@ -17,9 +17,20 @@
 #include <QComboBox>
 #include <QRadioButton>
 #include <QGroupBox>
+#include <QApplication>
+#include <QTimer>
+#include <QMessageBox>
 
 #include <memory>
 #include <unordered_map>
 #include <iostream>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <string>
+#include <stdio.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 #endif // INCLUDES_H

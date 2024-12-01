@@ -1,7 +1,25 @@
 #include "client_window.h"
 
-ClientChatWindow::ClientChatWindow(QWidget *parent)
-    : QWidget(parent)
+ClientChatWindow::ClientChatWindow(const std::string& host_path, QWidget *parent)
+    : QWidget(parent), host_path(host_path)
+{
+    init_gui();
+    setup_conn();
+
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [this, timer]() {
+
+        ++setupCallCount;
+        setup_conn();
+
+        if (setupCallCount >= 10) {
+            timer->stop();
+        }
+    });
+    timer->start(1000);
+}
+
+void ClientChatWindow::init_gui()
 {
     tabWidget.addTab(&generalChat, "Общий чат");
     tabWidget.addTab(&privateChat, "Личный чат");
@@ -13,6 +31,6 @@ ClientChatWindow::ClientChatWindow(QWidget *parent)
     setLayout(mainLayout);
 
     setGeometry(100, 100, 800, 600);
-    setWindowTitle("Клиент");
+    setWindowTitle(QString("Клиент: %1").arg(getpid()));
 }
 

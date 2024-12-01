@@ -12,8 +12,8 @@ public:
     ~InputDialog() override = default;
 
 private:
-    QTextEdit* textEdit { nullptr };
-    QLineEdit* lineEdit { nullptr };
+    QTextEdit* msg_output { nullptr };
+    QLineEdit* msg_input { nullptr };
 };
 
 #endif // INPUTDIALOG_H
