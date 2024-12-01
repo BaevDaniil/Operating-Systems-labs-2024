@@ -2,10 +2,6 @@ lab1.pro.user
 CMakeLists.txt.user
 build_lab1
 build
-
-# This file is used to ignore files which are generated
-# ----------------------------------------------------------------------------
-
 *~
 *.autosave
 *.a
@@ -39,17 +35,9 @@ Thumbs.db
 *.rc
 /.qmake.cache
 /.qmake.stash
-
-# qtcreator generated files
 *.pro.user*
-
-# xemacs temporary files
 *.flc
-
-# Vim temporary files
 .*.swp
-
-# Visual Studio generated files
 *.ib_pdb_index
 *.idb
 *.ilk
@@ -63,18 +51,10 @@ Thumbs.db
 *.opensdf
 *.vcxproj
 *vcxproj.*
-
-# MinGW generated files
 *.Debug
 *.Release
-
-# Python byte code
 *.pyc
-
-# Binaries
-# --------
 *.dll
 *.exe
-
 CMakeLists.txt.user
 QtCreatorDeployment.txt
