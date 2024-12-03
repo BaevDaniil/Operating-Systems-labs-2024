@@ -10,6 +10,7 @@ fi
 
 if ! command -v qmake6 &> /dev/null; then
     echo "qt6 is not installed. Please install qt6 and try again."
+    echo "try this: sudo apt install qt6-base-dev libqt6gui6 libqt6widgets6 libqt6opengl6-dev qt6-wayland"
     exit 1
 fi
 
@@ -31,13 +32,14 @@ fi
 
 cd "$initial_dir" || { echo "Failed to exit build directory."; exit 1; }
 
+mv "$initial_dir/build/conn_shm" "$initial_dir/conn_shm"
+
+mv "$initial_dir/build/conn_mq" "$initial_dir/conn_mq"
+
+mv "$initial_dir/build/conn_pipe" "$initial_dir/conn_pipe"
 
 rm -rf "$initial_dir/build"
-
-mkdir -p "$initial_dir/host"
 
 rm -rf  "$initial_dir/tmp"
 
 mkdir "$initial_dir/tmp"
-
-touch "$initial_dir/host/host_log.txt"
