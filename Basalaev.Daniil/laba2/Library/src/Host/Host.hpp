@@ -25,12 +25,13 @@ public:
     void listen() override;
 
 private slots:
-    void handleBookSelected(const std::string& bookName) override;
-    void handleBookReturned(const std::string& bookName) override;
+    void handleBookSelected(const std::string& bookName, alias::id_t clientId) override;
+    void handleBookReturned(const std::string& bookName, alias::id_t clientId) override;
 
 private:
-    QApplication m_app;
+    QApplication m_app; // TODO: remove and make m_window as pointer
     HostWindow m_window;
     std::atomic<bool> m_isRunning{true};
     alias::book_container_t m_books;
+    alias::clients_id_container_t m_clients;
 };

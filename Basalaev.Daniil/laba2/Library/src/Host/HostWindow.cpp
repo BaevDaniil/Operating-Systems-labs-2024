@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <signal.h>
 
-static int secondsLeft = 5;
+static int secondsLeft = 100;
 
 HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent)
     : LibraryWindowImpl(alias::HOST_ID, books, parent)
@@ -27,7 +27,7 @@ HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& bo
     terminateHostButton = new QPushButton("Terminate Host", this);
     layout->addWidget(terminateHostButton);
 
-    timerLabel = new QLabel("Time left: 5 seconds", this);
+    timerLabel = new QLabel("Time left: 100 seconds", this);
     layout->addWidget(timerLabel);
 
     clientTimer = new QTimer(this);
@@ -78,8 +78,8 @@ void HostWindow::terminateHost()
 
 void HostWindow::resetTimer()
 {
-    secondsLeft = 5;
-    timerLabel->setText("Time left: 5 seconds");
+    secondsLeft = 100;
+    timerLabel->setText("Time left: 100 seconds");
     clientTimer->start();
 }
 
@@ -91,24 +91,4 @@ void HostWindow::signalResetTimer()
 void HostWindow::signalStopTimer()
 {
     emit stopSignalTimer();
-}
-
-void HostWindow::onSuccessTakeBook()
-{
-
-}
-
-void HostWindow::onFailedTakeBook()
-{
-
-}
-
-void HostWindow::onSuccessReturnBook()
-{
-
-}
-
-void HostWindow::onFailedReturnBook()
-{
-
 }

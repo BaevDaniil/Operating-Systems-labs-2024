@@ -29,14 +29,12 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // Make child process
-    pid_t pid = fork();
-    if (pid == -1)
+    if (pid_t pid = fork(); pid == -1) // error
     {
         LOG_ERROR("APP", "Failed to fork");
         return EXIT_FAILURE;
     }
-    else if (pid == 0)
+    else if (pid != 0) // client
     {
         auto clientSocketConn = ConnSock::crateClientSocket(port);
         if (!clientSocketConn)
@@ -45,10 +43,10 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
         }
 
-        Client client(1, semaphore, *clientSocketConn, books);
+        Client client(pid, semaphore, *clientSocketConn, books);
         return client.start();
     }
-    else
+    else // host
     {
         auto hostSocketConnAccepted = hostSocketConn->Accept();
         if (!hostSocketConnAccepted)

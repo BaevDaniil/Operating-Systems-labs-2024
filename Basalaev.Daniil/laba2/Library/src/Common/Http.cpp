@@ -11,13 +11,13 @@ std::optional<request> request::parse(std::string const& reqMsg)
     if (reqMsg.substr(0, 7) != "http://") { return {}; }
 
     // parse operation
-    uint idx = 11;
-    if (auto op = reqMsg.substr(7, 11); op == "POST")
+    uint idxOfStartId = 11;
+    if (reqMsg.substr(7, 4) == "POST")
     {
-        idx = 12;
+        idxOfStartId = 12;
         req.type = OperationType_e::POST;
     }
-    else if (op == "PUT/")
+    else if (reqMsg.substr(7, 3) == "PUT")
     {
         req.type = OperationType_e::PUT;
     }
@@ -26,7 +26,7 @@ std::optional<request> request::parse(std::string const& reqMsg)
     // parse id
     auto idxOfLastSlash = reqMsg.rfind('/');
     if (idxOfLastSlash == std::string::npos) { return {}; }
-    req.id = std::stoi(reqMsg.substr(idx, idxOfLastSlash));
+    req.id = std::stoi(reqMsg.substr(idxOfStartId, idxOfLastSlash - idxOfStartId));
 
     // parse book name
     req.bookName = reqMsg.substr(idxOfLastSlash+1);
@@ -50,11 +50,19 @@ std::optional<response> response::parse(std::string const& rspMsg)
 
     // parse id
     auto idxOfLastSlash = rspMsg.rfind('/');
-    if (idxOfLastSlash == std::string::npos) { return {}; }
-    rsp.id = std::stoi(rspMsg.substr(13, idxOfLastSlash));
+    if (idxOfLastSlash == std::string::npos || idxOfLastSlash <= 12) { return {}; }
+    rsp.id = std::stoi(rspMsg.substr(12, idxOfLastSlash - 12)); // TODO: catch ex
 
     // parse book name
-    rsp.status = rspMsg.substr(idxOfLastSlash+1) == "OK" ? OperationStatus_e::OK : OperationStatus_e::FAIL;
+    if (auto op = rspMsg.substr(idxOfLastSlash+1); op == "OK")
+    {
+        rsp.status = OperationStatus_e::OK;
+    }
+    else if (op == "FAIL")
+    {
+        rsp.status = OperationStatus_e::FAIL;
+    }
+    else { return {}; }
 
     return {rsp};
 }

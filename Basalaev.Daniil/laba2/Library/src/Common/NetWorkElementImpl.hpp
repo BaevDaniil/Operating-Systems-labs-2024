@@ -24,8 +24,8 @@ public:
     alias::id_t getId() const noexcept { return m_id; }
 
 private slots:
-    virtual void handleBookSelected(const std::string& bookName) = 0;
-    virtual void handleBookReturned(const std::string& bookName) = 0;
+    virtual void handleBookSelected(const std::string& bookName, alias::id_t clientId) = 0;
+    virtual void handleBookReturned(const std::string& bookName, alias::id_t clientId) = 0;
 
 protected:
     alias::id_t m_id;

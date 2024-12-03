@@ -23,10 +23,14 @@ public:
     ClientWindow(alias::id_t, alias::book_container_t const&, QWidget* parent = nullptr);
     ~ClientWindow() override;
 
-    void onSuccessTakeBook() override;
-    void onFailedTakeBook() override;
-    void onSuccessReturnBook()override;
-    void onFailedReturnBook() override;
+    std::string getCurrentBook() const;
+
+    void onSuccessTakeBook(std::string const& bookName, alias::id_t clientId) override;
+    void onSuccessReturnBook(std::string const& bookName, alias::id_t clientId) override;
+
+signals:
+    void bookSelected(const std::string& bookName, alias::id_t);
+    void bookReturned(const std::string& bookName, alias::id_t);
 
 private slots:
     void selectBook();

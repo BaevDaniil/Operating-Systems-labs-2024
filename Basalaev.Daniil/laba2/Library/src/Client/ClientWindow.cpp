@@ -64,74 +64,32 @@ void ClientWindow::selectBook()
         QString bookName = m_bookList->currentItem()->text().split(": ").first();
         readingLabel->setText("Reading book: " + bookName);
 
-        emit bookSelected(bookName.toStdString());
+        emit bookSelected(bookName.toStdString(), m_id);
     }
 }
 
 void ClientWindow::cancelReading()
 {
     QString bookName = readingLabel->text().split(": ").last();
-    emit bookReturned(bookName.toStdString());
+    emit bookReturned(bookName.toStdString(), m_id);
 
     stackedWidget->setCurrentIndex(0);
 }
 
-void ClientWindow::onSuccessTakeBook()
+std::string ClientWindow::getCurrentBook() const
+{
+    return m_bookList->currentItem()->text().split(": ").first().toStdString();
+}
+
+void ClientWindow::onSuccessTakeBook(std::string const& bookName, alias::id_t clientId)
 {
     stackedWidget->setCurrentIndex(1);
-
-    utils::HistoryBookInfo bookInfo
-    {
-        .timeStamp = QDateTime::currentDateTime(),
-        .clientId = m_id,
-        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
-        .op = {.type = http::OperationType_e::POST, .status = http::OperationStatus_e::OK}
-    };
-
-    addHistoryEntry(bookInfo);
+    LibraryWindowImpl::onSuccessTakeBook(bookName, clientId);
 }
-
-void ClientWindow::onFailedTakeBook()
+void ClientWindow::onSuccessReturnBook(std::string const& bookName, alias::id_t clientId)
 {
-    LOG_ERROR(CLIENT_LOG, "Failed to take book");
-
-    utils::HistoryBookInfo bookInfo
-    {
-        .timeStamp = QDateTime::currentDateTime(),
-        .clientId = m_id,
-        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
-        .op = {.type = http::OperationType_e::POST, .status = http::OperationStatus_e::FAIL}
-    };
-
-    addHistoryEntry(bookInfo);
-}
-
-void ClientWindow::onSuccessReturnBook()
-{
-    utils::HistoryBookInfo bookInfo
-    {
-        .timeStamp = QDateTime::currentDateTime(),
-        .clientId = m_id,
-        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
-        .op = {.type = http::OperationType_e::PUT, .status = http::OperationStatus_e::OK}
-    };
-
-    addHistoryEntry(bookInfo);
-}
-
-void ClientWindow::onFailedReturnBook()
-{
-    LOG_ERROR(CLIENT_LOG, "Failed to return book");
-
-    utils::HistoryBookInfo bookInfo
-    {
-        .timeStamp = QDateTime::currentDateTime(),
-        .clientId = m_id,
-        .name = m_bookList->currentItem()->text().split(": ").first().toStdString(),
-        .op = {.type = http::OperationType_e::PUT, .status = http::OperationStatus_e::FAIL}
-    };
-
-    addHistoryEntry(bookInfo);
+    stackedWidget->setCurrentIndex(0);
+    LibraryWindowImpl::onSuccessReturnBook(bookName, clientId);
 }
 
 void ClientWindow::terminateClient()

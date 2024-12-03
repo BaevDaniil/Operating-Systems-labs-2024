@@ -3,6 +3,7 @@
 #include "Common/Alias.hpp"
 #include "Common/Book.hpp"
 #include "Common/NetWorkElementImpl.hpp"
+#include "Common/Http.hpp"
 
 #include <atomic>
 
@@ -25,11 +26,12 @@ public:
     void listen() override;
 
 private slots:
-    void handleBookSelected(const std::string& bookName) override;
-    void handleBookReturned(const std::string& bookName) override;
+    void handleBookSelected(const std::string& bookName, alias::id_t clientId) override;
+    void handleBookReturned(const std::string& bookName, alias::id_t clientId) override;
 
 private:
     QApplication m_app;
     ClientWindow m_window;
     std::atomic<bool> m_isRunning{true};
+    http::OperationType_e m_lastOpeartion{};
 };

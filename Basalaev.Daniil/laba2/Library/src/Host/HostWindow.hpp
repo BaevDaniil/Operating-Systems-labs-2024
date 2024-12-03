@@ -23,11 +23,6 @@ public:
     HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent = nullptr);
     ~HostWindow() override;
 
-    void onSuccessTakeBook() override;
-    void onFailedTakeBook() override;
-    void onSuccessReturnBook()override;
-    void onFailedReturnBook() override;
-
     void signalResetTimer();
     void signalStopTimer();
 

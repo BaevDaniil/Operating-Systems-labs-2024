@@ -1,6 +1,6 @@
 #include "Client.hpp"
 #include "ClientWindow.hpp"
-#include "Common/Http.hpp"
+#include "Common/Logger.hpp"
 
 #include <QApplication>
 #include <signal.h>
@@ -21,6 +21,8 @@ Client::~Client() = default;
 
 int Client::start()
 {
+    LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] successfully start");
+
     std::thread listener(&Client::listen, this); // start listen messages from host
 
     m_window.show();
@@ -44,52 +46,61 @@ void Client::listen()
             // TODO: check for notifications
             if (auto rsp = http::response::parse(std::string(buffer)))
             {
+                LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] successfully read msg from host: " + rsp->toString());
+
                 if (rsp->id != getId())
                 {
-                    // TODO: log
+                    LOG_ERROR(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] vs id = " + std::to_string(rsp->id) + " from host's msg");
+                    continue;
                 }
-                else if (rsp->status == http::OperationStatus_e::OK)
+
+                std::string const bookName = m_window.getCurrentBook();
+                if (m_lastOpeartion == http::OperationType_e::POST)
                 {
-                    m_window.onSuccessTakeBook();
+                    rsp->status == http::OperationStatus_e::OK ? m_window.onSuccessTakeBook(bookName, getId()) : m_window.onFailedTakeBook(bookName, getId());
                 }
                 else
                 {
-                    m_window.onFailedTakeBook();
+                    rsp->status == http::OperationStatus_e::OK ? m_window.onSuccessReturnBook(bookName, getId()) : m_window.onFailedReturnBook(bookName, getId());
                 }
             }
             else
             {
-                // TODO: log
+                LOG_ERROR(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] read, but failed to parse msg from host");
             }
         }
 
-        m_semaphore.post(); // End critical section
+        m_semaphore.post();
         sleep(0.01);
     }
 }
 
-void Client::handleBookSelected(const std::string& bookName)
+void Client::handleBookSelected(const std::string& bookName, alias::id_t clientId)
 {
-    std::string const reqStr = http::request{.type = http::OperationType_e::POST, .id = getId(), .bookName = bookName}.toString();
+    std::string const reqStr = http::request{.type = http::OperationType_e::POST, .id = clientId, .bookName = bookName}.toString();
     if (m_connection.Write(reqStr.c_str(), reqStr.size()))
     {
-        // TODO: log
+        LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] write to host: " + reqStr);
+        m_lastOpeartion = http::OperationType_e::POST;
     }
     else
     {
-        // TODO: log
+        LOG_ERROR(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] failed to write to host: " + reqStr);
+        m_window.onFailedTakeBook(bookName, clientId);
     }
 }
 
-void Client::handleBookReturned(const std::string& bookName)
+void Client::handleBookReturned(const std::string& bookName, alias::id_t clientId)
 {
-    std::string const reqStr = http::request{.type = http::OperationType_e::PUT, .id = getId(), .bookName = bookName}.toString();
+    std::string const reqStr = http::request{.type = http::OperationType_e::PUT, .id = clientId, .bookName = bookName}.toString();
     if (m_connection.Write(reqStr.c_str(), reqStr.size()))
     {
-        // TODO: log
+        LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] write to host: " + reqStr);
+        m_lastOpeartion = http::OperationType_e::PUT;
     }
     else
     {
-        // TODO: log
+        LOG_ERROR(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] failed to write to host: " + reqStr);
+        m_window.onFailedReturnBook(bookName, clientId);
     }
 }
