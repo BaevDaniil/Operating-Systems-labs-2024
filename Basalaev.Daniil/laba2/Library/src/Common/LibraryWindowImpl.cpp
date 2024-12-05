@@ -7,6 +7,7 @@ LibraryWindowImpl::LibraryWindowImpl(alias::id_t id, alias::book_container_t con
     , m_id(id)
 {
     m_bookList = new QListWidget(this);
+    m_bookList->setFixedWidth(250);
     updateBooks(books);
     createHistoryView();
 }
@@ -14,7 +15,7 @@ LibraryWindowImpl::LibraryWindowImpl(alias::id_t id, alias::book_container_t con
 void LibraryWindowImpl::updateBooks(alias::book_container_t const& books)
 {
     m_bookList->clear();
-    for (const auto& book : books)
+    for (auto const& book : books)
     {
         m_bookList->addItem(QString::fromStdString(book.name) + ": " + QString::number(book.amount));
     }
@@ -22,13 +23,24 @@ void LibraryWindowImpl::updateBooks(alias::book_container_t const& books)
 
 void LibraryWindowImpl::addHistoryEntry(utils::HistoryBookInfo const& booksInfo)
 {
-    m_historyList->addItem(booksInfo.toQString());
+    auto* listItem = new QListWidgetItem(booksInfo.toQString());
+
+    if (booksInfo.op.status == http::OperationStatus_e::OK)
+    {
+        listItem->setForeground(QColor(Qt::green));
+    }
+    else
+    {
+        listItem->setForeground(QColor(Qt::red));
+    }
+
+    m_historyList->addItem(listItem);
 }
 
 void LibraryWindowImpl::createHistoryView()
 {
     m_historyList = new QListWidget(this);
-    m_historyList->setFixedWidth(350);
+    m_historyList->setFixedWidth(550);
     auto* historyWidget = new QDockWidget("History", this);
     historyWidget->setWidget(m_historyList);
     addDockWidget(Qt::LeftDockWidgetArea, historyWidget);

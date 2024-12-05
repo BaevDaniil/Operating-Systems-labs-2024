@@ -72,8 +72,6 @@ void Host::listen()
                 {
                     handleBookReturned(req->bookName, req->id);
                 }
-
-                m_window->updateBooks(m_books);
             }
             else
             {
@@ -83,6 +81,19 @@ void Host::listen()
 
         m_semaphore.post(); // End critical section
         sleep(0.01);
+    }
+}
+
+void Host::updateClientInfo(utils::ClientInfo clientInfo)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [id = clientInfo.clientId](auto const& client){ return client.clientId == id; });
+    if (it == m_clients.end())
+    {
+        m_clients.emplace_back(std::move(clientInfo));
+    }
+    else
+    {
+        *it = std::move(clientInfo);
     }
 }
 
@@ -111,7 +122,17 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId)
     if (m_connection.Write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
-        rsp.status == http::OperationStatus_e::OK ? m_window->onSuccessTakeBook(bookName, clientId) : m_window->onFailedTakeBook(bookName, clientId);
+        if (rsp.status == http::OperationStatus_e::OK)
+        {
+            m_window->onSuccessTakeBook(bookName, clientId);
+            m_window->updateBooks(m_books);
+            updateClientInfo({.clientId = clientId, .readingBook = bookName, .secondsToKill = 100});
+            m_window->updateClientsInfo(m_clients);
+        }
+        else
+        {
+            m_window->onFailedTakeBook(bookName, clientId);
+        }
     }
     else
     {
@@ -138,7 +159,17 @@ void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId)
     if (m_connection.Write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
-        rsp.status == http::OperationStatus_e::OK ? m_window->onSuccessReturnBook(bookName, clientId) : m_window->onFailedReturnBook(bookName, clientId);
+        if (rsp.status == http::OperationStatus_e::OK)
+        {
+            m_window->onSuccessReturnBook(bookName, clientId);
+            m_window->updateBooks(m_books);
+            updateClientInfo({.clientId = clientId, .readingBook = "", .secondsToKill = 100});
+            m_window->updateClientsInfo(m_clients);
+        }
+        else
+        {
+            m_window->onFailedReturnBook(bookName, clientId);
+        }
     }
     else
     {

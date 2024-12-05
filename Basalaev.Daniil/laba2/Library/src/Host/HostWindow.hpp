@@ -2,6 +2,7 @@
 
 #include "Common/Book.hpp"
 #include "Common/LibraryWindowImpl.hpp"
+#include "Common/Utils.hpp"
 
 #include <QMainWindow>
 #include <QLabel>
@@ -23,6 +24,7 @@ public:
     HostWindow(std::string const& hostTitle, alias::book_container_t const& books, QWidget* parent = nullptr);
     ~HostWindow() override;
 
+    void updateClientsInfo(std::vector<utils::ClientInfo> const&);
     void signalResetTimer();
     void signalStopTimer();
 
@@ -36,6 +38,7 @@ private slots:
     void resetTimer();
 
 private:
+    QListWidget* m_clientList;
     QLabel* m_hostTitle;
     QPushButton* m_hostKillButton;
 

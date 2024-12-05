@@ -94,6 +94,49 @@ TEST_CASE("HTTP notification")
 {
     // TODO
     //! format notification: http://notification/{books}
+    static std::string const responseMsg = "http://notification/[{\"amount\":5,\"name\":\"Book 1\"},{\"amount\":3,\"name\":\"Book 2\"},{\"amount\":0,\"name\":\"Book 3\"}]";
+     
+    Book book1 = {.name = "Book 1", .amount = 5};
+    Book book2 = {.name = "Book 2", .amount = 3};
+    Book book3 = {.name = "Book 3", .amount = 0};
+    SECTION("parse notification [sunny]")
+    {
+        // parse from string
+        auto notify = http::notification::parse(responseMsg);
+        REQUIRE(notify);
+        REQUIRE(notify->books.size() == 3);
+        CHECK(notify->books[0].name == book1.name);
+        CHECK(notify->books[0].amount == book1.amount);
+        CHECK(notify->books[1].name == book2.name);
+        CHECK(notify->books[1].amount == book2.amount);
+        CHECK(notify->books[2].name == book3.name);
+        CHECK(notify->books[2].amount == book3.amount);
+
+        // crate
+        http::notification notify2{.books = {book1, book2, book3} };
+        CHECK(notify2.toString() == responseMsg);
+    }
+    SECTION("parse notification [rainy][invalid protocol prefix]")
+    {
+        REQUIRE_FALSE(http::notification::parse("https://notification/[{\"amount\":5,\"name\":\"Book 1\"}]"));
+        REQUIRE_FALSE(http::notification::parse("HTTP://notification/[{\"amount\":5,\"name\":\"Book 1\"}]"));
+        REQUIRE_FALSE(http::notification::parse("__1111https://notification/[{\"amount\":5,\"name\":\"Book 1\"}]"));
+        REQUIRE_FALSE(http::notification::parse("https://notificationLA/[{\"amount\":5,\"name\":\"Book 1\"}]\""));
+        REQUIRE_FALSE(http::notification::parse("https://notification/POST/[{\"amount\":5,\"name\":\"Book 1\"}]"));
+    }
+    SECTION("parse notification [rainy][notification some book without amount]")
+    {
+        REQUIRE_FALSE(http::notification::parse("http://notification/[{\"name\":\"Book 1\"}]"));
+    }
+    SECTION("parse notification [rainy][notification some book without name]")
+    {
+        REQUIRE_FALSE(http::notification::parse("http://notification/[{\"amount\":5}]"));
+    }
+    SECTION("parse notification [rainy][notification without array of books]")
+    {
+        REQUIRE_FALSE(http::notification::parse("http://notification/"));
+        REQUIRE_FALSE(http::notification::parse("http://notification/\"amount\":5"));
+    }
 }
 
 TEST_CASE("Socket connection")

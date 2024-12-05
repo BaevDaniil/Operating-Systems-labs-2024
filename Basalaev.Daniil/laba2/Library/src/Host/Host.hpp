@@ -23,8 +23,10 @@ private slots:
     void handleBookReturned(std::string const& bookName, alias::id_t clientId) override;
 
 private:
+    void updateClientInfo(utils::ClientInfo);
+
     std::unique_ptr<HostWindow> m_window{nullptr};
     std::atomic<bool> m_isRunning{true};
     alias::book_container_t m_books;
-    alias::clients_id_container_t m_clients;
+    std::vector<utils::ClientInfo> m_clients;
 };

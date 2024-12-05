@@ -1,5 +1,11 @@
 #include "Http.hpp"
 
+#include <QString>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
+#include <iostream>
 namespace http
 {
 
@@ -31,7 +37,7 @@ std::optional<request> request::parse(std::string const& reqMsg)
     // parse book name
     req.bookName = reqMsg.substr(idxOfLastSlash+1);
 
-    return {req};
+    return {std::move(req)};
 }
 
 std::string request::toString() const
@@ -64,7 +70,7 @@ std::optional<response> response::parse(std::string const& rspMsg)
     }
     else { return {}; }
 
-    return {rsp};
+    return {std::move(rsp)};
 }
 
 std::string response::toString() const
@@ -78,20 +84,42 @@ std::string response::toString() const
 std::optional<notification> notification::parse(std::string const& notificationMsg)
 {
     notification notify;
-    // TODO: use regex
+
     // parse foramt
     if (notificationMsg.substr(0, 20) != "http://notification/") { return {}; }
 
-    // parse books
-    // TODO
-    notify.books = {};
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(QString::fromStdString(notificationMsg.substr(20)).toUtf8());
+    if (!jsonDocument.isArray()) { return {}; }
 
-    return {notify};
+    // parse books
+    QJsonArray jsonArray = jsonDocument.array();
+    for (auto const& jsonValue : jsonArray)
+    {
+        if (!jsonValue.isObject()) { return {}; }
+
+        QJsonObject jsonBook = jsonValue.toObject();
+        if (!jsonBook.contains("name") || !jsonBook.contains("amount")) { return {}; }
+
+        notify.books.emplace_back(Book{.name = jsonBook["name"].toString().toStdString(), .amount = jsonBook["amount"].toInt()});
+    }
+
+    return {std::move(notify)};
 }
 
 std::string notification::toString() const
 {
-    return {}; // TODO
+    QJsonArray jsonArray;
+
+    for (auto const& book : books)
+    {
+        QJsonObject jsonBook;
+        jsonBook["name"] = QString::fromStdString(book.name);
+        jsonBook["amount"] = book.amount;
+        jsonArray.append(jsonBook);
+    }
+
+    QJsonDocument jsonDocument(jsonArray);
+    return "http://notification/" + jsonDocument.toJson(QJsonDocument::Compact).toStdString();
 }
 
 } // namespace http

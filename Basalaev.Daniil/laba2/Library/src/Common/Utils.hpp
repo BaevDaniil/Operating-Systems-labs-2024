@@ -19,4 +19,13 @@ struct HistoryBookInfo
     http::operation op;
 };
 
+struct ClientInfo
+{
+    QString toQString() const;
+
+    alias::id_t clientId;
+    std::string readingBook;
+    int secondsToKill;
+};
+
 } // namespace utils
