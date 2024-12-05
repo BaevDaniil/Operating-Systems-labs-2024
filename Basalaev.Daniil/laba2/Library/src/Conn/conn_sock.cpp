@@ -13,7 +13,7 @@ std::unique_ptr<ConnSock> ConnSock::crateHostSocket(alias::port_t hostPort)
     ConnSock* socket = new ConnSock();
     socket->m_socketFileDesriptor = ::socket(AF_INET, SOCK_STREAM, 0);
 
-    if (!socket->IsInitialized())
+    if (!socket->isValid())
     {
         LOG_ERROR("ConnSock", "Host failed to create socket");
         return nullptr;
@@ -46,7 +46,7 @@ std::unique_ptr<ConnSock> ConnSock::crateClientSocket(alias::port_t hostPort)
     ConnSock* socket = new ConnSock();
     socket->m_socketFileDesriptor = ::socket(AF_INET, SOCK_STREAM, 0);
 
-    if (!socket->IsInitialized())
+    if (!socket->isValid())
     {
         LOG_ERROR("ConnSock", "Client failed to create socket");
         return nullptr;
@@ -93,7 +93,7 @@ std::unique_ptr<ConnSock> ConnSock::Accept()
 
 bool ConnSock::Read(void* buf, size_t count)
 {
-    if (!IsInitialized()) { return false; }
+    if (!isValid()) { return false; }
 
     if (recv(m_socketFileDesriptor, buf, count, 0) <= 0) { return false; }
 
@@ -102,7 +102,7 @@ bool ConnSock::Read(void* buf, size_t count)
 
 bool ConnSock::Write(const void* buf, size_t count)
 {
-    if (!IsInitialized()) { return false; }
+    if (!isValid()) { return false; }
 
     if (send(m_socketFileDesriptor, buf, count, 0) <= 0) { return false; }
 
@@ -111,13 +111,13 @@ bool ConnSock::Write(const void* buf, size_t count)
 
 ConnSock::~ConnSock()
 {
-    if (IsInitialized()) 
+    if (isValid()) 
     {
         close(m_socketFileDesriptor);
     }
 }
 
-bool ConnSock::IsInitialized() const
+bool ConnSock::isValid() const
 {
     return m_socketFileDesriptor != -1;
 }

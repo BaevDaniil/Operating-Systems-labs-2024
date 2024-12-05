@@ -10,12 +10,8 @@ static int argc = 0;
 
 Client::Client(alias::id_t id, SemaphoreLocal& semaphore, connImpl& connection, alias::book_container_t const& books, QObject* parent)
     : NetWorkElementImpl(id, semaphore, connection, parent)
-    , m_app(argc, nullptr)
-    , m_window(id, books)
-{
-    QObject::connect(&m_window, &ClientWindow::bookSelected, this, &Client::handleBookSelected);
-    QObject::connect(&m_window, &ClientWindow::bookReturned, this, &Client::handleBookReturned);
-}
+    , m_books{books}
+{}
 
 Client::~Client() = default;
 
@@ -25,8 +21,21 @@ int Client::start()
 
     std::thread listener(&Client::listen, this); // start listen messages from host
 
-    m_window.show();
-    int res = m_app.exec();
+    std::vector<Book> books = { // TODO: remove when notification be implemented
+        {"Book 1", 10},
+        {"Book 2", 5},
+        {"Book 3", 20},
+        {"Book 4", 0}
+    };
+
+    QApplication app(argc, nullptr);
+    m_window = std::unique_ptr<ClientWindow>(new ClientWindow(getId(), m_books));
+
+    QObject::connect(m_window.get(), &ClientWindow::bookSelected, this, &Client::handleBookSelected);
+    QObject::connect(m_window.get(), &ClientWindow::bookReturned, this, &Client::handleBookReturned);
+
+    m_window->show();
+    int res = app.exec();
 
     m_isRunning = false; // TODO: make stop
     if (listener.joinable()) { listener.join(); }
@@ -54,14 +63,14 @@ void Client::listen()
                     continue;
                 }
 
-                std::string const bookName = m_window.getCurrentBook();
+                std::string const bookName = m_window->getCurrentBook();
                 if (m_lastOpeartion == http::OperationType_e::POST)
                 {
-                    rsp->status == http::OperationStatus_e::OK ? m_window.onSuccessTakeBook(bookName, getId()) : m_window.onFailedTakeBook(bookName, getId());
+                    rsp->status == http::OperationStatus_e::OK ? m_window->onSuccessTakeBook(bookName, getId()) : m_window->onFailedTakeBook(bookName, getId());
                 }
                 else
                 {
-                    rsp->status == http::OperationStatus_e::OK ? m_window.onSuccessReturnBook(bookName, getId()) : m_window.onFailedReturnBook(bookName, getId());
+                    rsp->status == http::OperationStatus_e::OK ? m_window->onSuccessReturnBook(bookName, getId()) : m_window->onFailedReturnBook(bookName, getId());
                 }
             }
             else
@@ -75,7 +84,7 @@ void Client::listen()
     }
 }
 
-void Client::handleBookSelected(const std::string& bookName, alias::id_t clientId)
+void Client::handleBookSelected(std::string const& bookName, alias::id_t clientId)
 {
     std::string const reqStr = http::request{.type = http::OperationType_e::POST, .id = clientId, .bookName = bookName}.toString();
     if (m_connection.Write(reqStr.c_str(), reqStr.size()))
@@ -86,11 +95,11 @@ void Client::handleBookSelected(const std::string& bookName, alias::id_t clientI
     else
     {
         LOG_ERROR(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] failed to write to host: " + reqStr);
-        m_window.onFailedTakeBook(bookName, clientId);
+        m_window->onFailedTakeBook(bookName, clientId);
     }
 }
 
-void Client::handleBookReturned(const std::string& bookName, alias::id_t clientId)
+void Client::handleBookReturned(std::string const& bookName, alias::id_t clientId)
 {
     std::string const reqStr = http::request{.type = http::OperationType_e::PUT, .id = clientId, .bookName = bookName}.toString();
     if (m_connection.Write(reqStr.c_str(), reqStr.size()))
@@ -101,6 +110,6 @@ void Client::handleBookReturned(const std::string& bookName, alias::id_t clientI
     else
     {
         LOG_ERROR(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] failed to write to host: " + reqStr);
-        m_window.onFailedReturnBook(bookName, clientId);
+        m_window->onFailedReturnBook(bookName, clientId);
     }
 }

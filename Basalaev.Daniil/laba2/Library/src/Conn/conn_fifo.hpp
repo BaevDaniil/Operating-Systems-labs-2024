@@ -17,7 +17,7 @@ public:
     bool Read(void* buf, size_t count) override;
     bool Write(const void* buf, size_t count) override;
 
-    bool IsInitialized() const override;
+    bool isValid() const override;
 
 private:
 

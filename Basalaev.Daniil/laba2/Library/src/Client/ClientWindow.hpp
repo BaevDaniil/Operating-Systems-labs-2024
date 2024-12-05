@@ -29,8 +29,8 @@ public:
     void onSuccessReturnBook(std::string const& bookName, alias::id_t clientId) override;
 
 signals:
-    void bookSelected(const std::string& bookName, alias::id_t);
-    void bookReturned(const std::string& bookName, alias::id_t);
+    void bookSelected(std::string const& bookName, alias::id_t);
+    void bookReturned(std::string const& bookName, alias::id_t);
 
 private slots:
     void selectBook();

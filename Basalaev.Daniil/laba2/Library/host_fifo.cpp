@@ -1,47 +1,48 @@
+#include "src/Host/Host.hpp"
+#include "src/Client/Client.hpp"
+#include "Conn/conn_fifo.hpp"
+#include "Common/Logger.hpp"
 
+#include <unistd.h>
 
 int main(int argc, char* argv[])
 {
-    // // initialize some stuff
-    // std::vector<Book> books = {
-    //     {"Book 1", 10},
-    //     {"Book 2", 5},
-    //     {"Book 3", 20},
-    //     {"Book 4", 0}
-    // };
-    // SemaphoreLocal semaphore(1);
+    // initialize some stuff
+    std::vector<Book> books = {
+        {"Book 1", 10},
+        {"Book 2", 5},
+        {"Book 3", 20},
+        {"Book 4", 0}
+    };
+    SemaphoreLocal semaphore(1);
 
-    // auto& logger = LoggerHost::get_instance();
+    auto hostFifoConn = ConnFifo::crateHostFifo("/tmp/my_fifo");
+    if (!hostFifoConn)
+    {
+        LOG_ERROR(HOST_LOG, "Failed to initialize fifo by host");
+        return EXIT_FAILURE;
+    }
 
-    // ConnFifo hostFifo("/tmp/my_fifo", logger);
-    // if (!hostFifo.IsInitialized()) {
-    //     logger.log(Status::ERROR, "Failed to initialize host queue");
-    //     return EXIT_FAILURE;
-    // }
+    if (pid_t pid = fork(); pid == -1) // error
+    {
+        LOG_ERROR("APP", "Failed to fork");
+        return EXIT_FAILURE;
+    }
+    else if (pid == 0) // client
+    {
+        auto clientFifoConn = ConnFifo::crateClientFifo("/tmp/my_fifo");
+        if (!clientFifoConn)
+        {
+            LOG_ERROR(CLIENT_LOG, "Failed to initialize client socket");
+            return EXIT_FAILURE;
+        }
 
-    // // Make child process
-    // pid_t pid = fork();
-    // if (pid == -1) {
-
-    //     // Error
-    //     logger.log(Status::ERROR, "Failed to fork client");
-    //     return EXIT_FAILURE;
-
-    // } else if (pid == 0) {
-
-    //     // this is child process -> start client
-    //     ConnFifo clientFifo("/tmp/my_fifo", LoggerClient::get_instance());
-    //     if (!clientFifo.IsInitialized()) {
-    //         logger.log(Status::ERROR, "Failed to initialize client queue");
-    //         return EXIT_FAILURE;
-    //     }
-    //     return processClient(semaphore, clientFifo, books);
-
-    // } else {
-
-    //     // this is main process -> start host
-    //     QApplication app(argc, argv);
-    //     return processHost("Communication by queue", semaphore, hostFifo, books, app, pid);
-
-    // }
+        Client client(pid, semaphore, *clientFifoConn, books);
+        return client.start();
+    }
+    else // host
+    {
+        Host host(semaphore, *hostFifoConn, books);
+        return host.start();
+    }
 }

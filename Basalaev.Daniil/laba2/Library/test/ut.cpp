@@ -2,6 +2,7 @@
 #include "Common/Alias.hpp"
 #include "Common/Http.hpp"
 #include "Conn/conn_sock.hpp"
+#include "Conn/conn_fifo.hpp"
 
 static constexpr alias::id_t ID = 1;
 static constexpr auto MAX_SIZE = 1024;
@@ -132,5 +133,39 @@ TEST_CASE("Socket connection")
 
         auto clientSocketConn = ConnSock::crateClientSocket(PORT + 1);
         REQUIRE_FALSE(clientSocketConn);
+    }
+}
+
+TEST_CASE("Fifo connection")
+{
+    static constexpr auto FIFO_PATH = "/tmp/my_fifo";
+    SECTION("Sanity connection and communication")
+    {
+        auto hostFifoConn = ConnFifo::crateHostFifo(FIFO_PATH);
+        REQUIRE(hostFifoConn);
+
+        auto clientFifoConn = ConnFifo::crateClientFifo(FIFO_PATH);
+        REQUIRE(clientFifoConn);
+
+        std::string const msg = "LALALA";
+        REQUIRE(clientFifoConn->Write(msg.c_str(), msg.size()));
+
+        char buffer[MAX_SIZE] = {0};
+        REQUIRE(hostFifoConn->Read(buffer, MAX_SIZE));
+        CHECK(std::string(buffer) == msg);
+
+        REQUIRE(hostFifoConn->Write(msg.c_str(), msg.size()));
+
+        buffer[MAX_SIZE] = {0};
+        REQUIRE(clientFifoConn->Read(buffer, MAX_SIZE));
+        CHECK(std::string(buffer) == msg);
+    }
+    SECTION("Failed to setup connection, because of different fifo's path")
+    {
+        auto hostFifoConn = ConnFifo::crateHostFifo(FIFO_PATH);
+        REQUIRE(hostFifoConn);
+
+        auto clientFifoConn = ConnFifo::crateClientFifo(FIFO_PATH + std::string("Lalala"));
+        REQUIRE_FALSE(clientFifoConn);
     }
 }

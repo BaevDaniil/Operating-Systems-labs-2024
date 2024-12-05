@@ -1,9 +1,9 @@
 #include "SemaphoreLocal.hpp"
 #include "Logger.hpp"
 
-SemaphoreLocal::SemaphoreLocal(uint value)
+SemaphoreLocal::SemaphoreLocal(uint amountConnections)
 {
-    if (sem_init(&semaphore, 0, value) == -1)
+    if (sem_init(&semaphore, 0, amountConnections) == -1)
     {
         LOG_ERROR("SemaphoreLocal", "initialization failed");
     }

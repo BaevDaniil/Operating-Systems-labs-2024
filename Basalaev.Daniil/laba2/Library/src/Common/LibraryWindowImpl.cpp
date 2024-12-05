@@ -16,7 +16,7 @@ void LibraryWindowImpl::updateBooks(alias::book_container_t const& books)
     m_bookList->clear();
     for (const auto& book : books)
     {
-        m_bookList->addItem(QString::fromStdString(book.name) + ": " + QString::number(book.count));
+        m_bookList->addItem(QString::fromStdString(book.name) + ": " + QString::number(book.amount));
     }
 }
 

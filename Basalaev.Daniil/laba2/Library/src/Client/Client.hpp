@@ -1,18 +1,12 @@
 #pragma once
 
+#include "ClientWindow.hpp"
 #include "Common/Alias.hpp"
 #include "Common/Book.hpp"
 #include "Common/NetWorkElementImpl.hpp"
 #include "Common/Http.hpp"
 
 #include <atomic>
-
-class ClientWindow;
-class QApplication;
-
-// TODO: remove
-#include <QApplication>
-#include "ClientWindow.hpp"
 
 class Client : public NetWorkElementImpl
 {
@@ -26,12 +20,12 @@ public:
     void listen() override;
 
 private slots:
-    void handleBookSelected(const std::string& bookName, alias::id_t clientId) override;
-    void handleBookReturned(const std::string& bookName, alias::id_t clientId) override;
+    void handleBookSelected(std::string const& bookName, alias::id_t clientId) override;
+    void handleBookReturned(std::string const& bookName, alias::id_t clientId) override;
 
 private:
-    QApplication m_app;
-    ClientWindow m_window;
+    std::unique_ptr<ClientWindow> m_window{nullptr};
     std::atomic<bool> m_isRunning{true};
     http::OperationType_e m_lastOpeartion{};
+    alias::book_container_t m_books; // TODO: try to remove when notification be implemented
 };

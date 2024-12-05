@@ -20,13 +20,11 @@ class HostWindow : public LibraryWindowImpl
     Q_OBJECT
 
 public:
-    HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent = nullptr);
+    HostWindow(std::string const& hostTitle, alias::book_container_t const& books, QWidget* parent = nullptr);
     ~HostWindow() override;
 
     void signalResetTimer();
     void signalStopTimer();
-
-    pid_t clientPid; // for kill
 
 signals:
     void resetSignalTimer();
@@ -38,10 +36,9 @@ private slots:
     void resetTimer();
 
 private:
-    QLabel* portLabel;
-    QPushButton* terminateClientButton;
-    QPushButton* terminateHostButton;
+    QLabel* m_hostTitle;
+    QPushButton* m_hostKillButton;
 
-    QTimer* clientTimer;
-    QLabel* timerLabel;
+    QTimer* m_clientTimer;
+    QLabel* m_timerText;
 };

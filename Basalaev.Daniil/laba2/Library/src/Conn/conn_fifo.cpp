@@ -9,6 +9,7 @@
 std::unique_ptr<ConnFifo> ConnFifo::crateHostFifo(std::string const& fifoPath)
 {
     ConnFifo* fifo = new ConnFifo();
+    fifo->m_fifoPath = fifoPath;
 
     if (mkfifo(fifo->m_fifoPath.c_str(), 0666) == -1)
     {
@@ -40,6 +41,7 @@ std::unique_ptr<ConnFifo> ConnFifo::crateHostFifo(std::string const& fifoPath)
 std::unique_ptr<ConnFifo> ConnFifo::crateClientFifo(std::string const& fifoPath)
 {
     ConnFifo* fifo = new ConnFifo();
+    fifo->m_fifoPath = fifoPath;
 
     fifo->m_readFileDisriptor = open(fifo->m_fifoPath.c_str(), O_RDONLY | O_NONBLOCK);
     if (fifo->m_readFileDisriptor == -1)
@@ -59,9 +61,9 @@ std::unique_ptr<ConnFifo> ConnFifo::crateClientFifo(std::string const& fifoPath)
     return std::unique_ptr<ConnFifo>(fifo);
 }
 
-bool ConnFifo::IsInitialized() const
+bool ConnFifo::isValid() const
 {
-    return m_writeFileDisriptor == -1 || m_readFileDisriptor == -1;
+    return !(m_writeFileDisriptor == -1 || m_readFileDisriptor == -1);
 }
 
 ConnFifo::~ConnFifo()
@@ -84,7 +86,7 @@ ConnFifo::~ConnFifo()
 
 bool ConnFifo::Read(void* buf, size_t count)
 {
-    if (!IsInitialized()) { return false; }
+    if (!isValid()) { return false; }
 
     ssize_t bytesRead = read(m_readFileDisriptor, buf, count);
     if (bytesRead == -1) { return false; }
@@ -94,7 +96,7 @@ bool ConnFifo::Read(void* buf, size_t count)
 
 bool ConnFifo::Write(const void* buf, size_t count)
 {
-    if (!IsInitialized()) { return false; }
+    if (!isValid()) { return false; }
 
     ssize_t bytesWritten = write(m_writeFileDisriptor, buf, count);
     if (bytesWritten == -1) { return false; }

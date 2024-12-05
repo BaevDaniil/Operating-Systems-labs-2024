@@ -10,77 +10,73 @@
 
 static int secondsLeft = 100;
 
-HostWindow::HostWindow(const std::string& hostTitle, const std::vector<Book>& books, QWidget* parent)
+HostWindow::HostWindow(std::string const& hostTitle, alias::book_container_t const& books, QWidget* parent)
     : LibraryWindowImpl(alias::HOST_ID, books, parent)
 {
     QWidget* centralWidget = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(centralWidget);
 
-    portLabel = new QLabel(QString::fromStdString(hostTitle), this);
-    layout->addWidget(portLabel);
+    m_hostTitle = new QLabel(QString::fromStdString(hostTitle), this);
+    layout->addWidget(m_hostTitle);
 
     layout->addWidget(m_bookList);
 
-    terminateClientButton = new QPushButton("Terminate Client", this);
-    layout->addWidget(terminateClientButton);
+    m_hostKillButton = new QPushButton("Terminate Host", this);
+    layout->addWidget(m_hostKillButton);
 
-    terminateHostButton = new QPushButton("Terminate Host", this);
-    layout->addWidget(terminateHostButton);
+    m_timerText = new QLabel("Time left: 100 seconds", this);
+    layout->addWidget(m_timerText);
 
-    timerLabel = new QLabel("Time left: 100 seconds", this);
-    layout->addWidget(timerLabel);
-
-    clientTimer = new QTimer(this);
-    clientTimer->setInterval(1000);
-    connect(clientTimer, &QTimer::timeout, this, [this]() {
-        if (!clientTimer->isActive()) return;
+    m_clientTimer = new QTimer(this);
+    m_clientTimer->setInterval(1000);
+    connect(m_clientTimer, &QTimer::timeout, this, [this]() {
+        if (!m_clientTimer->isActive()) return;
 
         if (--secondsLeft <= 0) {
             terminateClient();
         } else {
-            timerLabel->setText(QString("Time left: %1 seconds").arg(secondsLeft));
+            m_timerText->setText(QString("Time left: %1 seconds").arg(secondsLeft));
         }
     });
 
-    connect(terminateClientButton, &QPushButton::clicked, this, &HostWindow::terminateClient);
-    connect(terminateHostButton, &QPushButton::clicked, this, &HostWindow::terminateHost);
+    connect(m_hostKillButton, &QPushButton::clicked, this, &HostWindow::terminateHost);
     connect(this, &HostWindow::resetSignalTimer, this, &HostWindow::resetTimer);
     connect(this, &HostWindow::stopSignalTimer, this, [this]() {
-        timerLabel->setText("Client reading");
-        clientTimer->stop();
+        m_timerText->setText("Client reading");
+        m_clientTimer->stop();
     });
 
     setCentralWidget(centralWidget);
     setWindowTitle("Host Window");
     resize(600, 450);
 
-    clientTimer->start();
+    m_clientTimer->start();
 }
 
 HostWindow::~HostWindow() = default;
 
 void HostWindow::terminateClient()
 {
-    clientTimer->stop();
-    timerLabel->setText("Client terminated");
+    m_clientTimer->stop();
+    m_timerText->setText("Client terminated");
     QMessageBox::information(this, "Terminate Client", "Client terminated.");
     LOG_INFO(HOST_LOG, "Terminate Client");
-    kill(clientPid, SIGKILL);
+    // kill(clientPid, SIGKILL);
 }
 
 void HostWindow::terminateHost()
 {
     QMessageBox::information(this, "Terminate Host", "Host terminated.");
     LOG_INFO(HOST_LOG, "Terminate Host");
-    kill(clientPid, SIGKILL); // and kill client too
+    // kill(clientPid, SIGKILL); // and kill client too
     std::exit(0);
 }
 
 void HostWindow::resetTimer()
 {
     secondsLeft = 100;
-    timerLabel->setText("Time left: 100 seconds");
-    clientTimer->start();
+    m_timerText->setText("Time left: 100 seconds");
+    m_clientTimer->start();
 }
 
 void HostWindow::signalResetTimer()

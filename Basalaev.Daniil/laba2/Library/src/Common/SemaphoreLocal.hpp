@@ -5,7 +5,7 @@
 class SemaphoreLocal
 {
 public:
-    SemaphoreLocal(uint value);
+    SemaphoreLocal(uint amountConnections);
     void wait();
     void post();
     ~SemaphoreLocal();
