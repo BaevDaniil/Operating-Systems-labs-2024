@@ -39,3 +39,17 @@
 #include <sys/mman.h>
 #include <fstream>
 #include <ctime>
+#include <QApplication>
+#include <QMainWindow>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QLineEdit>
+#include <QSplitter>
+#include <QListWidget>
+#include <QLabel>
+#include <QTimer>
+#include <QDialog>
+#include <QScrollBar>

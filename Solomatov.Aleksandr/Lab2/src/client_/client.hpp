@@ -1,9 +1,12 @@
 #pragma once
 #include "../connections_/connection.hpp"
+#include "../gui/client_gui.hpp"
+#include "client_connection_logic.hpp"
 
 class Client {
 private:
-    std::unique_ptr<Connection> connection;
+    ClientMainWindow* window;
+    ClientConnectionLogic conlogic;
     std::thread listenThread;
     std::atomic<bool> active;
     std::thread idleTimerThread;
@@ -11,13 +14,19 @@ private:
     static constexpr int idleTimeoutSeconds = 60;
 
 public:
-    Client(const std::string &connectionId, bool create, std::unique_ptr<Connection> conn);
+    Client(ConnectionType type, pid_t host_pid, pid_t client_pid, sighendlerType sig_hendler);
 
-    void start();
-    void sendMessage(const std::string &message);
-    void listen();
+    void set_up_ui(ClientMainWindow *ptr)
+    {
+        window = ptr;
+    }
+    
+    // void start();
     void handleTimeout();
     void resetIdleTimer();
-
+    void send_to_host(const std::string&);
+    void send_to_host_general(const std::string&);
+    void process_general_chat();
+    void process_host_chat();
     ~Client();
 };

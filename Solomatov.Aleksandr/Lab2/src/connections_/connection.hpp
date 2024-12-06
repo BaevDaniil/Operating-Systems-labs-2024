@@ -7,4 +7,5 @@ public:
     virtual bool Write(const std::string&) = 0;
     virtual ~Connection() = default;
     Connection() = default;
+    virtual void print_name() = 0;
 };

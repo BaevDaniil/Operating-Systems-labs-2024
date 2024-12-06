@@ -26,4 +26,7 @@ public:
     static std::string create_general_filename(int num1, int num2) {
         return create_filename(num1, num2) + "_general";
     }
+    void print_name() override{
+        std::cout << "Conn name " << name;
+    }
 };

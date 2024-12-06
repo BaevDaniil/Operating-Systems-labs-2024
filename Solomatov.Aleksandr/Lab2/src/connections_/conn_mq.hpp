@@ -32,4 +32,7 @@ public:
     {
         return create_filename(num1, num2) + "general";
     }
+    void print_name() override{
+        std::cout << "Conn name " << name;
+    }
 };

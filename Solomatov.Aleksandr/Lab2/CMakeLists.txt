@@ -13,6 +13,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 # Генерация MOC файлов для GUI
 qt6_wrap_cpp(MOC_SOURCES src/gui/chat_gui.hpp)
+qt6_wrap_cpp(MOC_SOURCES src/gui/client_gui.hpp)
 
 # Список исходных файлов для соединений
 set(CONN_FILES
