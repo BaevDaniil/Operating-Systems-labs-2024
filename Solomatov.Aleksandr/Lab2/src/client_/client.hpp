@@ -12,7 +12,7 @@ private:
     std::thread idleTimerThread;
     std::atomic<bool> idle;
     static constexpr int idleTimeoutSeconds = 60;
-
+    
 public:
     Client(ConnectionType type, pid_t host_pid, pid_t client_pid, sighendlerType sig_hendler);
 

@@ -1,25 +1,10 @@
 #include "client.hpp"
 
-Client::Client(ConnectionType type, pid_t host_pid, pid_t client_pid, sighendlerType sig_hendler): conlogic(type, host_pid, client_pid, sig_hendler), active(true), idle(false) 
-    {
-    // Запуск потока для слежения за таймером
+Client::Client(ConnectionType type, pid_t host_pid, pid_t client_pid, sighendlerType sig_hendler): 
+conlogic(type, host_pid, client_pid, sig_hendler), active(true), idle(false) 
+{
         idleTimerThread = std::thread(&Client::handleTimeout, this);
-    }
-
-// void Client::start() {
-//     listenThread = std::thread(&Client::listen, this);
-// }
-
-// void Client::sendMessage(const std::string &message) {
-//     if (connection && active) {
-//         if (connection->Write(message)) {
-//             std::cout << "Sent: " << message << std::endl;
-//             resetIdleTimer();
-//         } else {
-//             std::cerr << "Failed to send message." << std::endl;
-//         }
-//     }
-// }
+}
 
 void Client::process_host_chat(){   
     std::string msg;
@@ -43,15 +28,6 @@ void Client::send_to_host(const std::string &msg)
         conlogic.send_to_host(msg);
 }
 
-// void Client::listen(std::string& message) {
-//     while (active) {
-//         if (connection->Read(message)) {
-//             resetIdleTimer();
-//         }
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100)); // минимальная пауза для снижения нагрузки
-//     }
-// }
-
 
 void Client::handleTimeout() {
     while (active) {
@@ -61,7 +37,7 @@ void Client::handleTimeout() {
             active = false;
             std::exit(0);
         }
-        idle = true; // помечаем как "неактивный", если не было взаимодействия
+        idle = true;
     }
 }
 
@@ -71,6 +47,7 @@ void Client::resetIdleTimer() {
 
 Client::~Client() {
     active = false;
+    conlogic.~ClientConnectionLogic();
     if (listenThread.joinable()) listenThread.join();
     if (idleTimerThread.joinable()) idleTimerThread.join();
 }

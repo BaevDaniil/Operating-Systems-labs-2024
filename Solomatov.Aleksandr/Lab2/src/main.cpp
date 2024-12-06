@@ -29,6 +29,9 @@ void host_signal_handler(int sig, siginfo_t *info, void *context) {
     case SIGUSR2:
         Host::get_instance(type, host_pid).process_general_chat(client_pid);
         break;
+    case SIGQUIT:
+        Host::get_instance(type, host_pid).remove_client(client_pid);
+        break;
     }
 }
 
@@ -48,7 +51,10 @@ void client_signal_handler(int sig, siginfo_t *info, void *context) {
     case SIGUSR2:
         client_instance->process_general_chat();
         break;
+    case SIGQUIT:
+        client_instance->~Client();
     }
+    
 }
 
 void ClientMainWindow::send_to_all(const std::string &msg)

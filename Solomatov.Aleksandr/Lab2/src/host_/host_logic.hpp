@@ -26,7 +26,8 @@ private:
         signal_handler.sa_sigaction = host_signal_handler;
         signal_handler.sa_flags = SA_SIGINFO;
         if (sigaction(SIGUSR1, &signal_handler, nullptr) == -1 || 
-            sigaction(SIGUSR2, &signal_handler, nullptr) == -1) {
+            sigaction(SIGUSR2, &signal_handler, nullptr) == -1 ||
+            sigaction(SIGQUIT, &signal_handler, nullptr) == -1) {
             throw std::runtime_error("Failed to register signal handler");
         }
     }
@@ -67,10 +68,12 @@ public:
         return false;
     }
 
-    bool read_from_client_general(int& client_pid, std::string& msg) {
+    bool read_from_client_general(int client_pid, std::string& msg) {
         auto& [pid, conn] = *general_client_to_host_connection.find(client_pid);
         if (conn->Read(msg)) {
-            log("Host recived general msg from "+ std::to_string(client_pid) + " " + msg);
+            std::ostringstream thread_id_stream;
+            thread_id_stream << std::this_thread::get_id();
+            log("Host recived general msg from "+ std::to_string(client_pid) + " " + msg + " in thread" + thread_id_stream.str());
             return true;
         }
         return false;
@@ -78,12 +81,18 @@ public:
 
     bool read_from_client_private(int& client_pid, std::string& msg) {
         auto& [pid, conn] = *client_to_host_connection.find(client_pid);
-        log("Try to read private message");
         if (conn->Read(msg)) {
             log("Host recived private msg from "+ std::to_string(client_pid) + " " + msg);
             return true;
         }
         log("Empty reading for PID: " + std::to_string(client_pid));
         return false;
+    }
+
+    void remove_client(int client_pid){
+        host_to_client_connection.erase(host_to_client_connection.find(client_pid));
+        client_to_host_connection.erase(client_to_host_connection.find(client_pid));
+        general_host_to_client_connection.erase(general_host_to_client_connection.find(client_pid));
+        general_client_to_host_connection.erase(general_client_to_host_connection.find(client_pid));
     }
 };

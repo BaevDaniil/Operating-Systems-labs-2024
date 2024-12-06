@@ -207,12 +207,12 @@ public:
             delete chatWindow;
             pid_table.erase(client_pid);
         }
-        message_history.erase(client_pid);
+        delete clientList->findItems("Client " + QString::number(client_pid), Qt::MatchExactly)[0];
     }
 
     void send_to_all_clients(const std::string &msg);
     void send_to_client_private(int client_pid, const std::string &msg);
-
+    ~MainWindow() override = default;
 private:
     QTextEdit *generalChatDisplay;
     QLineEdit *generalInputField;

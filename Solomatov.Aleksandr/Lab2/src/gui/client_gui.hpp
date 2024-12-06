@@ -58,7 +58,7 @@ public:
         });
     }
 
-    ~ClientMainWindow() override = default;
+    ~ClientMainWindow() override {kill(pid, SIGQUIT);};
 
 private:
     int pid;

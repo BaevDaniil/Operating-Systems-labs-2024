@@ -28,7 +28,7 @@ public:
     ClientConnectionLogic &operator=(const ClientConnectionLogic &) = delete;
     ClientConnectionLogic(ClientConnectionLogic &&) = delete;
     ClientConnectionLogic &operator=(ClientConnectionLogic &&) = delete;
-    ~ClientConnectionLogic() = default;
+    ~ClientConnectionLogic() {kill(host_pid, SIGQUIT), log("Disconnect for client " + std::to_string(pid));};
 
     ClientConnectionLogic(ConnectionType type, pid_t host_pid, pid_t pid, sighendlerType client_sig_handler):
     log_file("client_" + std::to_string(pid) + "_log.txt"), host_pid(host_pid), pid(pid)
@@ -39,7 +39,8 @@ public:
         signal_handler.sa_flags = SA_SIGINFO;
         
         if (sigaction(SIGUSR1, &signal_handler, nullptr) == -1 || 
-            sigaction(SIGUSR2, &signal_handler, nullptr) == -1)
+            sigaction(SIGUSR2, &signal_handler, nullptr) == -1 ||
+            sigaction(SIGQUIT, &signal_handler, nullptr) == -1)
             throw std::runtime_error("Failed to register signal handler");
 
         host_to_client_connection = std::move(ConnectionFabric::create_connection(type, ConnectionFabric::create_filename(type, host_pid, pid), false));
@@ -80,4 +81,5 @@ public:
         }
         return f;
     }
+
 };
