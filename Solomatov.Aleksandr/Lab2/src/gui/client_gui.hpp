@@ -1,15 +1,16 @@
 #pragma once
 #include "../includes/includes.hpp"
+// #include "../client_/client.hpp"
+
+class Client; 
 
 class ClientMainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    ClientMainWindow(int client_pid, QWidget *parent = nullptr) : QMainWindow(parent), pid(client_pid) {
+    ClientMainWindow(int client_pid, std::shared_ptr<Client> client, QWidget *parent = nullptr) : QMainWindow(parent), pid(client_pid), client_instance(client) {
         setWindowTitle("Client Chat Application");
         resize(1200, 900);
-
-        // Общий стиль для всего окна
         setStyleSheet(
             "QMainWindow { background-color: #f0f0f5; }"
             "QTextEdit { background-color: #ffffff; border: 1px solid #dcdcdc; border-radius: 8px; font-size: 14px; }"
@@ -18,7 +19,6 @@ public:
             "QPushButton:hover { background-color: #0056b3; }"
             "QLabel { font-weight: bold; font-size: 16px; color: #333333; margin-bottom: 8px; }");
 
-        // Центральный виджет
         QWidget *centralWidget = new QWidget(this);
         setCentralWidget(centralWidget);
 
@@ -58,7 +58,11 @@ public:
         });
     }
 
-    ~ClientMainWindow() override {kill(pid, SIGQUIT);};
+    ~ClientMainWindow() override {
+        if (auto client = client_instance.lock()) {
+            kill(pid, SIGQUIT);
+        }
+    };
 
 private:
     int pid;
@@ -69,6 +73,8 @@ private:
     QTextEdit *ChatDisplay;      
     QLineEdit *InputField;       
     QPushButton *SendButton;     
+
+    std::weak_ptr<Client> client_instance;
 
     QWidget *createChatWidget(const QString &title, QTextEdit *&display, QLineEdit *&input, QPushButton *&sendButton) {
         QWidget *chatWidget = new QWidget(this);
@@ -109,5 +115,6 @@ public:
     }
 
     void send_to_all(const std::string &msg);
+
     void send_to_host(const std::string &msg);
 };

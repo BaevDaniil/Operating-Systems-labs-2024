@@ -11,7 +11,7 @@ private:
     std::mutex activity_mutex;
     ThreadPool thread_pool;
 
-    Host(HostLogic& ref) : host_logic_ref(ref), running(true), thread_pool(4) { // 4 потока в пуле
+    Host(HostLogic& ref) : host_logic_ref(ref), running(true), thread_pool(4) {
     }
 
 public:

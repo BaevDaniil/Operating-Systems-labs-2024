@@ -24,10 +24,10 @@ private:
         log_file << "[Client " << pid << "] " << message << std::endl;
     }
 public:
-    ClientConnectionLogic(const ClientConnectionLogic &) = delete;
-    ClientConnectionLogic &operator=(const ClientConnectionLogic &) = delete;
-    ClientConnectionLogic(ClientConnectionLogic &&) = delete;
-    ClientConnectionLogic &operator=(ClientConnectionLogic &&) = delete;
+    ClientConnectionLogic(const ClientConnectionLogic &) = default;
+    ClientConnectionLogic &operator=(const ClientConnectionLogic &) = default;
+    ClientConnectionLogic(ClientConnectionLogic &&) = default;
+    ClientConnectionLogic &operator=(ClientConnectionLogic &&) = default;
     ~ClientConnectionLogic() {kill(host_pid, SIGQUIT), log("Disconnect for client " + std::to_string(pid));};
 
     ClientConnectionLogic(ConnectionType type, pid_t host_pid, pid_t pid, sighendlerType client_sig_handler):

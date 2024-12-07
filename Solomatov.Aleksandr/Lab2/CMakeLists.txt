@@ -29,6 +29,7 @@ add_executable(conn_mq
     ${CONN_FILES} 
     src/main.cpp
     src/client_/client.cpp
+    src/gui/client_gui.cpp  # Добавляем новый файл
     ${MOC_SOURCES}
 )
 target_compile_definitions(conn_mq PRIVATE USE_MQ_FILE)
@@ -39,6 +40,7 @@ add_executable(conn_pipe
     ${CONN_FILES} 
     src/main.cpp
     src/client_/client.cpp
+    src/gui/client_gui.cpp  # Добавляем новый файл
     ${MOC_SOURCES}
 )
 target_compile_definitions(conn_pipe PRIVATE USE_PIPE_FILE)
@@ -49,6 +51,7 @@ add_executable(conn_shm
     ${CONN_FILES} 
     src/main.cpp
     src/client_/client.cpp
+    src/gui/client_gui.cpp  # Добавляем новый файл
     ${MOC_SOURCES}
 )
 target_compile_definitions(conn_shm PRIVATE USE_SHM_FILE)

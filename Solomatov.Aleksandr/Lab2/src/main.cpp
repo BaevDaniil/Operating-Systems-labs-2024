@@ -36,7 +36,7 @@ void host_signal_handler(int sig, siginfo_t *info, void *context) {
 }
 
 
-std::unique_ptr<Client> client_instance;
+std::shared_ptr<Client> client_instance;
 void client_signal_handler(int sig, siginfo_t *info, void *context) {
     if (client_instance) {
         client_instance->resetIdleTimer();
@@ -52,19 +52,10 @@ void client_signal_handler(int sig, siginfo_t *info, void *context) {
         client_instance->process_general_chat();
         break;
     case SIGQUIT:
-        client_instance->~Client();
+        client_instance.reset();
+        break;
     }
     
-}
-
-void ClientMainWindow::send_to_all(const std::string &msg)
-{
-    client_instance->send_to_host_general(msg);
-}
-
-void ClientMainWindow::send_to_host(const std::string &msg)
-{
-    client_instance->send_to_host(msg);
 }
 
 void MainWindow::send_to_all_clients(const std::string &msg){
@@ -127,10 +118,13 @@ int main(int argc, char *argv[])
             char **argv = nullptr;
             client_pid = getpid();
             QApplication clientApp(argc, argv);
-            ClientMainWindow clientWindow(client_pid);
-            client_instance = std::make_unique<Client>(type, host_pid, client_pid, client_signal_handler);
-            clientWindow.show();
-            client_instance->set_up_ui(&clientWindow);
+
+            auto client_instance = std::make_shared<Client>(type, host_pid, client_pid, client_signal_handler);
+            auto client_window = std::make_shared<ClientMainWindow>(client_pid, client_instance);
+            
+            // client_instance = std::make_unique<Client>(type, host_pid, client_pid, client_signal_handler);
+            client_window->show();
+            client_instance->set_up_ui(client_window);
             return clientApp.exec();
         }
         else
