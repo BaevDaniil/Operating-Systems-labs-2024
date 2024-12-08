@@ -1,7 +1,6 @@
 #ifndef HOST_GUI_HPP
 #define HOST_GUI_HPP
 
-#include <QApplication>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QTextEdit>
@@ -19,7 +18,7 @@ public:
     HostGUI(QWidget *parent = nullptr);
     ~HostGUI();
 
-private slots:
+public slots:
     void onSendButtonClicked();
     void checkActivity();
 

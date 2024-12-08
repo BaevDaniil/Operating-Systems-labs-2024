@@ -2,6 +2,8 @@
 #define CONN_MQ_HPP
 
 #include <mqueue.h>
+#include <string>
+#include <stdexcept>
 
 class ConnMq {
 public:
@@ -14,6 +16,7 @@ private:
     int id;
     bool create;
     mqd_t mq;
+    std::string queueName;
 };
 
 #endif // CONN_MQ_HPP

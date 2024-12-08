@@ -4,7 +4,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <string.h>
+#include <string>
+#include <stdexcept>
 
 class ConnFifo {
 public:
@@ -17,6 +18,7 @@ private:
     int id;
     bool create;
     int fifo;
+    std::string fifoPath;
 };
 
 #endif // CONN_FIFO_HPP

@@ -1,11 +1,12 @@
 #include "host_gui.hpp"
 #include <QtWidgets/QMessageBox>
+#include <QApplication>
 
 HostGUI::HostGUI(QWidget *parent)
     : QMainWindow(parent)
-    , clientSegConn(1, false)
-    , clientMqConn(1, false)
-    , clientFifoConn(1, false)
+    , clientSegConn(1, true)
+    , clientMqConn(1, true)
+    , clientFifoConn(1, true)
     , activityTimer(new QTimer(this)) {
 
     centralWidget = new QWidget(this);

@@ -1,5 +1,6 @@
 #include "client_gui.hpp"
 #include <QtWidgets/QMessageBox>
+#include <QApplication>
 
 ClientGUI::ClientGUI(QWidget *parent)
     : QMainWindow(parent)
