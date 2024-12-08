@@ -8,14 +8,15 @@
 
 class Client {
 private:
-    pid_t host_pid;
     constexpr static int conn_timeout = 5;
+    std::vector<Book> client_books;
+
+    pid_t host_pid;
 
 public:
+    
+    std::string client_name = "Linups";
     bool is_running = true;
-
-    sem_t* sem_read;
-    sem_t* sem_write;
 
     Conn* client_conn;
     Conn* host_conn;
@@ -24,4 +25,7 @@ public:
     ClientWindow window;
     bool setup_conn();
     void read_from_host();
+    
+    ~Client();
 };
+

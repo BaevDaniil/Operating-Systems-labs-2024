@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(LocalChatApp)
+project(Lips_library)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -27,6 +27,28 @@ set(CLIENT_FIFO_SRC_FILES
   connection/conn_fifo.cpp
 )
 
+# Host and Client source files for Queue
+set(HOST_MQ_SRC_FILES
+  host/host_mq.cpp
+  connection/conn_mq.cpp
+)
+
+set(CLIENT_MQ_SRC_FILES
+  client/client_mq.cpp
+  connection/conn_mq.cpp
+)
+
+# Host and Client source files for Socket
+set(HOST_SOCK_SRC_FILES
+  host/host_sock.cpp
+  connection/conn_sock.cpp
+)
+
+set(CLIENT_SOCK_SRC_FILES
+  client/client_sock.cpp
+  connection/conn_sock.cpp
+)
+
 set(GUI
   interface/client_interface.cpp
   interface/host_interface.cpp
@@ -42,15 +64,32 @@ add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})
 add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})
 
 
+# Add executables for Queue communication
+add_executable(host_mq ${HOST_MQ_SRC_FILES} ${GUI} ${MOC_SOURCES})
+add_executable(client_mq ${CLIENT_MQ_SRC_FILES} ${GUI} ${MOC_SOURCES})
+
+# Add executables for Socket communication
+add_executable(host_sock ${HOST_SOCK_SRC_FILES} ${GUI} ${MOC_SOURCES})
+add_executable(client_sock ${CLIENT_SOCK_SRC_FILES} ${GUI} ${MOC_SOURCES})
+
+
 # Link Qt libraries to the GUI executable
 target_link_libraries(host_fifo Qt6::Widgets)
 target_link_libraries(client_fifo Qt6::Widgets)
+target_link_libraries(host_mq Qt6::Widgets)
+target_link_libraries(client_mq Qt6::Widgets)
+target_link_libraries(host_sock Qt6::Widgets)
+target_link_libraries(client_sock Qt6::Widgets)
 
 
 # Set output directories for all executables
 set_target_properties(host_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set_target_properties(client_fifo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(host_mq PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(client_mq PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(host_sock PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(client_sock PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 
 # Custom target to build all
-add_custom_target(all_targets DEPENDS host_fifo client_fifo)
+add_custom_target(all_targets DEPENDS host_fifo client_fifo host_mq client_mq host_sock client_sock)

@@ -13,8 +13,9 @@ ClientWindow::ClientWindow(const std::vector<Book>& books, QWidget* parent)
 
     setCentralWidget(stacked_widget);
     setWindowTitle("Client Control Panel");
-    resize(400, 300);
+    resize(800, 600);
 
+    // Set started window
     stacked_widget->setCurrentIndex(0);
 }
 
@@ -29,10 +30,10 @@ void ClientWindow::create_base_view(const std::vector<Book>& books) {
 
     book_qlist = new QListWidget(this);
     for (const auto& book : books) {
-        book_qlist->addItem(QString::fromStdString(book.name));
+        book_qlist->addItem(QString::fromStdString(book.name) + " [" + QString::number(book.count) + "]");
     }
     left_label = new QLabel("Book list", this);
-    select_button = new QPushButton("Take a book", this);
+    select_button = new QPushButton("Pick up a book", this);
     select_button->setEnabled(false);
 
     layout1->addWidget(left_label);
@@ -44,9 +45,6 @@ void ClientWindow::create_base_view(const std::vector<Book>& books) {
     QVBoxLayout* layout2 = new QVBoxLayout(history_list_w);
 
     history_list = new QListWidget(this);
-    for (const auto& book : books) {
-        history_list->addItem(QString::fromStdString(book.name) + " [" + QString::number(book.count) + "]");
-    }
     right_label = new QLabel("History list", this);
     layout2->addWidget(right_label);
     layout2->addWidget(history_list);
@@ -97,7 +95,6 @@ void ClientWindow::cancel_reading() {
 
 void ClientWindow::success_take_book() {
     std::cout << "success_take_book\n";
-
     stacked_widget->setCurrentIndex(1);
 }
 
@@ -105,3 +102,19 @@ void ClientWindow::fail_take_book() {
     std::cout << "Failed to take book\n";
     // QMessageBox::warning(nullptr, "FAIL", "Failed to take book");
 }
+
+void ClientWindow::update_books(const std::vector<Book>& books, std::string state, std::string book_name, std::string time, bool flag) {
+    std::cout << "ClientWindow::update_books: " << book_name << std::endl;
+    if (flag) {
+        book_qlist->clear();
+        for (const auto& book : books) {
+            book_qlist->addItem(QString::fromStdString(book.name) + " [" + QString::number(book.count) + "]");
+        }
+        history_list->addItem(QString::fromStdString(time) + " " + QString::fromStdString(state) + " " + QString::fromStdString(book_name));
+    }
+    else{
+        std::string fail_state = "[FAILED TO TAKE]";
+        history_list->addItem(QString::fromStdString(time) + " " + QString::fromStdString(fail_state) + " " + QString::fromStdString(book_name));
+    }
+}
+

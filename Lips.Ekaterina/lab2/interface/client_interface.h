@@ -21,23 +21,6 @@
 
 class ClientWindow : public QMainWindow {
     Q_OBJECT
-
-public:
-    ClientWindow(const std::vector<Book>& books, QWidget* parent = nullptr);
-    ~ClientWindow();
-
-    void success_take_book();
-    void fail_take_book();
-
-signals:
-    void bookSelected(const QString& book_name);
-    void bookReturned(const QString& book_name);
-
-private slots:
-    void select_book();
-    void cancel_reading();
-
-
 private:
     void create_base_view(const std::vector<Book>& books);
     void create_reading_view();
@@ -53,4 +36,22 @@ private:
     QLabel* left_label;
     QLabel* right_label;
     QListWidget* history_list;
+
+public:
+    ClientWindow(const std::vector<Book>& books, QWidget* parent = nullptr);
+    ~ClientWindow();
+
+    void success_take_book();
+    void fail_take_book();
+    void update_books(const std::vector<Book>& books, std::string state, std::string book_name, std::string time, bool flag);
+
+signals:
+    void bookSelected(const QString& book_name);
+    void bookReturned(const QString& book_name);
+
+private slots:
+    void select_book();
+    void cancel_reading();
+
+    // QPushButton* terminateHostButton;
 };

@@ -44,59 +44,52 @@ bool Client::setup_conn() {
     return true;
 };
 
-
 void Client::read_from_host() {
     while (is_running) {
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-        ts.tv_sec += conn_timeout;
-        // if (sem_timedwait(semRead, &ts) == -1)
-        //     return;
 
         if (client_conn && client_conn->is_valid()) {
             std::string message;
             const size_t max_size = 1024;
 
-            struct timespec ts;
-            clock_gettime(CLOCK_REALTIME, &ts);
-            ts.tv_sec += conn_timeout;
-            // if (sem_timedwait(semRead, &ts) == -1)
-            //     return;
-
             if (client_conn->read(message, max_size)) {
                 std::cout << "Read message: " << message << "\n";
-
-                if (message == "YES") { 
+                bool take_flag = true;
+                std::string str;
+                if (message.rfind("YES", 0) == 0) { 
                     std::cout << "Get YES\n";
-                    window.success_take_book(); 
+                    window.success_take_book();
+                    str = message.substr(3);
+
+                    
                 }
-                else if (message == "NO") { 
+                else if (message.rfind("NO", 0) == 0) { 
                     std::cout << "Get NO\n";
                     window.fail_take_book();
+                    take_flag = false;
+                    str = message.substr(2);
                 }
+
+                
+                int delimetr_pos = str.find("#");
+                std::string book_name = str.substr(0, delimetr_pos);
+                std::string time = str.substr(delimetr_pos + 1); 
+
+                window.update_books(books, "[TAKE]", book_name, time, take_flag);
             }
         }
         sleep(1);
     }
+    std::cout << "while ended" << std::endl;
 };
 
 
-Client::Client(std::vector<Book> books) : window(books){
+Client::Client(std::vector<Book> books) : client_books(std::move(books)), window(client_books){
     setup_conn();
+}
 
-    std::string sem_read_path = "/sem2" + std::to_string(host_pid);
-    sem_read = sem_open(sem_read_path.c_str(), 0);
-    if (sem_read == SEM_FAILED) {
-        std::cout << "Could not open semaphore --> Terminate\n";
-        exit(EXIT_FAILURE);
-    }
-
-    std::string sem_write_path = "/sem1" + std::to_string(host_pid);
-    sem_write = sem_open(sem_write_path.c_str(), 0);
-    if (sem_write == SEM_FAILED) {
-        std::cout << "Could not open semaphore --> Terminate\n";
-        exit(EXIT_FAILURE);
-    }
+Client::~Client() {
+    delete client_conn;
+    delete host_conn;
 }
 
 void read_wrap(Client& client){
@@ -119,7 +112,6 @@ int main(int argc, char* argv[]) {
             return;
         }
         std::cout << "Write TAKE\n";
-        sem_post(client.sem_write);
     });
 
     QObject::connect(&client.window, &ClientWindow::bookReturned, [&client] (const QString& book_name) {
@@ -129,14 +121,13 @@ int main(int argc, char* argv[]) {
             return;
         }
         std::cout << "Write RETURN\n";
-        sem_post(client.sem_write);
     });
 
     client.window.setWindowTitle("Chat Application Client");
-    client.window.resize(400, 300);
     client.window.show();
 
     int res = app.exec();
+
 
     client.is_running = false;
 

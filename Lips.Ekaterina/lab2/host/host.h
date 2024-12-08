@@ -13,8 +13,9 @@
 
 
 class Host {
-private:
+  private:
     pid_t pid = getpid();
+    // pid_t clientPid = -1
     static constexpr int timeout = 5;
 
     std::vector<Book> books;
@@ -28,7 +29,7 @@ private:
 
     bool setup_conn();
 
-public:
+  public:
     
     bool is_running = true;
 
@@ -37,25 +38,5 @@ public:
     Host(const std::vector<Book>& books_);
     void read_from_client(); 
     void write_to_client(std::string response);
-    void terminate(int status);
-    static void signal_handler(int signum, siginfo_t *si, void *data);
+    // ~Host() 
 };
-
-
-void Host::terminate(int status) {
-    exit(status);
-}
-
-
-void Host::signal_handler(int signum, siginfo_t *si, void *data) {
-    switch (signum) {
-        case SIGTERM:
-            // terminate(EXIT_SUCCESS);
-            break;
-        case SIGUSR1:
-            // 
-            break;
-        default:
-            break;
-        }
-}
