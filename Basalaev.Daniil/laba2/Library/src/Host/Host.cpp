@@ -5,7 +5,7 @@
 
 #include <QApplication>
 #include <signal.h>
-#include <thread>
+#include <cstdlib>
 
 namespace details
 {
@@ -25,40 +25,80 @@ auto findBook(alias::book_container_t& books, std::string const& bookName)
 
 } // namespace details
 
-static int argc = 0;
+Host::Host(SemaphoreLocal& semaphore, std::vector<alias::id_t> const& clientId, std::vector<std::unique_ptr<connImpl>> connections, alias::book_container_t const& books, QObject* parent)
+    : QObject(parent)
+    , m_semaphore(semaphore)
+    , m_connections(std::move(connections))
+    , m_books{books}
+{
+    for (auto const id : clientId)
+    {
+        auto& clientInfo = m_clients.emplace_back(utils::ClientInfoWithTimer{
+                                .info = {.clientId = id},
+                                .timer = std::unique_ptr<QTimer>{new QTimer()}
+                            });
+        clientInfo.timer->setInterval(1000);
+        clientInfo.timer->setSingleShot(false);
+        // update client information every 1 second
+        connect(clientInfo.timer.get(), &QTimer::timeout, this, [this, &clientInfo]() {
+            clientInfo.info.secondsToKill--;
+            m_window->updateClientsInfo(m_clients);
+            if (clientInfo.info.secondsToKill == 0)
+            {
+                removeClient(clientInfo.info.clientId);
+                m_window->notifyClientTerminated(clientInfo.info.clientId);
+            }
+        });
 
-Host::Host(SemaphoreLocal& semaphore, connImpl& connection, alias::book_container_t const& books, QObject* parent)
-    : NetWorkElementImpl(alias::HOST_ID, semaphore, connection, parent)
-    , m_books(books)
-{}
+        clientInfo.timer->start();
+    }
+}
 
 Host::~Host() = default;
+
+void Host::stop()
+{
+    m_isRunning = false;
+
+    for (auto& thread : m_listenerThreads)
+    {
+        if (thread.joinable())
+        {
+            thread.join();
+        }
+    }
+}
 
 int Host::start()
 {
     LOG_INFO(HOST_LOG, "successfully start");
 
-    std::thread listener(&Host::listen, this); // start listen messages from clients
+    // start listen messages from clients
+    for (auto& connection : m_connections)
+    {
+        m_listenerThreads.emplace_back(&Host::listen, this, std::ref(*connection));
+    }
 
+    int argc = 0;
     QApplication app(argc, nullptr);
     m_window = std::unique_ptr<HostWindow>(new HostWindow("HOST WINDOW", m_books));
     m_window->show();
+    m_window->updateClientsInfo(m_clients);
     int res = app.exec();
 
-    m_isRunning = false; // TODO: make stop
-    if (listener.joinable()) { listener.join(); }
+    stop();
 
     return res;
 }
 
-void Host::listen()
+void Host::listen(connImpl& connection)
 {
     while (m_isRunning)
     {
         m_semaphore.wait();
 
         char buffer[1024] = {0};
-        if (m_connection.Read(buffer, sizeof(buffer)))
+        if (connection.Read(buffer, sizeof(buffer)))
         {
             if (auto req = http::request::parse(std::string(buffer)))
             {
@@ -66,11 +106,11 @@ void Host::listen()
 
                 if (req->type == http::OperationType_e::POST)
                 {
-                    handleBookSelected(req->bookName, req->id);
+                    handleBookSelected(req->bookName, req->id, connection);
                 }
                 else
                 {
-                    handleBookReturned(req->bookName, req->id);
+                    handleBookReturned(req->bookName, req->id, connection);
                 }
             }
             else
@@ -84,20 +124,77 @@ void Host::listen()
     }
 }
 
-void Host::updateClientInfo(utils::ClientInfo clientInfo)
+void Host::updateClientInfo(utils::ClientInfo&& clientInfo)
 {
-    auto it = std::find_if(m_clients.begin(), m_clients.end(), [id = clientInfo.clientId](auto const& client){ return client.clientId == id; });
-    if (it == m_clients.end())
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [id = clientInfo.clientId](auto const& client){ return client.info.clientId == id; });
+    if (it != m_clients.end())
     {
-        m_clients.emplace_back(std::move(clientInfo));
-    }
-    else
-    {
-        *it = std::move(clientInfo);
+        it->info = std::move(clientInfo);
     }
 }
 
-void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId)
+void Host::resetClientTimer(alias::id_t clientId)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) {
+                               return client.info.clientId == clientId;
+                           });
+
+    if (it != m_clients.end())
+    {
+        it->timer->stop();
+        it->timer->start(5000);
+        it->info.secondsToKill = 5;
+    }
+}
+
+void Host::stopClientTimer(alias::id_t clientId)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) {
+                               return client.info.clientId == clientId;
+                           });
+
+    if (it != m_clients.end())
+    {
+        it->timer->stop();
+        it->info.secondsToKill = 5;
+    }
+}
+
+void Host::removeClient(alias::id_t clientId)
+{
+    LOG_INFO(HOST_LOG, "Removing client[ID=" + std::to_string(clientId) + "]");
+
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) {
+                                 return client.info.clientId == clientId;
+                             });
+
+    if (it != m_clients.end())
+    {
+        // TODO: stop timer???
+        m_clients.erase(it);
+    }
+
+    // TODO: close connection
+}
+
+void Host::notifyClientsUpdateBookStatus()
+{
+    http::notification notification{.books = m_books};
+    std::string const notificationStr = notification.toString();
+    for (auto& connection : m_connections)
+    {
+        if (connection->Write(notificationStr.c_str(), notificationStr.size())) // w/o sync
+        {
+            LOG_INFO(HOST_LOG, "write to client: " + notificationStr);
+        }
+        else
+        {
+            LOG_ERROR(HOST_LOG, "failed to write to client: " + notificationStr);
+        }
+    }
+}
+
+void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId, connImpl& connection)
 {
     http::response rsp{.id = clientId};
 
@@ -119,15 +216,16 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId)
     }
 
     std::string const rspStr = rsp.toString();
-    if (m_connection.Write(rspStr.c_str(), rspStr.size()))
+    if (connection.Write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
         if (rsp.status == http::OperationStatus_e::OK)
         {
             m_window->onSuccessTakeBook(bookName, clientId);
             m_window->updateBooks(m_books);
-            updateClientInfo({.clientId = clientId, .readingBook = bookName, .secondsToKill = 100});
+            updateClientInfo({.clientId = clientId, .readingBook = bookName, .secondsToKill = 5});
             m_window->updateClientsInfo(m_clients);
+            // notifyClientsUpdateBookStatus();
         }
         else
         {
@@ -141,7 +239,7 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId)
     }
 }
 
-void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId)
+void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId, connImpl& connection)
 {
     http::response rsp{.id = clientId};
 
@@ -156,15 +254,16 @@ void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId)
     }
 
     std::string const rspStr = rsp.toString();
-    if (m_connection.Write(rspStr.c_str(), rspStr.size()))
+    if (connection.Write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
         if (rsp.status == http::OperationStatus_e::OK)
         {
             m_window->onSuccessReturnBook(bookName, clientId);
             m_window->updateBooks(m_books);
-            updateClientInfo({.clientId = clientId, .readingBook = "", .secondsToKill = 100});
+            updateClientInfo({.clientId = clientId, .readingBook = "", .secondsToKill = 5});
             m_window->updateClientsInfo(m_clients);
+            // notifyClientsUpdateBookStatus();
         }
         else
         {

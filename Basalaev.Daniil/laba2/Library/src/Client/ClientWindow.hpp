@@ -34,7 +34,7 @@ signals:
 
 private slots:
     void selectBook();
-    void cancelReading();
+    void stopReading();
     void terminateClient();
 
 private:

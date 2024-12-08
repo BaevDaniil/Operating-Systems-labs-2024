@@ -3,7 +3,8 @@
 
 SemaphoreLocal::SemaphoreLocal(uint amountConnections)
 {
-    if (sem_init(&semaphore, 0, amountConnections) == -1)
+    // If PSHARED then share it with other processes
+    if (sem_init(&semaphore, /*PSHARED*/1, amountConnections) == -1)
     {
         LOG_ERROR("SemaphoreLocal", "initialization failed");
     }

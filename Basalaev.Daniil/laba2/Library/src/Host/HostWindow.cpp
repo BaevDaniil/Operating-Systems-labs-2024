@@ -4,18 +4,9 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QDockWidget>
-#include <QDateTime>
-#include <cstdlib>
-#include <signal.h>
-
-static int secondsLeft = 100;
-
-#include <QLabel>
-#include <QPushButton>
 #include <QVBoxLayout>
-#include <QTimer>
-#include <QListWidget>
-#include <QDockWidget>
+#include <QScrollArea>
+#include <QString>
 #include <QPalette>
 #include <QFont>
 
@@ -38,9 +29,6 @@ HostWindow::HostWindow(std::string const& hostTitle, alias::book_container_t con
     m_hostKillButton = new QPushButton("Terminate Host", this);
     layout->addWidget(m_hostKillButton);
 
-    m_timerText = new QLabel("Time left: 100 seconds", this);
-    layout->addWidget(m_timerText);
-
     m_clientList = new QListWidget(this);
     m_clientList->setMinimumHeight(200);
     m_clientList->setMinimumWidth(400);
@@ -57,39 +45,19 @@ HostWindow::HostWindow(std::string const& hostTitle, alias::book_container_t con
     centralWidget->setAutoFillBackground(true);
     centralWidget->setPalette(palette);
 
-    m_clientTimer = new QTimer(this);
-    m_clientTimer->setInterval(1000);
-    connect(m_clientTimer, &QTimer::timeout, this, [this]() {
-        if (!m_clientTimer->isActive())
-            return;
-
-        if (--secondsLeft <= 0) {
-            terminateClient();
-        } else {
-            m_timerText->setText(QString("Time left: %1 seconds").arg(secondsLeft));
-        }
-    });
-
     connect(m_hostKillButton, &QPushButton::clicked, this, &HostWindow::terminateHost);
-    connect(this, &HostWindow::resetSignalTimer, this, &HostWindow::resetTimer);
-    connect(this, &HostWindow::stopSignalTimer, this, [this]() {
-        m_timerText->setText("Client reading");
-        m_clientTimer->stop();
-    });
-
-    m_clientTimer->start();
 }
 
 HostWindow::~HostWindow() = default;
 
-void HostWindow::updateClientsInfo(std::vector<utils::ClientInfo> const& clientsInfo)
+void HostWindow::updateClientsInfo(std::vector<utils::ClientInfoWithTimer> const& clientsInfo)
 {
     m_clientList->clear();
     for (auto const& clientInfo : clientsInfo)
     {
-        QListWidgetItem* clientItem = new QListWidgetItem(clientInfo.toQString(), m_clientList);
+        QListWidgetItem* clientItem = new QListWidgetItem(clientInfo.info.toQString(), m_clientList);
 
-        if (clientInfo.readingBook.empty())
+        if (clientInfo.info.readingBook.empty())
         {
             clientItem->setForeground(QColor(Qt::red));
         }
@@ -102,13 +70,11 @@ void HostWindow::updateClientsInfo(std::vector<utils::ClientInfo> const& clients
     }
 }
 
-void HostWindow::terminateClient()
+void HostWindow::notifyClientTerminated(alias::id_t id)
 {
-    m_clientTimer->stop();
-    m_timerText->setText("Client terminated");
-    QMessageBox::information(this, "Terminate Client", "Client terminated.");
-    LOG_INFO(HOST_LOG, "Terminate Client");
-    // kill(clientPid, SIGKILL);
+    std::string const msg = "Client[ID=" + std::to_string(id) + "] terminated.";
+    QMessageBox::information(this, "Terminate Client", QString::fromStdString(msg));
+    LOG_INFO(HOST_LOG, msg);
 }
 
 void HostWindow::terminateHost()
@@ -117,21 +83,4 @@ void HostWindow::terminateHost()
     LOG_INFO(HOST_LOG, "Terminate Host");
     // kill(clientPid, SIGKILL); // and kill client too
     std::exit(0);
-}
-
-void HostWindow::resetTimer()
-{
-    secondsLeft = 100;
-    m_timerText->setText("Time left: 100 seconds");
-    m_clientTimer->start();
-}
-
-void HostWindow::signalResetTimer()
-{
-    emit resetSignalTimer();
-}
-
-void HostWindow::signalStopTimer()
-{
-    emit stopSignalTimer();
 }

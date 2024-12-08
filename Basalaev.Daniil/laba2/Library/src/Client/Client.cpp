@@ -9,7 +9,10 @@
 static int argc = 0;
 
 Client::Client(alias::id_t id, SemaphoreLocal& semaphore, connImpl& connection, alias::book_container_t const& books, QObject* parent)
-    : NetWorkElementImpl(id, semaphore, connection, parent)
+    : QObject(parent)
+    , m_id(id)
+    , m_semaphore(semaphore)
+    , m_connection(connection)
     , m_books{books}
 {}
 
@@ -19,14 +22,7 @@ int Client::start()
 {
     LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] successfully start");
 
-    std::thread listener(&Client::listen, this); // start listen messages from host
-
-    std::vector<Book> books = { // TODO: remove when notification be implemented
-        {"Book 1", 10},
-        {"Book 2", 5},
-        {"Book 3", 20},
-        {"Book 4", 0}
-    };
+    std::thread listener(&Client::listen, this); // start listen responses from host
 
     QApplication app(argc, nullptr);
     m_window = std::unique_ptr<ClientWindow>(new ClientWindow(getId(), m_books));
@@ -52,7 +48,15 @@ void Client::listen()
         char buffer[1024] = {0};
         if (m_connection.Read(buffer, sizeof(buffer)))
         {
-            // TODO: check for notifications
+            // Check for notifications
+            if (auto notify = http::notification::parse(std::string(buffer)))
+            {
+                LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] successfully read msg from host: " + notify->toString());
+                m_books = std::move(notify->books);
+                m_window->updateBooks(m_books);
+                continue;
+            }
+            
             if (auto rsp = http::response::parse(std::string(buffer)))
             {
                 LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(getId()) + "] successfully read msg from host: " + rsp->toString());

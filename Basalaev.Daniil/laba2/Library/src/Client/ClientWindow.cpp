@@ -49,10 +49,10 @@ void ClientWindow::createReadingView()
     readingLabel = new QLabel("Reading book: ", this);
     layout->addWidget(readingLabel);
 
-    cancelReadingButton = new QPushButton("Cancel Reading", this);
+    cancelReadingButton = new QPushButton("Stop Reading", this);
     layout->addWidget(cancelReadingButton);
 
-    connect(cancelReadingButton, &QPushButton::clicked, this, &ClientWindow::cancelReading);
+    connect(cancelReadingButton, &QPushButton::clicked, this, &ClientWindow::stopReading);
 
     stackedWidget->addWidget(readingView);
 }
@@ -68,7 +68,7 @@ void ClientWindow::selectBook()
     }
 }
 
-void ClientWindow::cancelReading()
+void ClientWindow::stopReading()
 {
     QString bookName = readingLabel->text().split(": ").last();
     emit bookReturned(bookName.toStdString(), m_id);

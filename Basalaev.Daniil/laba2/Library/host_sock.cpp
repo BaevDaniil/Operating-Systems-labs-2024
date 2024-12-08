@@ -7,20 +7,34 @@
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2) // take port
+    if (argc != 3)
     {
-        LOG_ERROR("APP", "Usage: ./host <port>");
+        LOG_ERROR("APP", "Usage: ./host <port> <num_clients>");
         return EXIT_FAILURE;
     }
 
     alias::port_t port = std::stoi(argv[1]);
+    int numClients = std::stoi(argv[2]);
+
+    if (numClients <= 0)
+    {
+        LOG_ERROR("APP", "Number of clients must be greater than zero");
+        return EXIT_FAILURE;
+    }
+
     alias::book_container_t books = {
-        {"Book 1", 10},
-        {"Book 2", 5},
-        {"Book 3", 20},
+        {"Book 1", 1},
+        {"Book 2", 2},
+        {"Book 3", 3},
         {"Book 4", 0}
     };
-    SemaphoreLocal semaphore(1);
+
+    SemaphoreLocal semaphore(numClients);
+    std::vector<std::unique_ptr<SemaphoreLocal>> semaphores;
+    for (int i = 0; i < numClients; ++i)
+    {
+        semaphores.emplace_back(std::make_unique<SemaphoreLocal>(1));
+    }
 
     auto hostSocketConn = ConnSock::crateHostSocket(port);
     if (!hostSocketConn)
@@ -29,24 +43,35 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (pid_t pid = fork(); pid == -1) // error
+    std::vector<std::unique_ptr<connImpl>> hostConnections;
+    std::vector<alias::id_t> clientsId;
+
+    for (int i = 0; i < numClients; ++i)
     {
-        LOG_ERROR("APP", "Failed to fork");
-        return EXIT_FAILURE;
-    }
-    else if (pid != 0) // client
-    {
-        auto clientSocketConn = ConnSock::crateClientSocket(port);
-        if (!clientSocketConn)
+        if (pid_t pid = fork(); pid == -1) // Error
         {
-            LOG_ERROR(CLIENT_LOG, "Failed to initialize client socket");
+            LOG_ERROR("APP", "Failed to fork");
             return EXIT_FAILURE;
         }
+        else if (pid == 0) // client
+        {
+            auto clientSocketConn = ConnSock::crateClientSocket(port);
+            if (!clientSocketConn)
+            {
+                LOG_ERROR(CLIENT_LOG, "Failed to initialize client socket");
+                return EXIT_FAILURE;
+            }
 
-        Client client(pid, semaphore, *clientSocketConn, books);
-        return client.start();
+            Client client(getpid(), semaphore, *clientSocketConn, books);
+            return client.start();
+        }
+        else // host
+        {
+            clientsId.push_back(pid);
+        }
     }
-    else // host
+
+    for (int i = 0; i < numClients; ++i)
     {
         auto hostSocketConnAccepted = hostSocketConn->Accept();
         if (!hostSocketConnAccepted)
@@ -55,7 +80,9 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
         }
 
-        Host host(semaphore, *hostSocketConnAccepted, books);
-        return host.start();
+        hostConnections.push_back(std::move(hostSocketConnAccepted));
     }
+
+    Host host(semaphore, clientsId, std::move(hostConnections), books);
+    return host.start();
 }

@@ -5,6 +5,8 @@
 
 #include <QString>
 #include <QDateTime>
+#include <QTimer>
+#include <memory>
 #include <string>
 
 namespace utils
@@ -25,7 +27,13 @@ struct ClientInfo
 
     alias::id_t clientId;
     std::string readingBook;
-    int secondsToKill;
+    int secondsToKill = 5;
+};
+
+struct ClientInfoWithTimer
+{
+    ClientInfo info;
+    std::unique_ptr<QTimer> timer;
 };
 
 } // namespace utils
