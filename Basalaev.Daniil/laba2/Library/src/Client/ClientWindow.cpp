@@ -14,7 +14,7 @@ ClientWindow::ClientWindow(alias::id_t id, alias::book_container_t const& books,
     createReadingView();
 
     setCentralWidget(stackedWidget);
-    setWindowTitle("Client Window");
+    setWindowTitle(QString("Client Window [ID=%1]").arg(id));
     resize(400, 300);
 
     stackedWidget->setCurrentIndex(0);

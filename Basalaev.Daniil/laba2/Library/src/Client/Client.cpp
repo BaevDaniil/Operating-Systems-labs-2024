@@ -45,8 +45,8 @@ void Client::listen()
     {
         m_semaphore.wait();
 
-        char buffer[1024] = {0};
-        if (m_connection.Read(buffer, sizeof(buffer)))
+        char buffer[alias::MAX_MSG_SIZE] = {0};
+        if (m_connection.Read(buffer))
         {
             // Check for notifications
             if (auto notify = http::notification::parse(std::string(buffer)))

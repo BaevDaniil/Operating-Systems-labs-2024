@@ -18,3 +18,6 @@ target_link_libraries(host_fifo LibraryLib)
 
 add_executable(host_sock host_sock.cpp)
 target_link_libraries(host_sock LibraryLib)
+
+add_executable(host_pipe host_pipe.cpp)
+target_link_libraries(host_pipe LibraryLib)

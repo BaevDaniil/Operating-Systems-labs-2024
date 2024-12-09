@@ -1,6 +1,6 @@
 #include "src/Host/Host.hpp"
 #include "src/Client/Client.hpp"
-#include "Conn/conn_fifo.hpp"
+#include "Conn/conn_pipe.hpp"
 #include "Common/Logger.hpp"
 
 #include <unistd.h>
@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 {
     if (argc != 2)
     {
-        LOG_ERROR("APP", "Usage: ./host_fifo <num_clients>");
+        LOG_ERROR("APP", "Usage: ./host_pipe <num_clients>");
         return EXIT_FAILURE;
     }
 
@@ -31,16 +31,18 @@ int main(int argc, char* argv[])
     SemaphoreLocal semaphore(numClients);
 
     std::vector<std::unique_ptr<connImpl>> hostConnections;
+    std::vector<std::unique_ptr<connImpl>> clientsConnections;
     for (int i = 0; i < numClients; ++i)
     {
-        auto hostFifoConn = ConnFifo::crateHostFifo("/tmp/my_fifo_" + std::to_string(i));
-        if (!hostFifoConn)
+        auto [hostPipeConn, clientPipeConn] = ConnPipe::createPipeConns();
+        if (!hostPipeConn && !clientPipeConn)
         {
-            LOG_ERROR(HOST_LOG, "Failed to initialize fifo by host");
+            LOG_ERROR(HOST_LOG, "Failed to initialize pipe by host");
             return EXIT_FAILURE;
         }
 
-        hostConnections.push_back(std::move(hostFifoConn));
+        hostConnections.push_back(std::move(hostPipeConn));
+        clientsConnections.push_back(std::move(clientPipeConn));
     }
 
     std::vector<alias::id_t> clientsId;
@@ -53,14 +55,7 @@ int main(int argc, char* argv[])
         }
         else if (pid == 0) // client
         {
-            auto clientFifoConn = ConnFifo::crateClientFifo("/tmp/my_fifo_" + std::to_string(i));
-            if (!clientFifoConn)
-            {
-                LOG_ERROR(CLIENT_LOG, "Failed to initialize client socket");
-                return EXIT_FAILURE;
-            }
-
-            Client client(getpid(), semaphore, *clientFifoConn, books);
+            Client client(getpid(), semaphore, *clientsConnections[i], books);
             return client.start();
         }
         else // host

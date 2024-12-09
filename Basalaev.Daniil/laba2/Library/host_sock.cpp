@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 {
     if (argc != 3)
     {
-        LOG_ERROR("APP", "Usage: ./host <port> <num_clients>");
+        LOG_ERROR("APP", "Usage: ./host_sock <port> <num_clients>");
         return EXIT_FAILURE;
     }
 
@@ -30,11 +30,6 @@ int main(int argc, char* argv[])
     };
 
     SemaphoreLocal semaphore(numClients);
-    std::vector<std::unique_ptr<SemaphoreLocal>> semaphores;
-    for (int i = 0; i < numClients; ++i)
-    {
-        semaphores.emplace_back(std::make_unique<SemaphoreLocal>(1));
-    }
 
     auto hostSocketConn = ConnSock::crateHostSocket(port);
     if (!hostSocketConn)

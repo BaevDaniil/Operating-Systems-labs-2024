@@ -15,7 +15,7 @@ public:
 
     std::unique_ptr<ConnSock> Accept();
 
-    bool Read(void* buf, size_t count) override;
+    bool Read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
     bool Write(const void* buf, size_t count) override;
 
     bool isValid() const override;

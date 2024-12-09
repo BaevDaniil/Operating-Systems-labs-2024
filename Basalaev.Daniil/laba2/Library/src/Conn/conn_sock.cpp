@@ -91,11 +91,11 @@ std::unique_ptr<ConnSock> ConnSock::Accept()
     return std::unique_ptr<ConnSock>(socket);
 }
 
-bool ConnSock::Read(void* buf, size_t count)
+bool ConnSock::Read(void* buf, size_t maxSize)
 {
     if (!isValid()) { return false; }
 
-    if (recv(m_socketFileDesriptor, buf, count, 0) <= 0) { return false; }
+    if (recv(m_socketFileDesriptor, buf, maxSize, 0) <= 0) { return false; }
 
     return true;
 }

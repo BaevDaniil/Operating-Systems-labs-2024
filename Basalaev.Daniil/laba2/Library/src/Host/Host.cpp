@@ -115,8 +115,8 @@ void Host::listen(connImpl& connection)
     {
         m_semaphore.wait();
 
-        char buffer[1024] = {0};
-        if (connection.Read(buffer, sizeof(buffer)))
+        char buffer[alias::MAX_MSG_SIZE] = {0};
+        if (connection.Read(buffer))
         {
             if (auto req = http::request::parse(std::string(buffer)))
             {
@@ -148,7 +148,7 @@ void Host::updateClientInfo(utils::ClientInfo&& clientInfo)
     auto it = std::find_if(m_clients.begin(), m_clients.end(), [id = clientInfo.clientId](auto const& client){ return client.info.clientId == id; });
     if (it != m_clients.end())
     {
-        it->info = std::move(clientInfo);
+        it->info = clientInfo;
     }
 }
 
@@ -244,15 +244,17 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId,
             m_window->onSuccessTakeBook(bookName, clientId);
             m_window->updateBooks(m_books);
             updateClientInfo({.clientId = clientId, .readingBook = bookName, .secondsToKill = 5});
-            m_window->updateClientsInfo(m_clients);
             emit stopTimer(clientId);
             // notifyClientsUpdateBookStatus();
         }
         else
         {
+            updateClientInfo({.clientId = clientId, .readingBook = "", .secondsToKill = 5});
             emit resetTimer(clientId);
             m_window->onFailedTakeBook(bookName, clientId);
         }
+
+        m_window->updateClientsInfo(m_clients);
     }
     else
     {

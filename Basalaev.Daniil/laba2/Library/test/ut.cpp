@@ -3,6 +3,7 @@
 #include "Common/Http.hpp"
 #include "Conn/conn_sock.hpp"
 #include "Conn/conn_fifo.hpp"
+#include "Conn/conn_pipe.hpp"
 
 static constexpr alias::id_t ID = 1;
 static constexpr auto MAX_SIZE = 1024;
@@ -210,5 +211,28 @@ TEST_CASE("Fifo connection")
 
         auto clientFifoConn = ConnFifo::crateClientFifo(FIFO_PATH + std::string("Lalala"));
         REQUIRE_FALSE(clientFifoConn);
+    }
+}
+
+TEST_CASE("Pipe connection")
+{
+    SECTION("Sanity connection and communication")
+    {
+        auto [hostPipeConn, clientPipeConn] = ConnPipe::createPipeConns();
+        REQUIRE(hostPipeConn);
+        REQUIRE(clientPipeConn);
+
+        std::string const msg = "LALALA";
+        REQUIRE(clientPipeConn->Write(msg.c_str(), msg.size()));
+
+        char buffer[MAX_SIZE] = {0};
+        REQUIRE(hostPipeConn->Read(buffer, MAX_SIZE));
+        CHECK(std::string(buffer) == msg);
+
+        REQUIRE(hostPipeConn->Write(msg.c_str(), msg.size()));
+
+        buffer[MAX_SIZE] = {0};
+        REQUIRE(clientPipeConn->Read(buffer, MAX_SIZE));
+        CHECK(std::string(buffer) == msg);
     }
 }
