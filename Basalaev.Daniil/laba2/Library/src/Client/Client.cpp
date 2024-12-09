@@ -84,7 +84,7 @@ void Client::listen()
         }
 
         m_semaphore.post();
-        sleep(0.01);
+        sleep(0.1);
     }
 }
 

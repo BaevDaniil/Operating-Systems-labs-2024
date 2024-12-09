@@ -33,28 +33,23 @@ Host::Host(SemaphoreLocal& semaphore, std::vector<alias::id_t> const& clientId, 
 {
     for (auto const id : clientId)
     {
-        auto& clientInfo = m_clients.emplace_back(utils::ClientInfoWithTimer{
-                                .info = {.clientId = id},
-                                .timer = std::unique_ptr<QTimer>{new QTimer()}
-                            });
-        clientInfo.timer->setInterval(1000);
-        clientInfo.timer->setSingleShot(false);
-        // update client information every 1 second
-        connect(clientInfo.timer.get(), &QTimer::timeout, this, [this, &clientInfo]() {
-            clientInfo.info.secondsToKill--;
-            m_window->updateClientsInfo(m_clients);
-            if (clientInfo.info.secondsToKill == 0)
-            {
-                removeClient(clientInfo.info.clientId);
-                m_window->notifyClientTerminated(clientInfo.info.clientId);
-            }
-        });
-
-        clientInfo.timer->start();
+        m_clients.emplace_back(utils::ClientInfoWithTimer{
+                                    .info = {.clientId = id},
+                                    .timer = nullptr
+                                });
     }
+
+    connect(this, &Host::resetTimer, this, &Host::resetClientTimer);
+    connect(this, &Host::stopTimer, this, &Host::stopClientTimer);
 }
 
-Host::~Host() = default;
+Host::~Host()
+{
+    for (auto const& client : m_clients)
+    {
+        kill(client.info.clientId, SIGKILL);
+    }
+}
 
 void Host::stop()
 {
@@ -84,11 +79,34 @@ int Host::start()
     m_window = std::unique_ptr<HostWindow>(new HostWindow("HOST WINDOW", m_books));
     m_window->show();
     m_window->updateClientsInfo(m_clients);
+    setClientTimers();
     int res = app.exec();
 
     stop();
 
     return res;
+}
+
+void Host::setClientTimers()
+{
+    for (auto& clientInfo : m_clients)
+    {
+        clientInfo.timer = std::unique_ptr<QTimer>{new QTimer()};
+        clientInfo.timer->setInterval(1000);
+        clientInfo.timer->setSingleShot(false);
+        // update client information every 1 second
+        connect(clientInfo.timer.get(), &QTimer::timeout, this, [this, &clientInfo]() {
+            clientInfo.info.secondsToKill--;
+            m_window->updateClientsInfo(m_clients);
+            if (clientInfo.info.secondsToKill == 0)
+            {
+                removeClient(clientInfo.info.clientId);
+                m_window->notifyClientTerminated(clientInfo.info.clientId);
+            }
+        });
+
+        clientInfo.timer->start();
+    }
 }
 
 void Host::listen(connImpl& connection)
@@ -110,6 +128,7 @@ void Host::listen(connImpl& connection)
                 }
                 else
                 {
+                    emit resetTimer(req->id);
                     handleBookReturned(req->bookName, req->id, connection);
                 }
             }
@@ -120,7 +139,7 @@ void Host::listen(connImpl& connection)
         }
 
         m_semaphore.post(); // End critical section
-        sleep(0.01);
+        sleep(0.1);
     }
 }
 
@@ -142,7 +161,7 @@ void Host::resetClientTimer(alias::id_t clientId)
     if (it != m_clients.end())
     {
         it->timer->stop();
-        it->timer->start(5000);
+        it->timer->start(1000);
         it->info.secondsToKill = 5;
     }
 }
@@ -170,7 +189,7 @@ void Host::removeClient(alias::id_t clientId)
 
     if (it != m_clients.end())
     {
-        // TODO: stop timer???
+        kill(clientId, SIGKILL);
         m_clients.erase(it);
     }
 
@@ -219,22 +238,27 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId,
     if (connection.Write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
+
         if (rsp.status == http::OperationStatus_e::OK)
         {
             m_window->onSuccessTakeBook(bookName, clientId);
             m_window->updateBooks(m_books);
             updateClientInfo({.clientId = clientId, .readingBook = bookName, .secondsToKill = 5});
             m_window->updateClientsInfo(m_clients);
+            emit stopTimer(clientId);
             // notifyClientsUpdateBookStatus();
         }
         else
         {
+            emit resetTimer(clientId);
             m_window->onFailedTakeBook(bookName, clientId);
         }
     }
     else
     {
         LOG_ERROR(HOST_LOG, "failed to write to client: " + rspStr);
+
+        emit resetTimer(clientId);
         m_window->onFailedTakeBook(bookName, clientId);
     }
 }
@@ -257,6 +281,7 @@ void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId,
     if (connection.Write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
+
         if (rsp.status == http::OperationStatus_e::OK)
         {
             m_window->onSuccessReturnBook(bookName, clientId);

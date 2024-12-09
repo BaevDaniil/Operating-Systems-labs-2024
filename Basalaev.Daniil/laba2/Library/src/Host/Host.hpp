@@ -21,12 +21,17 @@ public:
     void listen(connImpl&);
     void stop();
 
+signals:
+    void resetTimer(int);
+    void stopTimer(int);
+
 private slots:
     void handleBookSelected(std::string const& bookName, alias::id_t clientId, connImpl&);
     void handleBookReturned(std::string const& bookName, alias::id_t clientId, connImpl&);
 
 private:
     void updateClientInfo(utils::ClientInfo&&);
+    void setClientTimers();
     void resetClientTimer(alias::id_t);
     void stopClientTimer(alias::id_t);
     void removeClient(alias::id_t);

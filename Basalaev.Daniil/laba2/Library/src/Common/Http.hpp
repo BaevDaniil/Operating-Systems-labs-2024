@@ -33,7 +33,7 @@ struct request
     std::string toString() const;
 
     OperationType_e type;
-    id_t id;
+    alias::id_t id;
     std::string bookName;
 };
 
@@ -43,7 +43,7 @@ struct response
     static std::optional<response> parse(std::string const& rspMsg);
     std::string toString() const;
 
-    id_t id;
+    alias::id_t id;
     OperationStatus_e status;
 };
 

@@ -81,6 +81,7 @@ void HostWindow::terminateHost()
 {
     QMessageBox::information(this, "Terminate Host", "Host terminated.");
     LOG_INFO(HOST_LOG, "Terminate Host");
-    // kill(clientPid, SIGKILL); // and kill client too
     std::exit(0);
+    // this->close();
+    // qApp->quit();
 }

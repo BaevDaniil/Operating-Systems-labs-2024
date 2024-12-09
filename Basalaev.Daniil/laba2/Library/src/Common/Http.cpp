@@ -5,7 +5,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-#include <iostream> //
 namespace http
 {
 
@@ -86,26 +85,19 @@ std::optional<notification> notification::parse(std::string const& notificationM
     notification notify;
 
     // parse foramt
-    std::cout << "FORMAT: " << std::endl;
     if (notificationMsg.substr(0, 20) != "http://notification/") { return {}; }
-    std::cout << "COORECT: " << std::endl;
 
-    std::cout << "isArray: " << std::endl;
     QJsonDocument jsonDocument = QJsonDocument::fromJson(QString::fromStdString(notificationMsg.substr(20)).toUtf8());
     if (!jsonDocument.isArray()) { return {}; }
-    std::cout << "CORRECT: " << std::endl;
 
     // parse books
     QJsonArray jsonArray = jsonDocument.array();
     for (auto const& jsonValue : jsonArray)
     {
-        std::cout << "isObject: " << std::endl;
         if (!jsonValue.isObject()) { return {}; }
-        std::cout << "CORRECT: " << std::endl;
 
         QJsonObject jsonBook = jsonValue.toObject();
         if (!jsonBook.contains("name") || !jsonBook.contains("amount")) { return {}; }
-        std::cout << "name and amount = CORRECT: " << std::endl;
 
         notify.books.emplace_back(Book{.name = jsonBook["name"].toString().toStdString(), .amount = jsonBook["amount"].toInt()});
     }
