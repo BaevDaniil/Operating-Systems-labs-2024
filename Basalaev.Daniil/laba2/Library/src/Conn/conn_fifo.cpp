@@ -32,7 +32,7 @@ std::unique_ptr<ConnFifo> ConnFifo::crateHostFifo(std::string const& fifoPath)
     if (fifo->m_writeFileDisriptor == -1)
     {
         LOG_ERROR("ConnFifo", "Host failed to open FIFO for writing");
-        close(fifo->m_readFileDisriptor);
+        fifo->close();
         return nullptr;
     }
 
@@ -56,7 +56,7 @@ std::unique_ptr<ConnFifo> ConnFifo::crateClientFifo(std::string const& fifoPath)
     if (fifo->m_writeFileDisriptor == -1)
     {
         LOG_ERROR("ConnFifo", "Client failed to open FIFO for writing");
-        close(fifo->m_readFileDisriptor);
+        fifo->close();
         return nullptr;
     }
 
@@ -70,14 +70,21 @@ bool ConnFifo::isValid() const
 
 ConnFifo::~ConnFifo()
 {
+    close();
+}
+
+void ConnFifo::close()
+{
     if (m_readFileDisriptor != -1)
     {
-        close(m_readFileDisriptor);
+        ::close(m_readFileDisriptor);
+        m_readFileDisriptor = -1;
     }
 
     if (m_writeFileDisriptor != -1)
     {
-        close(m_writeFileDisriptor);
+        ::close(m_writeFileDisriptor);
+        m_writeFileDisriptor = -1;
     }
 
     if (!m_fifoPath.empty() && m_isHost)
@@ -86,12 +93,12 @@ ConnFifo::~ConnFifo()
     }
 }
 
-bool ConnFifo::Read(void* buf, size_t maxSize)
+bool ConnFifo::read(void* buf, size_t maxSize)
 {
     if (!isValid()) { return false; }
 
     char tmpBuf[alias::MAX_MSG_SIZE];
-    ssize_t bytesRead = read(m_readFileDisriptor, tmpBuf, maxSize);
+    ssize_t bytesRead = ::read(m_readFileDisriptor, tmpBuf, maxSize);
     if (bytesRead == -1) { return false; }
 
     if ((tmpBuf[0] == '0' && m_isHost) || (tmpBuf[0] == '1' && !m_isHost))
@@ -100,21 +107,21 @@ bool ConnFifo::Read(void* buf, size_t maxSize)
     }
     else
     {
-        Write(&tmpBuf[1], bytesRead - 1);
+        write(&tmpBuf[1], bytesRead - 1);
         return false;
     }
 
     return bytesRead > 0;
 }
 
-bool ConnFifo::Write(const void* buf, size_t count)
+bool ConnFifo::write(const void* buf, size_t count)
 {
     if (!isValid()) { return false; }
 
     char tmpBuf[alias::MAX_MSG_SIZE];
     tmpBuf[0] = m_isHost ? '1' : '0';
     std::memcpy(&tmpBuf[1], buf, count);
-    ssize_t bytesWritten = write(m_writeFileDisriptor, tmpBuf, count + 1);
+    ssize_t bytesWritten = ::write(m_writeFileDisriptor, tmpBuf, count + 1);
     if (bytesWritten == -1) { return false; }
 
     return static_cast<size_t>(bytesWritten) == count + 1;

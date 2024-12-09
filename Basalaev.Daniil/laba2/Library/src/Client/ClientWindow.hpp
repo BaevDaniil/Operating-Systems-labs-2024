@@ -35,16 +35,13 @@ signals:
 private slots:
     void selectBook();
     void stopReading();
-    void terminateClient();
 
 private:
     void createBookView(alias::book_container_t const&);
     void createReadingView();
 
-    // For switch windows (started <-> reading)
-    QStackedWidget* stackedWidget; 
-    QPushButton* selectButton;
-
-    QLabel* readingLabel;
-    QPushButton* cancelReadingButton;
+    QStackedWidget* m_stackedWidget; 
+    QPushButton* m_selectButton;
+    QLabel* m_readingLabel;
+    QPushButton* m_stopReadingButton;
 };

@@ -1,6 +1,7 @@
 #include "LibraryWindowImpl.hpp"
 
 #include <QDockWidget>
+#include <QCloseEvent>
 
 LibraryWindowImpl::LibraryWindowImpl(alias::id_t id, alias::book_container_t const& books, QWidget* parent)
     : QMainWindow(parent)
@@ -8,8 +9,28 @@ LibraryWindowImpl::LibraryWindowImpl(alias::id_t id, alias::book_container_t con
 {
     m_bookList = new QListWidget(this);
     m_bookList->setFixedWidth(250);
+    m_bookList->setStyleSheet(
+        "QListWidget {"
+        "   background-color: #f4f4f4;"
+        "   border: 1px solid #c0c0c0;"
+        "   border-radius: 5px;"
+        "   padding: 5px;"
+        "   font-size: 14px;"
+        "   color: #333333;"
+        "}"
+        "QListWidget::item {"
+        "   padding: 5px;"
+        "   border-bottom: 1px solid #d0d0d0;"
+        "}"
+        "QListWidget::item:selected {"
+        "   background-color: #87cefa;"
+        "   color: #ffffff;"
+        "}"
+    );
+
     updateBooks(books);
     createHistoryView();
+    setWindowFlags(Qt::CustomizeWindowHint);
 }
 
 void LibraryWindowImpl::updateBooks(alias::book_container_t const& books)
@@ -40,7 +61,26 @@ void LibraryWindowImpl::addHistoryEntry(utils::HistoryBookInfo const& booksInfo)
 void LibraryWindowImpl::createHistoryView()
 {
     m_historyList = new QListWidget(this);
-    m_historyList->setFixedWidth(550);
+    m_historyList->setFixedWidth(400);
+    m_historyList->setStyleSheet(
+        "QListWidget {"
+        "   background-color: #fff8e1;"
+        "   border: 1px solid #c0c0c0;"
+        "   border-radius: 5px;"
+        "   padding: 5px;"
+        "   font-size: 14px;"
+        "   color: #333333;"
+        "}"
+        "QListWidget::item {"
+        "   padding: 5px;"
+        "   border-bottom: 1px solid #d0d0d0;"
+        "}"
+        "QListWidget::item:selected {"
+        "   background-color: #ffd54f;"
+        "   color: #ffffff;"
+        "}"
+    );
+
     auto* historyWidget = new QDockWidget("History", this);
     historyWidget->setWidget(m_historyList);
     addDockWidget(Qt::LeftDockWidgetArea, historyWidget);
@@ -96,4 +136,16 @@ void LibraryWindowImpl::onFailedReturnBook(std::string const& bookName, alias::i
     };
 
     addHistoryEntry(bookInfo);
+}
+
+void LibraryWindowImpl::closeEvent(QCloseEvent* event)
+{
+    if (m_letClose)
+    {
+        QMainWindow::closeEvent(event);
+    }
+    else
+    {
+        event->ignore();
+    }
 }

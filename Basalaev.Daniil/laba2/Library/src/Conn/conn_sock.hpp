@@ -10,13 +10,15 @@ class ConnSock : public connImpl
 public:
     ~ConnSock() override;
 
-    static std::unique_ptr<ConnSock> crateHostSocket(alias::port_t hostPort);
-    static std::unique_ptr<ConnSock> crateClientSocket(alias::port_t hostPort);
+    static std::unique_ptr<ConnSock> craeteHostSocket(alias::port_t hostPort);
+    static std::unique_ptr<ConnSock> craeteClientSocket(alias::port_t hostPort);
 
-    std::unique_ptr<ConnSock> Accept();
+    std::unique_ptr<ConnSock> accept();
 
-    bool Read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
-    bool Write(const void* buf, size_t count) override;
+    bool read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
+    bool write(const void* buf, size_t count) override;
+
+    void close() override;
 
     bool isValid() const override;
 

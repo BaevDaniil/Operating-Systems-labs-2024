@@ -6,8 +6,6 @@
 #include <signal.h>
 #include <thread>
 
-static int argc = 0;
-
 Client::Client(alias::id_t id, SemaphoreLocal& semaphore, connImpl& connection, alias::book_container_t const& books, QObject* parent)
     : QObject(parent)
     , m_id(id)
@@ -24,6 +22,7 @@ int Client::start()
 
     std::thread listener(&Client::listen, this); // start listen responses from host
 
+    int argc = 0;
     QApplication app(argc, nullptr);
     m_window = std::unique_ptr<ClientWindow>(new ClientWindow(getId(), m_books));
 
@@ -34,6 +33,7 @@ int Client::start()
     int res = app.exec();
 
     m_isRunning = false; // TODO: make stop
+    m_connection.close();
     if (listener.joinable()) { listener.join(); }
 
     return res;
@@ -46,7 +46,7 @@ void Client::listen()
         m_semaphore.wait();
 
         char buffer[alias::MAX_MSG_SIZE] = {0};
-        if (m_connection.Read(buffer))
+        if (m_connection.read(buffer))
         {
             // Check for notifications
             if (auto notify = http::notification::parse(std::string(buffer)))
@@ -91,7 +91,7 @@ void Client::listen()
 void Client::handleBookSelected(std::string const& bookName, alias::id_t clientId)
 {
     std::string const reqStr = http::request{.type = http::OperationType_e::POST, .id = clientId, .bookName = bookName}.toString();
-    if (m_connection.Write(reqStr.c_str(), reqStr.size()))
+    if (m_connection.write(reqStr.c_str(), reqStr.size()))
     {
         LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] write to host: " + reqStr);
         m_lastOpeartion = http::OperationType_e::POST;
@@ -106,7 +106,7 @@ void Client::handleBookSelected(std::string const& bookName, alias::id_t clientI
 void Client::handleBookReturned(std::string const& bookName, alias::id_t clientId)
 {
     std::string const reqStr = http::request{.type = http::OperationType_e::PUT, .id = clientId, .bookName = bookName}.toString();
-    if (m_connection.Write(reqStr.c_str(), reqStr.size()))
+    if (m_connection.write(reqStr.c_str(), reqStr.size()))
     {
         LOG_INFO(CLIENT_LOG, "[ID=" + std::to_string(clientId) + "] write to host: " + reqStr);
         m_lastOpeartion = http::OperationType_e::PUT;

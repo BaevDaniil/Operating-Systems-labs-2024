@@ -6,14 +6,21 @@
 
 ConnPipe::~ConnPipe()
 {
+    close();
+}
+
+void ConnPipe::close()
+{
     if (m_readFileDescriptor != -1)
     {
-        close(m_readFileDescriptor);
+        ::close(m_readFileDescriptor);
+        m_readFileDescriptor = -1;
     }
 
     if (m_writeFileDescriptor != -1)
     {
-        close(m_writeFileDescriptor);
+        ::close(m_writeFileDescriptor);
+        m_writeFileDescriptor = -1;
     }
 }
 
@@ -45,21 +52,21 @@ bool ConnPipe::isValid() const
     return !(m_writeFileDescriptor == -1 || m_readFileDescriptor == -1);
 }
 
-bool ConnPipe::Read(void* buf, size_t maxSize)
+bool ConnPipe::read(void* buf, size_t maxSize)
 {
     if (!isValid()) { return false; }
 
-    ssize_t bytesRead = read(m_readFileDescriptor, buf, maxSize);
+    ssize_t bytesRead = ::read(m_readFileDescriptor, buf, maxSize);
     if (bytesRead == -1) { return false; }
 
     return bytesRead > 0;
 }
 
-bool ConnPipe::Write(const void* buf, size_t count)
+bool ConnPipe::write(const void* buf, size_t count)
 {
     if (!isValid()) { return false; }
 
-    ssize_t bytesWritten = write(m_writeFileDescriptor, buf, count);
+    ssize_t bytesWritten = ::write(m_writeFileDescriptor, buf, count);
     if (bytesWritten == -1) { return false; }
 
     return bytesWritten == static_cast<ssize_t>(count);

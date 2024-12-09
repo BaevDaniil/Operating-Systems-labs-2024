@@ -33,5 +33,5 @@ private:
     alias::id_t m_id;
     SemaphoreLocal& m_semaphore;
     connImpl& m_connection;
-    alias::book_container_t m_books; // TODO: try to remove when notification be implemented
+    alias::book_container_t m_books;
 };

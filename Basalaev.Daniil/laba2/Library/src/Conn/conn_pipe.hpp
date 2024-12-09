@@ -14,8 +14,10 @@ public:
 
     static std::pair<std::unique_ptr<ConnPipe>, std::unique_ptr<ConnPipe>> createPipeConns();
 
-    bool Read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
-    bool Write(const void* buf, size_t count) override;
+    bool read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
+    bool write(const void* buf, size_t count) override;
+
+    void close() override;
 
     bool isValid() const override;
 

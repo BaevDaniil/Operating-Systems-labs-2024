@@ -45,15 +45,22 @@ Host::Host(SemaphoreLocal& semaphore, std::vector<alias::id_t> const& clientId, 
 
 Host::~Host()
 {
-    for (auto const& client : m_clients)
-    {
-        kill(client.info.clientId, SIGKILL);
-    }
+    stop();
 }
 
 void Host::stop()
 {
     m_isRunning = false;
+
+    for (auto& connection : m_connections)
+    {
+        connection->close();
+    }
+
+    for (auto const& client : m_clients)
+    {
+        kill(client.info.clientId, SIGKILL);
+    }
 
     for (auto& thread : m_listenerThreads)
     {
@@ -97,12 +104,12 @@ void Host::setClientTimers()
         // update client information every 1 second
         connect(clientInfo.timer.get(), &QTimer::timeout, this, [this, &clientInfo]() {
             clientInfo.info.secondsToKill--;
-            m_window->updateClientsInfo(m_clients);
             if (clientInfo.info.secondsToKill == 0)
             {
                 removeClient(clientInfo.info.clientId);
                 m_window->notifyClientTerminated(clientInfo.info.clientId);
             }
+            m_window->updateClientsInfo(m_clients);
         });
 
         clientInfo.timer->start();
@@ -116,7 +123,7 @@ void Host::listen(connImpl& connection)
         m_semaphore.wait();
 
         char buffer[alias::MAX_MSG_SIZE] = {0};
-        if (connection.Read(buffer))
+        if (connection.read(buffer))
         {
             if (auto req = http::request::parse(std::string(buffer)))
             {
@@ -138,7 +145,7 @@ void Host::listen(connImpl& connection)
             }
         }
 
-        m_semaphore.post(); // End critical section
+        m_semaphore.post();
         sleep(0.1);
     }
 }
@@ -192,8 +199,6 @@ void Host::removeClient(alias::id_t clientId)
         kill(clientId, SIGKILL);
         m_clients.erase(it);
     }
-
-    // TODO: close connection
 }
 
 void Host::notifyClientsUpdateBookStatus()
@@ -202,7 +207,7 @@ void Host::notifyClientsUpdateBookStatus()
     std::string const notificationStr = notification.toString();
     for (auto& connection : m_connections)
     {
-        if (connection->Write(notificationStr.c_str(), notificationStr.size())) // w/o sync
+        if (connection->write(notificationStr.c_str(), notificationStr.size())) // w/o sync?
         {
             LOG_INFO(HOST_LOG, "write to client: " + notificationStr);
         }
@@ -235,7 +240,7 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId,
     }
 
     std::string const rspStr = rsp.toString();
-    if (connection.Write(rspStr.c_str(), rspStr.size()))
+    if (connection.write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
 
@@ -280,7 +285,7 @@ void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId,
     }
 
     std::string const rspStr = rsp.toString();
-    if (connection.Write(rspStr.c_str(), rspStr.size()))
+    if (connection.write(rspStr.c_str(), rspStr.size()))
     {
         LOG_INFO(HOST_LOG, "write to client: " + rspStr);
 

@@ -9,7 +9,7 @@ QString HistoryBookInfo::toQString() const
     QString clientIdStr = QString::number(clientId);
     QString opType = op.type == http::OperationType_e::POST ? "POST" : "PUT";
     QString status = op.status == http::OperationStatus_e::OK ? "OK" : "FAIL";
-    return QString("[%1][ID=%2]: %3/%4 [%5], %2 \"%3\": %4").arg(timeStr, clientIdStr, opType, QString::fromStdString(name), status);
+    return QString("[%1][ID=%2]: %3/%4 [%5]").arg(timeStr, clientIdStr, opType, QString::fromStdString(name), status);
 }
 
 QString ClientInfo::toQString() const

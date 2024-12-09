@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-std::unique_ptr<ConnSock> ConnSock::crateHostSocket(alias::port_t hostPort)
+std::unique_ptr<ConnSock> ConnSock::craeteHostSocket(alias::port_t hostPort)
 {
     ConnSock* socket = new ConnSock();
     socket->m_socketFileDesriptor = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -26,14 +26,14 @@ std::unique_ptr<ConnSock> ConnSock::crateHostSocket(alias::port_t hostPort)
     if (bind(socket->m_socketFileDesriptor, (struct sockaddr*)&socket->m_address, sizeof(socket->m_address)) == -1)
     {
         LOG_ERROR("ConnSock", "Host failed to bind socket");
-        close(socket->m_socketFileDesriptor);
+        socket->close();
         socket->m_socketFileDesriptor = -1;
         return nullptr;
     }
 
     if (listen(socket->m_socketFileDesriptor, 1) == -1) {
         LOG_ERROR("ConnSock", "Host failed to listen socket");
-        close(socket->m_socketFileDesriptor);
+        socket->close();
         socket->m_socketFileDesriptor = -1;
         return nullptr;
     }
@@ -41,7 +41,7 @@ std::unique_ptr<ConnSock> ConnSock::crateHostSocket(alias::port_t hostPort)
     return std::unique_ptr<ConnSock>(socket);
 }
 
-std::unique_ptr<ConnSock> ConnSock::crateClientSocket(alias::port_t hostPort)
+std::unique_ptr<ConnSock> ConnSock::craeteClientSocket(alias::port_t hostPort)
 {
     ConnSock* socket = new ConnSock();
     socket->m_socketFileDesriptor = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -58,7 +58,7 @@ std::unique_ptr<ConnSock> ConnSock::crateClientSocket(alias::port_t hostPort)
     if (inet_pton(AF_INET, "127.0.0.1", &socket->m_address.sin_addr) <= 0)
     {
         LOG_ERROR("ConnSock", "Client recieve invalid host IP address");
-        close(socket->m_socketFileDesriptor);
+        socket->close();
         socket->m_socketFileDesriptor = -1;
         return nullptr;
     }
@@ -66,7 +66,7 @@ std::unique_ptr<ConnSock> ConnSock::crateClientSocket(alias::port_t hostPort)
     if (connect(socket->m_socketFileDesriptor, (struct sockaddr*)&socket->m_address, sizeof(socket->m_address)) == -1)
     {
         LOG_ERROR("ConnSock", "Client failed to connect to host");
-        close(socket->m_socketFileDesriptor);
+        socket->close();
         socket->m_socketFileDesriptor = -1;
         return nullptr;
     }
@@ -74,11 +74,11 @@ std::unique_ptr<ConnSock> ConnSock::crateClientSocket(alias::port_t hostPort)
     return std::unique_ptr<ConnSock>(socket);
 }
 
-std::unique_ptr<ConnSock> ConnSock::Accept()
+std::unique_ptr<ConnSock> ConnSock::accept()
 {
     alias::address_t clientAddr;
     socklen_t clientLen = sizeof(clientAddr);
-    alias::desriptor_t clientFd = accept(m_socketFileDesriptor, (struct sockaddr*)&clientAddr, &clientLen);
+    alias::desriptor_t clientFd = ::accept(m_socketFileDesriptor, (struct sockaddr*)&clientAddr, &clientLen);
     if (clientFd == -1)
     {
         LOG_ERROR("ConnSock", "Host failed to accept connection");
@@ -91,7 +91,7 @@ std::unique_ptr<ConnSock> ConnSock::Accept()
     return std::unique_ptr<ConnSock>(socket);
 }
 
-bool ConnSock::Read(void* buf, size_t maxSize)
+bool ConnSock::read(void* buf, size_t maxSize)
 {
     if (!isValid()) { return false; }
 
@@ -100,7 +100,7 @@ bool ConnSock::Read(void* buf, size_t maxSize)
     return true;
 }
 
-bool ConnSock::Write(const void* buf, size_t count)
+bool ConnSock::write(const void* buf, size_t count)
 {
     if (!isValid()) { return false; }
 
@@ -111,9 +111,15 @@ bool ConnSock::Write(const void* buf, size_t count)
 
 ConnSock::~ConnSock()
 {
-    if (isValid()) 
+    close();
+}
+
+void ConnSock::close()
+{
+    if (isValid())
     {
-        close(m_socketFileDesriptor);
+        ::close(m_socketFileDesriptor);
+        m_socketFileDesriptor = -1;
     }
 }
 

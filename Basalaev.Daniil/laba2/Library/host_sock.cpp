@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
     SemaphoreLocal semaphore(numClients);
 
-    auto hostSocketConn = ConnSock::crateHostSocket(port);
+    auto hostSocketConn = ConnSock::craeteHostSocket(port);
     if (!hostSocketConn)
     {
         LOG_ERROR(HOST_LOG, "Failed to initialize host socket");
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
         }
         else if (pid == 0) // client
         {
-            auto clientSocketConn = ConnSock::crateClientSocket(port);
+            auto clientSocketConn = ConnSock::craeteClientSocket(port);
             if (!clientSocketConn)
             {
                 LOG_ERROR(CLIENT_LOG, "Failed to initialize client socket");
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < numClients; ++i)
     {
-        auto hostSocketConnAccepted = hostSocketConn->Accept();
+        auto hostSocketConnAccepted = hostSocketConn->accept();
         if (!hostSocketConnAccepted)
         {
             LOG_ERROR(HOST_LOG, "Failed to accept connection");

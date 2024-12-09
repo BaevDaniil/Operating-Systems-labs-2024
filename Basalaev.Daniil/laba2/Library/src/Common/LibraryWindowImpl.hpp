@@ -26,8 +26,10 @@ public:
 
 protected:
     void createHistoryView();
+    void closeEvent(QCloseEvent*);
 
     QListWidget* m_historyList;
     QListWidget* m_bookList;
     alias::id_t m_id;
+    bool m_letClose{false};
 };

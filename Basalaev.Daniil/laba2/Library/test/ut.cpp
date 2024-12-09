@@ -147,35 +147,35 @@ TEST_CASE("Socket connection")
     static alias::port_t PORT = 10101;
     SECTION("Sanity connection and communication")
     {
-        auto hostSocketConn = ConnSock::crateHostSocket(PORT);
+        auto hostSocketConn = ConnSock::craeteHostSocket(PORT);
         REQUIRE(hostSocketConn);
 
-        auto clientSocketConn = ConnSock::crateClientSocket(PORT);
+        auto clientSocketConn = ConnSock::craeteClientSocket(PORT);
         REQUIRE(clientSocketConn);
 
-        auto hostSocketConnAccepted = hostSocketConn->Accept();
+        auto hostSocketConnAccepted = hostSocketConn->accept();
         REQUIRE(hostSocketConnAccepted);
 
         std::string const msg = "LALALA";
-        REQUIRE(clientSocketConn->Write(msg.c_str(), msg.size()));
+        REQUIRE(clientSocketConn->write(msg.c_str(), msg.size()));
 
         char buffer[MAX_SIZE] = {0};
-        REQUIRE(hostSocketConnAccepted->Read(buffer, MAX_SIZE));
+        REQUIRE(hostSocketConnAccepted->read(buffer, MAX_SIZE));
         CHECK(std::string(buffer) == msg);
 
-        REQUIRE(hostSocketConnAccepted->Write(msg.c_str(), msg.size()));
+        REQUIRE(hostSocketConnAccepted->write(msg.c_str(), msg.size()));
 
         buffer[MAX_SIZE] = {0};
-        REQUIRE(clientSocketConn->Read(buffer, MAX_SIZE));
+        REQUIRE(clientSocketConn->read(buffer, MAX_SIZE));
         CHECK(std::string(buffer) == msg);
     }
     SECTION("Failed to setup connection, because of different host's PORT")
     {
         PORT++; // For new connection new port
-        auto hostSocketConn = ConnSock::crateHostSocket(PORT);
+        auto hostSocketConn = ConnSock::craeteHostSocket(PORT);
         REQUIRE(hostSocketConn);
 
-        auto clientSocketConn = ConnSock::crateClientSocket(PORT + 1);
+        auto clientSocketConn = ConnSock::craeteClientSocket(PORT + 1);
         REQUIRE_FALSE(clientSocketConn);
     }
 }
@@ -192,16 +192,16 @@ TEST_CASE("Fifo connection")
         REQUIRE(clientFifoConn);
 
         std::string const msg = "LALALA";
-        REQUIRE(clientFifoConn->Write(msg.c_str(), msg.size()));
+        REQUIRE(clientFifoConn->write(msg.c_str(), msg.size()));
 
         char buffer[MAX_SIZE] = {0};
-        REQUIRE(hostFifoConn->Read(buffer, MAX_SIZE));
+        REQUIRE(hostFifoConn->read(buffer, MAX_SIZE));
         CHECK(std::string(buffer) == msg);
 
-        REQUIRE(hostFifoConn->Write(msg.c_str(), msg.size()));
+        REQUIRE(hostFifoConn->write(msg.c_str(), msg.size()));
 
         buffer[MAX_SIZE] = {0};
-        REQUIRE(clientFifoConn->Read(buffer, MAX_SIZE));
+        REQUIRE(clientFifoConn->read(buffer, MAX_SIZE));
         CHECK(std::string(buffer) == msg);
     }
     SECTION("Failed to setup connection, because of different fifo's path")
@@ -223,16 +223,16 @@ TEST_CASE("Pipe connection")
         REQUIRE(clientPipeConn);
 
         std::string const msg = "LALALA";
-        REQUIRE(clientPipeConn->Write(msg.c_str(), msg.size()));
+        REQUIRE(clientPipeConn->write(msg.c_str(), msg.size()));
 
         char buffer[MAX_SIZE] = {0};
-        REQUIRE(hostPipeConn->Read(buffer, MAX_SIZE));
+        REQUIRE(hostPipeConn->read(buffer, MAX_SIZE));
         CHECK(std::string(buffer) == msg);
 
-        REQUIRE(hostPipeConn->Write(msg.c_str(), msg.size()));
+        REQUIRE(hostPipeConn->write(msg.c_str(), msg.size()));
 
         buffer[MAX_SIZE] = {0};
-        REQUIRE(clientPipeConn->Read(buffer, MAX_SIZE));
+        REQUIRE(clientPipeConn->read(buffer, MAX_SIZE));
         CHECK(std::string(buffer) == msg);
     }
 }

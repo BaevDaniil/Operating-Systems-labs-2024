@@ -14,8 +14,10 @@ public:
     static std::unique_ptr<ConnFifo> crateHostFifo(std::string const& fifoPath);
     static std::unique_ptr<ConnFifo> crateClientFifo(std::string const& fifoPath);
 
-    bool Read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
-    bool Write(const void* buf, size_t count) override;
+    bool read(void* buf, size_t maxSize = alias::MAX_MSG_SIZE) override;
+    bool write(const void* buf, size_t count) override;
+
+    void close() override;
 
     bool isValid() const override;
 
