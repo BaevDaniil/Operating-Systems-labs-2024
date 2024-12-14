@@ -31,6 +31,8 @@
 #include <string>
 #include <stdio.h>
 #include <sys/wait.h>
+#include <thread>
+#include <chrono>
 #include <sys/types.h>
 
 #endif // INCLUDES_H

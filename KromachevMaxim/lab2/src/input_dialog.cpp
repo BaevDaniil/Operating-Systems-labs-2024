@@ -18,4 +18,11 @@ InputDialog::InputDialog(QWidget *parent)
 
     mainLayout->addLayout(inputLayout);
     setWindowTitle("Чат");
+
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &InputDialog::on_send_clicked);
+}
+
+void InputDialog::append_msg(const std::string& msg)
+{
+    msg_output->append(QString::fromStdString("<<< " + msg));
 }

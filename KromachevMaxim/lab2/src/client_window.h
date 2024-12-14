@@ -9,27 +9,28 @@ class ClientChatWindow : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ClientChatWindow(const std::string& host_path, QWidget *parent = nullptr);
+    explicit ClientChatWindow(__pid_t host_pid, QWidget *parent = nullptr);
     ~ClientChatWindow() override = default;
 
 private slots:
-    void send_msg_to_general();
-    void send_msg_to_private();
-    void read_msg_from_general();
-    void read_msg_from_private();
+    void send_public_msg(const std::string& msg);
+    void send_private_msg(const std::string& msg);
+    void read_msg();
 
 private:
-    QTabWidget tabWidget;
-    InputDialog generalChat;
-    InputDialog privateChat;
-    std::string host_path;
-    int setupCallCount = 0;
+    QTabWidget tab_widget;
+    InputDialog public_chat;
+    InputDialog private_chat;
+    __pid_t host_pid;
 
-    Conn* host_conn;
-    Conn* general_chat_conn;
+    int setup_count = 0;
+
+    std::pair<Conn*, Conn*> private_conn {nullptr, nullptr};
+    std::pair<Conn*, Conn*> public_conn {nullptr, nullptr};
 
     void setup_conn();
     void init_gui();
+    void init_timers();
 };
 
 #endif // CLIENTCHATWINDOW_H

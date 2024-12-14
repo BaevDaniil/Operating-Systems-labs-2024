@@ -11,10 +11,11 @@ public:
     ~ConnFifo();
     bool is_valid() const override;
 
-private:
-    bool read(const std::string& buf, unsigned size);
+    void setup_conn(bool create);
+    bool read(std::string& buf, unsigned size);
     bool write(const std::string& buf);
 
+private:
     const std::string path;
     int fd = -1;
     bool valid {false};
