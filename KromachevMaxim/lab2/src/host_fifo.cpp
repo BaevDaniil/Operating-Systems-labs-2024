@@ -5,12 +5,6 @@
 
 void HostChatWindow::setup_conn()
 {
-    std::string send_public_chat = "/tmp/host_client_public_fifo" + std::to_string(getpid());
-    std::string read_public_chat = "/tmp/client_host_public_fifo" + std::to_string(getpid());
-
-    public_conn.first = new ConnFifo(send_public_chat, true);
-    public_conn.second = new ConnFifo(read_public_chat, true);
-
     for(auto& client_pid : clients_pid)
     {
         std::string send_private_chat = "/tmp/host_client_private_fifo" + std::to_string(client_pid);
@@ -20,22 +14,21 @@ void HostChatWindow::setup_conn()
         privates_conn[client_pid].second = new ConnFifo(read_private_chat, true);
     }
 
+    for(auto& client_pid : clients_pid)
+    {
+        std::string send_public_chat = "/tmp/host_client_public_fifo" + std::to_string(client_pid);
+        std::string read_public_chat = "/tmp/client_host_public_fifo" + std::to_string(client_pid);
+
+        publics_conn[client_pid].first = new ConnFifo(send_public_chat, true);
+        publics_conn[client_pid].second = new ConnFifo(read_public_chat, true);
+    }
+
     QTimer *timer = new QTimer(this);
 
     connect(timer, &QTimer::timeout, [this, timer]()
     {
         if (setup_count < 10)
         {
-            if (!public_conn.first->is_valid())
-            {
-                public_conn.first->setup_conn(true);
-            }
-
-            if (!public_conn.second->is_valid())
-            {
-                public_conn.second->setup_conn(true);
-            }
-
             for(auto& conn : privates_conn)
             {
                 if (!conn.second.first->is_valid())
@@ -49,17 +42,40 @@ void HostChatWindow::setup_conn()
                 }
             }
 
-            bool is_valid = true;
+            for(auto& conn : publics_conn)
+            {
+                if (!conn.second.first->is_valid())
+                {
+                    conn.second.first->setup_conn(true);
+                }
+
+                if (!conn.second.second->is_valid())
+                {
+                    conn.second.second->setup_conn(true);
+                }
+            }
+
+            bool private_is_valid = true;
             for(auto& conn : privates_conn)
             {
                 if(!conn.second.first->is_valid() || !conn.second.second->is_valid())
                 {
-                    is_valid = false;
+                    private_is_valid = false;
                     break;
                 }
             }
 
-            if (public_conn.first->is_valid() && public_conn.second->is_valid() && is_valid) {
+            bool public_is_valid = true;
+            for(auto& conn : publics_conn)
+            {
+                if(!conn.second.first->is_valid() || !conn.second.second->is_valid())
+                {
+                    public_is_valid = false;
+                    break;
+                }
+            }
+
+            if (private_is_valid && public_is_valid) {
                 timer->stop();
                 return;
             }
@@ -75,7 +91,7 @@ void HostChatWindow::setup_conn()
     timer->start(1000);
 }
 
-void HostChatWindow::send_public_msg(const std::string& msg)
+void HostChatWindow::send_public_msg(const std::string& msg, __pid_t pid)
 {
     if(msg.empty())
     {
@@ -83,16 +99,23 @@ void HostChatWindow::send_public_msg(const std::string& msg)
         return;
     }
 
-    if(public_conn.first && public_conn.first->is_valid())
+    for(auto& public_conn : publics_conn)
     {
-        if(!public_conn.first->write(msg))
+        if(public_conn.second.first && public_conn.second.first->is_valid() && public_conn.first != pid)
         {
-            QMessageBox::critical(this, "Error", "Failed to send message.");
-            return;
+            if(!public_conn.second.first->write(msg))
+            {
+                QMessageBox::critical(this, "Error", "Failed to send message.");
+                return;
+            }
         }
     }
 
-    public_chat.append_msg(msg);
+    if(pid == -1)
+    {
+        public_chat.append_msg("snd: " + msg);
+        return;
+    }
 }
 
 void HostChatWindow::send_private_msg(const std::string& msg)
@@ -103,9 +126,9 @@ void HostChatWindow::send_private_msg(const std::string& msg)
     {
         if(private_chat.second.get() == chat_dialog)
         {
-            __pid_t pid;
-            const char* str = private_chat.first->text().toStdString().c_str();
-            sscanf(str, "Клиент: %d", &pid);
+            int pid;
+            std::string  str = private_chat.first->text().toStdString();
+            sscanf(str.c_str(), "Клиент: %d", &pid);
 
             auto private_conn = privates_conn[pid];
 
@@ -117,14 +140,14 @@ void HostChatWindow::send_private_msg(const std::string& msg)
 
             if(private_conn.first && private_conn.first->is_valid())
             {
-                if(private_conn.first->write(msg))
+                if(!private_conn.first->write(msg))
                 {
                     QMessageBox::critical(this, "Error", "Failed to send message.");
                     return;
                 }
             }
 
-            private_chat.second->append_msg(msg);
+            private_chat.second->append_msg("snd: " + msg);
             return;
         }
     }
@@ -132,15 +155,20 @@ void HostChatWindow::send_private_msg(const std::string& msg)
 
 void HostChatWindow::read_msg()
 {
-    if(public_conn.second->is_valid())
+    for(auto& public_conn : publics_conn)
     {
-        std::string msg;
-        const unsigned max_size = 1024;
-        if(public_conn.second->read(msg, max_size))
+        if(public_conn.second.second->is_valid())
         {
-            if(!msg.empty())
+            std::string msg;
+            const unsigned max_size = 1024;
+            if(public_conn.second.second->read(msg, max_size))
             {
-                public_chat.append_msg(">>> " + msg);
+                if(!msg.empty())
+                {
+                    send_public_msg(msg, public_conn.first);
+                    public_chat.append_msg("rcv: " + msg);
+                    break;
+                }
             }
         }
     }
@@ -157,13 +185,13 @@ void HostChatWindow::read_msg()
                 {
                     for(auto& private_chat : private_chats)
                     {
-                        __pid_t pid;
-                        const char* str = private_chat.first->text().toStdString().c_str();
-                        sscanf(str, "Клиент: %d", &pid);
+                        int pid;
+                        std::string  str = private_chat.first->text().toStdString();
+                        sscanf(str.c_str(), "Клиент: %d", &pid);
 
                         if(pid == private_conn.first)
                         {
-                            private_chat.second->append_msg(">>> " + msg);
+                            private_chat.second->append_msg("rcv: " + msg);
                             break;
                         }
                     }

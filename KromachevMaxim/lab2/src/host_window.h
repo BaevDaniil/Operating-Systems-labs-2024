@@ -13,7 +13,7 @@ public:
     ~HostChatWindow() override = default;
 
 private slots:
-    void send_public_msg(const std::string& msg);
+    void send_public_msg(const std::string& msg, __pid_t pid = -1);
     void send_private_msg(const std::string& msg);
     void read_msg();
 
@@ -25,7 +25,7 @@ private:
     std::unordered_map<QListWidgetItem*, std::unique_ptr<InputDialog>> private_chats;
 
     std::unordered_map<__pid_t, std::pair<Conn*, Conn*>> privates_conn;
-    std::pair<Conn*, Conn*> public_conn {nullptr, nullptr};
+    std::unordered_map<__pid_t, std::pair<Conn*, Conn*>> publics_conn;
     std::vector<__pid_t> clients_pid;
 
     int setup_count = 0;

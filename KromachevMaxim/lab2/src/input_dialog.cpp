@@ -24,5 +24,5 @@ InputDialog::InputDialog(QWidget *parent)
 
 void InputDialog::append_msg(const std::string& msg)
 {
-    msg_output->append(QString::fromStdString("<<< " + msg));
+    msg_output->append(QString::fromStdString(msg));
 }

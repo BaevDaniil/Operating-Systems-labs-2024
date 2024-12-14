@@ -11,8 +11,8 @@ void ClientChatWindow::setup_conn()
     private_conn.first = new ConnFifo(send_private_chat, false);
     private_conn.second = new ConnFifo(read_private_chat, false);
 
-    std::string send_public_chat  = "/tmp/client_host_public_fifo"  + std::to_string(host_pid);
-    std::string read_public_chat  = "/tmp/host_client_public_fifo"  + std::to_string(host_pid);
+    std::string send_public_chat  = "/tmp/client_host_public_fifo"  + std::to_string(getpid());
+    std::string read_public_chat  = "/tmp/host_client_public_fifo"  + std::to_string(getpid());
 
     public_conn.first = new ConnFifo(send_public_chat, false);
     public_conn.second = new ConnFifo(read_public_chat, false);
@@ -77,7 +77,7 @@ void ClientChatWindow::send_public_msg(const std::string& msg)
         }
     }
 
-    public_chat.append_msg(msg);
+    public_chat.append_msg("snd: " + msg);
 }
 
 void ClientChatWindow::send_private_msg(const std::string& msg)
@@ -90,14 +90,14 @@ void ClientChatWindow::send_private_msg(const std::string& msg)
 
     if(private_conn.first && private_conn.first->is_valid())
     {
-        if(private_conn.first->write(msg))
+        if(!private_conn.first->write(msg))
         {
             QMessageBox::critical(this, "Error", "Failed to send message.");
             return;
         }
     }
 
-    private_chat.append_msg(msg);
+    private_chat.append_msg("snd: " + msg);
 }
 
 void ClientChatWindow::read_msg()
@@ -110,7 +110,7 @@ void ClientChatWindow::read_msg()
         {
             if(!msg.empty())
             {
-                public_chat.append_msg(">>> " + msg);
+                public_chat.append_msg("rcv: " + msg);
             }
         }
     }
@@ -123,7 +123,7 @@ void ClientChatWindow::read_msg()
         {
             if(!msg.empty())
             {
-                private_chat.append_msg(">>> " + msg);
+                private_chat.append_msg("rcv: " + msg);
             }
         }
     }

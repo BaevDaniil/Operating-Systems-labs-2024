@@ -15,8 +15,8 @@ public:
 private slots:
     void on_send_clicked()
     {
-        msg_input->clear();
         emit send_msg(msg_input->text().toStdString());
+        msg_input->clear();
     }
 
 signals:

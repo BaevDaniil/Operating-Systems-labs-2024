@@ -62,7 +62,7 @@ bool ConnFifo::write(const std::string& buf)
         return false;
     }
     else {
-        if(::write(fd, buf.c_str(), sizeof(buf)) == -1) {
+        if(::write(fd, buf.c_str(), buf.size()) == -1) {
             fprintf(stderr, "Не удалось записать данные в канал.\n");
             return false;
         }

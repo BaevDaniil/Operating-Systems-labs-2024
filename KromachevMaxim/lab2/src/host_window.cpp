@@ -41,7 +41,10 @@ void HostChatWindow::init_gui()
     setGeometry(100, 100, 800, 600);
     setWindowTitle("Сервер");
 
-    connect(&public_chat, &InputDialog::send_msg, this, &HostChatWindow::send_public_msg);
+    connect(&public_chat, &InputDialog::send_msg, this, [this](const std::string& msg)
+    {
+        send_public_msg(msg, -1);
+    });
 
     connect(&clients_list, &QListWidget::itemClicked, [this](QListWidgetItem *item)
     {
