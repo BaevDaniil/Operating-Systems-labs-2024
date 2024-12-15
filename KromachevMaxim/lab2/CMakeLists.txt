@@ -19,6 +19,12 @@ set(FIFO_FILES
     src/conn_fifo.cpp
 )
 
+set(SOCKET_FILES
+    src/host_socket.cpp
+    src/client_socket.cpp
+    src/conn_socket.cpp
+)
+
 set(GUI_FILES
     src/host_window.cpp
     src/client_window.cpp
@@ -30,4 +36,10 @@ add_executable(conn_fifo
     ${GUI_FILES}
 )
 
+add_executable(conn_socket
+    ${SOCKET_FILES}
+    ${GUI_FILES}
+)
+
 target_link_libraries(conn_fifo PRIVATE Qt6::Widgets)
+target_link_libraries(conn_socket PRIVATE Qt6::Widgets)

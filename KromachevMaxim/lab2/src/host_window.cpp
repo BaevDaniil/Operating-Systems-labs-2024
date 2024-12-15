@@ -17,26 +17,6 @@ HostChatWindow::HostChatWindow(const std::vector<__pid_t>& clients_pid, QWidget 
 
 HostChatWindow::~HostChatWindow()
 {
-    for(auto& public_conn : publics_conn)
-    {
-        if (public_conn.second.first) {
-            delete public_conn.second.first;
-        }
-        if(public_conn.second.second) {
-            delete public_conn.second.second;
-        }
-    }
-
-    for(auto& private_conn : privates_conn)
-    {
-        if(private_conn.second.first) {
-            delete private_conn.second.first;
-        }
-        if(private_conn.second.second) {
-            delete private_conn.second.second;
-        }
-    }
-
     for (auto& chat : private_chats)
     {
         if(chat.first) {
@@ -109,6 +89,7 @@ void HostChatWindow::init_timers()
                 if(pid == client_pid)
                 {
                     delete chat.second;
+                    private_chats.erase(chat.first);
                     delete chat.first;
                     break;
                 }
@@ -146,6 +127,7 @@ void HostChatWindow::handle_signal(int signo, siginfo_t *info, void *context)
             if(pid == info->si_pid)
             {
                 delete chat.second;
+                private_chats.erase(chat.first);
                 delete chat.first;
                 break;
             }

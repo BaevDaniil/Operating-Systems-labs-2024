@@ -6,14 +6,14 @@ void ClientChatWindow::setup_conn()
     std::string send_private_chat = "/tmp/client_host_private_fifo" + std::to_string(getpid());
     std::string read_private_chat = "/tmp/host_client_private_fifo" + std::to_string(getpid());
 
-    private_conn.first = new ConnFifo(send_private_chat, false);
-    private_conn.second = new ConnFifo(read_private_chat, false);
+    private_conn.first = std::make_unique<ConnFifo>(send_private_chat, false);
+    private_conn.second = std::make_unique<ConnFifo>(read_private_chat, false);
 
     std::string send_public_chat  = "/tmp/client_host_public_fifo"  + std::to_string(getpid());
     std::string read_public_chat  = "/tmp/host_client_public_fifo"  + std::to_string(getpid());
 
-    public_conn.first = new ConnFifo(send_public_chat, false);
-    public_conn.second = new ConnFifo(read_public_chat, false);
+    public_conn.first = std::make_unique<ConnFifo>(send_public_chat, false);
+    public_conn.second = std::make_unique<ConnFifo>(read_public_chat, false);
 
     QTimer *timer = new QTimer(this);
 

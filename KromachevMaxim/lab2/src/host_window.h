@@ -24,10 +24,11 @@ private:
     QListWidget clients_list;
     std::unordered_map<QListWidgetItem*, InputDialog*> private_chats;
 
-    std::unordered_map<__pid_t, std::pair<Conn*, Conn*>> privates_conn;
-    std::unordered_map<__pid_t, std::pair<Conn*, Conn*>> publics_conn;
     std::vector<__pid_t> clients_pid;
     std::unordered_map<__pid_t, QTimer*> timers;
+
+    std::unordered_map<__pid_t, std::pair<std::unique_ptr<Conn>, std::unique_ptr<Conn>>> privates_conn;
+    std::unordered_map<__pid_t, std::pair<std::unique_ptr<Conn>, std::unique_ptr<Conn>>> publics_conn;
 
     static HostChatWindow* instance;
 

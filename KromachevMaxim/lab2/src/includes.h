@@ -36,5 +36,11 @@
 #include <thread>
 #include <chrono>
 #include <csignal>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <stdio.h>
 
 #endif // INCLUDES_H

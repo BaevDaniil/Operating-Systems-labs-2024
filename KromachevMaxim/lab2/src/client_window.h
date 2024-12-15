@@ -25,8 +25,8 @@ private:
 
     int setup_count = 0;
 
-    std::pair<Conn*, Conn*> private_conn {nullptr, nullptr};
-    std::pair<Conn*, Conn*> public_conn {nullptr, nullptr};
+    std::pair<std::unique_ptr<Conn>, std::unique_ptr<Conn>> private_conn {nullptr, nullptr};
+    std::pair<std::unique_ptr<Conn>, std::unique_ptr<Conn>> public_conn {nullptr, nullptr};
 
     void setup_conn();
     void init_gui();

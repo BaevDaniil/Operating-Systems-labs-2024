@@ -10,8 +10,8 @@ void HostChatWindow::setup_conn()
         std::string send_private_chat = "/tmp/host_client_private_fifo" + std::to_string(client_pid);
         std::string read_private_chat = "/tmp/client_host_private_fifo" + std::to_string(client_pid);
 
-        privates_conn[client_pid].first = new ConnFifo(send_private_chat, true);
-        privates_conn[client_pid].second = new ConnFifo(read_private_chat, true);
+        privates_conn[client_pid].first = std::make_unique<ConnFifo>(send_private_chat, true);
+        privates_conn[client_pid].second = std::make_unique<ConnFifo>(read_private_chat, true);
     }
 
     for(auto& client_pid : clients_pid)
@@ -19,8 +19,8 @@ void HostChatWindow::setup_conn()
         std::string send_public_chat = "/tmp/host_client_public_fifo" + std::to_string(client_pid);
         std::string read_public_chat = "/tmp/client_host_public_fifo" + std::to_string(client_pid);
 
-        publics_conn[client_pid].first = new ConnFifo(send_public_chat, true);
-        publics_conn[client_pid].second = new ConnFifo(read_public_chat, true);
+        publics_conn[client_pid].first = std::make_unique<ConnFifo>(send_public_chat, true);
+        publics_conn[client_pid].second = std::make_unique<ConnFifo>(read_public_chat, true);
     }
 
     QTimer *timer = new QTimer(this);
@@ -130,17 +130,15 @@ void HostChatWindow::send_private_msg(const std::string& msg)
             std::string  str = private_chat.first->text().toStdString();
             sscanf(str.c_str(), "Клиент: %d", &pid);
 
-            auto private_conn = privates_conn[pid];
-
             if(msg.empty())
             {
                 QMessageBox::warning(this, "Warning", "Cannot send an empty message.");
                 return;
             }
 
-            if(private_conn.first && private_conn.first->is_valid())
+            if(privates_conn[pid].first && privates_conn[pid].first->is_valid())
             {
-                if(!private_conn.first->write(msg))
+                if(!privates_conn[pid].first->write(msg))
                 {
                     QMessageBox::critical(this, "Error", "Failed to send message.");
                     return;
