@@ -10,7 +10,7 @@ class ClientChatWindow : public QWidget
     Q_OBJECT
 public:
     explicit ClientChatWindow(__pid_t host_pid, QWidget *parent = nullptr);
-    ~ClientChatWindow() override = default;
+    ~ClientChatWindow() override;
 
 private slots:
     void send_public_msg(const std::string& msg);

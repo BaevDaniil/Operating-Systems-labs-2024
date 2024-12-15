@@ -1,8 +1,6 @@
 #include "client_window.h"
 #include "conn_fifo.h"
 
-// TODO дописать деструкторы
-
 void ClientChatWindow::setup_conn()
 {
     std::string send_private_chat = "/tmp/client_host_private_fifo" + std::to_string(getpid());

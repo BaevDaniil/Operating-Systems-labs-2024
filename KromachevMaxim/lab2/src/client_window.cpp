@@ -8,6 +8,24 @@ ClientChatWindow::ClientChatWindow(__pid_t host_pid, QWidget *parent)
     init_timers();
 }
 
+ClientChatWindow::~ClientChatWindow()
+{
+    if (public_conn.first) {
+        delete public_conn.first;
+    }
+    if(public_conn.second) {
+        delete public_conn.second;
+    }
+    if(private_conn.first) {
+        delete private_conn.first;
+    }
+    if(private_conn.second) {
+        delete private_conn.second;
+    }
+
+    kill(host_pid, SIGUSR1);
+}
+
 void ClientChatWindow::init_gui()
 {
     tab_widget.addTab(&public_chat, "Общий чат");

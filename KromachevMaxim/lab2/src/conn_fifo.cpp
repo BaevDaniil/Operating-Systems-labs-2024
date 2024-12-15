@@ -46,7 +46,11 @@ bool ConnFifo::read(std::string& buf, unsigned size)
 
         if(read_bytes == -1)
         {
-            fprintf(stderr, "Ошибка при чтении данных из канала.\n");
+            if(errno == ENXIO)
+            {
+                fprintf(stderr, "fifo был удален.\n");
+                return false;
+            }
             return false;
         }
 

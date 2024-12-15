@@ -1,7 +1,7 @@
 #include "input_dialog.h"
 
 InputDialog::InputDialog(QWidget *parent)
-    : QWidget{parent}
+    : QDialog{parent}
 {
     msg_output = new QTextEdit(this);
     msg_output->setReadOnly(true);
@@ -20,6 +20,7 @@ InputDialog::InputDialog(QWidget *parent)
     setWindowTitle("Чат");
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, &InputDialog::on_send_clicked);
+    connect(buttonBox, &QDialogButtonBox::rejected, msg_input, &QLineEdit::clear);
 }
 
 void InputDialog::append_msg(const std::string& msg)

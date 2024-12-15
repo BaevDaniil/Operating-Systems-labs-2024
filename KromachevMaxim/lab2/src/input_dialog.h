@@ -3,7 +3,7 @@
 
 #include "includes.h"
 
-class InputDialog : public QWidget
+class InputDialog : public QDialog
 {
     Q_OBJECT
 

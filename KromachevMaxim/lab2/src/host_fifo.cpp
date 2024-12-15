@@ -124,7 +124,7 @@ void HostChatWindow::send_private_msg(const std::string& msg)
 
     for(auto& private_chat : private_chats)
     {
-        if(private_chat.second.get() == chat_dialog)
+        if(private_chat.second == chat_dialog)
         {
             int pid;
             std::string  str = private_chat.first->text().toStdString();
@@ -167,6 +167,8 @@ void HostChatWindow::read_msg()
                 {
                     send_public_msg(msg, public_conn.first);
                     public_chat.append_msg("rcv: " + msg);
+                    timers[public_conn.first]->stop();
+                    timers[public_conn.first]->start(60000);
                     break;
                 }
             }
@@ -195,6 +197,8 @@ void HostChatWindow::read_msg()
                             break;
                         }
                     }
+                    timers[private_conn.first]->stop();
+                    timers[private_conn.first]->start(60000);
                 }
             }
         }
