@@ -52,7 +52,6 @@ bool ConnFifo::read(std::string& buf, unsigned size)
                 std::perror("fifo файл удален");
                 return false;
             }
-            std::perror("Ошибка чтения из канала");
             return false;
         }
 

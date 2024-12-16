@@ -25,6 +25,12 @@ set(SOCKET_FILES
     src/conn_socket.cpp
 )
 
+set(PIPE_FILES
+    src/host_pipe.cpp
+    src/client_pipe.cpp
+    src/conn_pipe.cpp
+)
+
 set(GUI_FILES
     src/host_window.cpp
     src/client_window.cpp
@@ -41,5 +47,11 @@ add_executable(conn_socket
     ${GUI_FILES}
 )
 
+add_executable(conn_pipe
+    ${PIPE_FILES}
+    ${GUI_FILES}
+)
+
 target_link_libraries(conn_fifo PRIVATE Qt6::Widgets)
 target_link_libraries(conn_socket PRIVATE Qt6::Widgets)
+target_link_libraries(conn_pipe PRIVATE Qt6::Widgets)
