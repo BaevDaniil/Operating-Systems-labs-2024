@@ -9,7 +9,7 @@ ConnFifo::~ConnFifo()
 {
     if(valid) {
         if(close(fd) == -1) {
-            fprintf(stderr, "Ошибка при закрытии канала fifo.\n");
+            std::perror("Ошибка при закрытии канала fifo");
         }
     }
     unlink(path.c_str());
@@ -19,12 +19,13 @@ void ConnFifo::setup_conn(bool create)
 {
     if(create) {
         if(mkfifo(path.c_str(), 0777) == -1) {
-            fprintf(stderr, "Невозможно создать fifo канал.\n");
+            std::perror("Невозможно создать fifo канал");
             return;
         }
     }
     if((fd = ::open(path.c_str(), O_RDWR | O_NONBLOCK)) == -1) {
-        fprintf(stderr, "Не удалось открыть fifo файл.\n");
+        std::perror("Не удалось открыть fifo файл");
+        return;
     }
     else {
         valid = true;
@@ -35,7 +36,7 @@ bool ConnFifo::read(std::string& buf, unsigned size)
 {
     if(!valid)
     {
-        fprintf(stderr, "Невозможно читать из канала, канал не работает.\n");
+        std::perror("Канал недоступен");
         return false;
     }
     else
@@ -48,9 +49,10 @@ bool ConnFifo::read(std::string& buf, unsigned size)
         {
             if(errno == ENXIO)
             {
-                fprintf(stderr, "fifo был удален.\n");
+                std::perror("fifo файл удален");
                 return false;
             }
+            std::perror("Ошибка чтения из канала");
             return false;
         }
 
@@ -62,12 +64,12 @@ bool ConnFifo::read(std::string& buf, unsigned size)
 bool ConnFifo::write(const std::string& buf)
 {
     if(!valid) {
-        fprintf(stderr, "Невозможно писать в канал, канал не работает.\n");
+        std::perror("Канал недоступен");
         return false;
     }
     else {
         if(::write(fd, buf.c_str(), buf.size()) == -1) {
-            fprintf(stderr, "Не удалось записать данные в канал.\n");
+            std::perror("Ошибка записи в канал");
             return false;
         }
         return true;

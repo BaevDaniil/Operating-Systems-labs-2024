@@ -13,12 +13,13 @@ public:
 
     void setup_conn(bool create);
     void accept_conn();
+    void connect_to_server();
     bool read(std::string& buf, unsigned size);
     bool write(const std::string& buf);
 
 private:
     const std::string path;
-    int d = -1;
+    int fd = -1;
     bool valid {false};
 };
 
