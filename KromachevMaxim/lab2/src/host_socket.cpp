@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
             char** argv = nullptr;
 
             QApplication app(argc, argv);
-            ClientChatWindow client_window(getppid());
+            ClientChatWindow client_window(getppid(), nullptr);
             client_window.show();
 
             return app.exec();
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
     }
 
     QApplication app(argc, argv);
-    HostChatWindow host_window(pid_clients);
+    HostChatWindow host_window(pid_clients, nullptr);
     host_window.show();
     return app.exec();
 }

@@ -9,7 +9,7 @@ class ClientChatWindow : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ClientChatWindow(__pid_t host_pid, QWidget *parent = nullptr);
+    explicit ClientChatWindow(__pid_t host_pid, void* reserve, QWidget *parent = nullptr);
     ~ClientChatWindow() override;
 
 private slots:
@@ -24,6 +24,7 @@ private:
     __pid_t host_pid;
 
     int setup_count = 0;
+    void* reserve;
 
     std::pair<std::unique_ptr<Conn>, std::unique_ptr<Conn>> private_conn {nullptr, nullptr};
     std::pair<std::unique_ptr<Conn>, std::unique_ptr<Conn>> public_conn {nullptr, nullptr};

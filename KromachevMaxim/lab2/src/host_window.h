@@ -9,7 +9,7 @@ class HostChatWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit HostChatWindow(const std::vector<__pid_t>& clients_pid, QWidget *parent = nullptr);
+    explicit HostChatWindow(const std::vector<__pid_t>& clients_pid, void* reserve, QWidget *parent = nullptr);
     ~HostChatWindow();
 
 private slots:
@@ -33,6 +33,7 @@ private:
     static HostChatWindow* instance;
 
     int setup_count = 0;
+    void* reserve;
 
     void setup_conn();
     void init_gui();

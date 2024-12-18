@@ -1,7 +1,7 @@
 #include "client_window.h"
 
-ClientChatWindow::ClientChatWindow(__pid_t host_pid, QWidget *parent)
-    : QWidget(parent), host_pid(host_pid)
+ClientChatWindow::ClientChatWindow(__pid_t host_pid, void* reserve, QWidget *parent)
+    : QWidget(parent), host_pid(host_pid), reserve(reserve)
 {
     init_gui();
     setup_conn();

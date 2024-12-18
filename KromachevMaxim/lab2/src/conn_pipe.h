@@ -7,17 +7,16 @@
 class ConnPipe : public Conn
 {
 public:
-    ConnPipe(const std::string& path, bool create);
+    ConnPipe(int pipe);
     ~ConnPipe();
     bool is_valid() const override;
 
-    void setup_conn(bool create);
+    void setup_conn(bool create) {}
     bool read(std::string& buf, unsigned size);
     bool write(const std::string& buf);
 
 private:
-    const std::string path;
-    int fd = -1;
+    int pipe;
     bool valid {false};
 };
 

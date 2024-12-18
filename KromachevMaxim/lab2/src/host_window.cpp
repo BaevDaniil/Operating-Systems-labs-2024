@@ -4,8 +4,8 @@
 
 HostChatWindow* HostChatWindow::instance = nullptr;
 
-HostChatWindow::HostChatWindow(const std::vector<__pid_t>& clients_pid, QWidget *parent)
-    : QMainWindow(parent), clients_pid(clients_pid)
+HostChatWindow::HostChatWindow(const std::vector<__pid_t>& clients_pid, void* reserve, QWidget *parent)
+    : QMainWindow(parent), clients_pid(clients_pid), reserve(reserve)
 {
     init_gui();
     setup_conn();
