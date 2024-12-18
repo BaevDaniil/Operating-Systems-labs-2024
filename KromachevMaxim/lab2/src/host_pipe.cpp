@@ -7,11 +7,11 @@ void HostChatWindow::setup_conn()
 {
     for(size_t i = 0; i < clients_pid.size(); i++)
     {
-        publics_conn[clients_pid[i]].first = std::make_unique<ConnPipe>(*((int*)reserve + 2 * i));
-        publics_conn[clients_pid[i]].second = std::make_unique<ConnPipe>(*((int*)reserve + 2 * i + 1));
+        publics_conn[clients_pid[i]].first = std::make_unique<ConnPipe>(*((int*)reserve + 4 * i));
+        publics_conn[clients_pid[i]].second = std::make_unique<ConnPipe>(*((int*)reserve + 4 * i + 1));
 
-        privates_conn[clients_pid[i]].first = std::make_unique<ConnPipe>(*((int*)reserve + 2 * i + 2));
-        privates_conn[clients_pid[i]].second = std::make_unique<ConnPipe>(*((int*)reserve + 2 * i + 3));
+        privates_conn[clients_pid[i]].first = std::make_unique<ConnPipe>(*((int*)reserve + 4 * i + 2));
+        privates_conn[clients_pid[i]].second = std::make_unique<ConnPipe>(*((int*)reserve + 4 * i + 3));
     }
 }
 
@@ -132,14 +132,14 @@ int main(int argc, char *argv[])
 
     if (argc < 2)
     {
-        fprintf(stderr, "Ошибка: укажите количество клиентов в аргументах командной строки.\n");
+        std::perror("Ошибка: укажите количество клиентов в аргументах командной строки");
         exit(1);
     }
 
     int clientCount = std::stoi(argv[1]);
     if (clientCount <= 0)
     {
-        fprintf(stderr, "Ошибка: некорректное количество клиентов.\n");
+        std::perror("Ошибка: некорректное количество клиентов");
         exit(1);
     }
 
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 
         if (pid == -1)
         {
-            fprintf(stderr, "Ошибка: функция fork() вернула -1.\n");
+            std::perror("Ошибка функции fork()");
             exit(1);
 
         }
@@ -190,10 +190,10 @@ int main(int argc, char *argv[])
             close(p2[1]);
             close(p3[0]);
             close(p4[1]);
-            pipes[2 * i] = p1[1];
-            pipes[2 * i + 1] = p2[0];
-            pipes[2 * i + 2] = p3[1];
-            pipes[2 * i + 3] = p4[0];
+            pipes[4 * i] = p1[1];
+            pipes[4 * i + 1] = p2[0];
+            pipes[4 * i + 2] = p3[1];
+            pipes[4 * i + 3] = p4[0];
         }
     }
 

@@ -192,15 +192,15 @@ int main(int argc, char *argv[])
 
     if (argc < 2)
     {
-        fprintf(stderr, "Ошибка: укажите количество клиентов в аргументах командной строки.\n");
-        return 1;
+        std::perror("Ошибка: укажите количество клиентов в аргументах командной строки");
+        exit(1);
     }
 
     int clientCount = std::stoi(argv[1]);
     if (clientCount <= 0)
     {
-        fprintf(stderr, "Ошибка: некорректное количество клиентов.\n");
-        return 1;
+        std::perror("Ошибка: некорректное количество клиентов");
+        exit(1);
     }
 
     std::vector<__pid_t> pid_clients;
@@ -211,8 +211,8 @@ int main(int argc, char *argv[])
 
         if (pid == -1)
         {
-            fprintf(stderr, "Ошибка: функция fork() вернула -1.\n");
-            return 1;
+            std::perror("Ошибка функции fork()");
+            exit(1);
 
         }
         else if (pid == 0)
