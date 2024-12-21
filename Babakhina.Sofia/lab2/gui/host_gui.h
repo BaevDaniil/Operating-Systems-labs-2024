@@ -7,30 +7,33 @@
 #include <QScrollArea>
 #include <QListWidget>
 #include <QString>
+#include <QWidget>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QMessageBox>
+#include <QApplication>
+#include <QStringList>
+#include <QHeaderView>
+
+#include <cstdlib>
+#include <signal.h>
 #include <vector>
 #include <string>
-#include <QWidget>
+
 #include "../book.h"
 
 class HostWindow : public QMainWindow {
     Q_OBJECT
+    
+private:
+    QLabel* left_label;
+    QLabel* right_label;
+    QTableWidget* table;
+    QTableWidget* book_table;
 
 public:
     HostWindow(const std::vector<Book>& books, QWidget* parent = nullptr);
     virtual ~HostWindow();
 
-    void updateBooks(const std::vector<Book>& books);
-
-    // pid_t clientPid; // for kill
-
-// private slots:
-//     void terminateClient();
-//     void terminateHost();
-
-private:
-    QLabel* portLabel;
-    QListWidget* bookList;
-    QPushButton* terminateClientButton;
-    QPushButton* terminateHostButton;
-    int hostPort;
+    void update_books(const std::vector<Book>& books, std::string state, std::string book_name, std::string client_name, std::string time, bool flag);
 };

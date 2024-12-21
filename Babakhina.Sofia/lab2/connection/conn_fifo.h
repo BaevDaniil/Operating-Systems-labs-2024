@@ -2,11 +2,9 @@
 
 #include "conn.h"
 
-#include <string>
-
 
 class ConnFifo : public Conn {
-  public:
+public:
     ConnFifo(const std::string& path, bool create);
     ~ConnFifo();
 
@@ -14,10 +12,10 @@ class ConnFifo : public Conn {
     bool read(std::string& msg, size_t max_size) override;
     bool is_valid() const override;
 
-  private:
+    void close();
+
+private:
     std::string path;
     int fd;
     bool valid;
-
-    void close();
 };

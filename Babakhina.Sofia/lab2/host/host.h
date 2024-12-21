@@ -1,55 +1,49 @@
 #pragma once
+
 #include "../gui/host_gui.h"
 #include "../connection/conn.h"
-#include <sys/types.h>
-#include <unistd.h>
-#include <memory>
-#include <thread>
-#include <signal.h>
-#include <semaphore.h>
-#include <fcntl.h>
+#include "../semaphore/semaphore.h"
+#include "../book.h"
 
+#include <QApplication>
+
+#include <fstream>
+#include <iostream>
+#include <unistd.h>
+#include <vector>
+#include <sys/ipc.h>
+#include <thread>
+#include <stdlib.h>
 
 class Host {
-private:
-    static Host instance;
+protected:
     pid_t pid = getpid();
-    pid_t clientPid = -1;
+
     static constexpr int timeout = 5;
 
-    sem_t* semRead;
-    sem_t* semWrite;
+    std::vector<Book> books;
+
+    Semaphore semaphore;
 
     Conn* client_conn;
     Conn* host_conn;
 
-    bool setup_conn();
-
-    std::vector<Book> books;
-
 public:
-    
     bool is_running = true;
 
     HostWindow window;
 
     Host(const std::vector<Book>& books_);
+    virtual ~Host() {}
+
     void read_from_client(); 
     void write_to_client(std::string response);
 
-    void Terminate(int status);
-
-    static void SignalHandler(int signum, siginfo_t *si, void *data);
+    virtual bool setup_conn() = 0;
 };
 
+bool return_book(std::vector<Book>& books, const std::string& book_name, std::string client_name);
 
-void Host::SignalHandler(int signum, siginfo_t *si, void *data) {
-    switch (signum) {
-        case SIGTERM:
-            break;
-        case SIGUSR1:
-            break;
-        default:
-            break;
-        }
-}
+bool select_book(std::vector<Book>& books, const std::string& book_name, std::string client_name);
+
+void read_wrap(Host& host);
