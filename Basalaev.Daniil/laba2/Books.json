@@ -1,0 +1,8 @@
+{
+    "books": [
+        {"name": "Book 1", "amount": 1},
+        {"name": "Book 2", "amount": 2},
+        {"name": "Book 3", "amount": 3},
+        {"name": "Book 4", "amount": 0}
+    ]
+}
