@@ -2,14 +2,15 @@
 #include "src/Client/Client.hpp"
 #include "Conn/conn_fifo.hpp"
 #include "Common/Logger.hpp"
+#include "Common/Reader.hpp"
 
 #include <unistd.h>
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
+    if (argc < 2 || argc > 3)
     {
-        LOG_ERROR("APP", "Usage: ./host_fifo <num_clients>");
+        LOG_ERROR("APP", "Usage: ./host_fifo <num_clients> [optional: path_to_file]");
         return EXIT_FAILURE;
     }
 
@@ -21,14 +22,20 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    alias::book_container_t books = {
-        {"Book 1", 1},
-        {"Book 2", 2},
-        {"Book 3", 3},
-        {"Book 4", 0}
-    };
+    std::string filePath = "Books.json";
+    if (argc == 3)
+    {
+        filePath = argv[2];
+    }
 
-    SemaphoreLocal semaphore(numClients);
+    auto books = Reader::parse(filePath);
+    if (!books)
+    {
+        LOG_ERROR("APP", "Failed to parse JSON file with books");
+        return EXIT_FAILURE;
+    }
+
+    SemaphoreLocal semaphore(numClients + 1);
 
     std::vector<std::unique_ptr<connImpl>> hostConnections;
     for (int i = 0; i < numClients; ++i)
@@ -60,7 +67,7 @@ int main(int argc, char* argv[])
                 return EXIT_FAILURE;
             }
 
-            Client client(getpid(), semaphore, *clientFifoConn, books);
+            Client client(getpid(), semaphore, *clientFifoConn, *books);
             return client.start();
         }
         else // host
@@ -69,6 +76,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    Host host(semaphore, clientsId, std::move(hostConnections), books);
+    Host host(semaphore, clientsId, std::move(hostConnections), *books);
     return host.start();
 }

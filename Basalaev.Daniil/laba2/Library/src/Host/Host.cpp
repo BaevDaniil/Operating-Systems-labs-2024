@@ -56,11 +56,15 @@ void Host::stop()
     {
         connection->close();
     }
+    m_connections.clear();
 
     for (auto const& client : m_clients)
     {
         kill(client.info.clientId, SIGKILL);
     }
+    m_clients.clear();
+
+    kill(getpid(), SIGKILL); // TODO: close threads
 
     for (auto& thread : m_listenerThreads)
     {
@@ -69,6 +73,7 @@ void Host::stop()
             thread.join();
         }
     }
+    m_listenerThreads.clear();
 }
 
 int Host::start()
@@ -157,32 +162,37 @@ void Host::updateClientInfo(utils::ClientInfo&& clientInfo)
     {
         it->info = clientInfo;
     }
+    else
+    {
+        LOG_ERROR(HOST_LOG, "Try update client info, but client[ID=" + std::to_string(clientInfo.clientId) + "] doesn't exist");
+    }
 }
 
 void Host::resetClientTimer(alias::id_t clientId)
 {
-    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) {
-                               return client.info.clientId == clientId;
-                           });
-
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) { return client.info.clientId == clientId; });
     if (it != m_clients.end())
     {
-        it->timer->stop();
-        it->timer->start(1000);
         it->info.secondsToKill = 5;
+        it->timer->start();
+    }
+    else
+    {
+        LOG_ERROR(HOST_LOG, "Try restart timer, but client[ID=" + std::to_string(clientId) + "] doesn't exist");
     }
 }
 
 void Host::stopClientTimer(alias::id_t clientId)
 {
-    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) {
-                               return client.info.clientId == clientId;
-                           });
-
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) { return client.info.clientId == clientId; });
     if (it != m_clients.end())
     {
         it->timer->stop();
         it->info.secondsToKill = 5;
+    }
+    else
+    {
+        LOG_ERROR(HOST_LOG, "Try stop timer, but client[ID=" + std::to_string(clientId) + "] doesn't exist");
     }
 }
 
@@ -190,24 +200,27 @@ void Host::removeClient(alias::id_t clientId)
 {
     LOG_INFO(HOST_LOG, "Removing client[ID=" + std::to_string(clientId) + "]");
 
-    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) {
-                                 return client.info.clientId == clientId;
-                             });
-
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientId](auto const& client) { return client.info.clientId == clientId; });
     if (it != m_clients.end())
     {
+        it->timer->stop();
+        it->info.secondsToKill = 0;
         kill(clientId, SIGKILL);
-        m_clients.erase(it);
+    }
+    else
+    {
+        LOG_ERROR(HOST_LOG, "Try remove client, but client[ID=" + std::to_string(clientId) + "] doesn't exist");
     }
 }
 
 void Host::notifyClientsUpdateBookStatus()
 {
-    http::notification notification{.books = m_books};
+    http::notification const notification{.books = m_books};
     std::string const notificationStr = notification.toString();
     for (auto& connection : m_connections)
     {
-        if (connection->write(notificationStr.c_str(), notificationStr.size())) // w/o sync?
+        // w/o wait semaphore, because of wait yet
+        if (connection->write(notificationStr.c_str(), notificationStr.size()))
         {
             LOG_INFO(HOST_LOG, "write to client: " + notificationStr);
         }
@@ -250,7 +263,7 @@ void Host::handleBookSelected(std::string const& bookName, alias::id_t clientId,
             m_window->updateBooks(m_books);
             updateClientInfo({.clientId = clientId, .readingBook = bookName, .secondsToKill = 5});
             emit stopTimer(clientId);
-            // notifyClientsUpdateBookStatus();
+            notifyClientsUpdateBookStatus();
         }
         else
         {
@@ -295,7 +308,7 @@ void Host::handleBookReturned(std::string const& bookName, alias::id_t clientId,
             m_window->updateBooks(m_books);
             updateClientInfo({.clientId = clientId, .readingBook = "", .secondsToKill = 5});
             m_window->updateClientsInfo(m_clients);
-            // notifyClientsUpdateBookStatus();
+            notifyClientsUpdateBookStatus();
         }
         else
         {

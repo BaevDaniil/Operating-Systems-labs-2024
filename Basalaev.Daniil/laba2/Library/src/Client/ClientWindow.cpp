@@ -108,10 +108,10 @@ void ClientWindow::selectBook()
 {
     if (m_bookList->currentItem())
     {
-        QString bookName = QString::fromStdString(getCurrentBook());
-        m_readingLabel->setText("Reading book: " + bookName);
+        std::string const bookName = getCurrentBook();
+        m_readingLabel->setText("Reading book: " + QString::fromStdString(bookName));
 
-        emit bookSelected(bookName.toStdString(), m_id);
+        emit bookSelected(bookName, m_id);
     }
 }
 
@@ -120,12 +120,6 @@ void ClientWindow::stopReading()
     QString bookName = m_readingLabel->text().split(": ").last();
     emit bookReturned(bookName.toStdString(), m_id);
 
-    m_stackedWidget->setCurrentIndex(0);
-}
-
-std::string ClientWindow::getCurrentBook() const
-{
-    return m_bookList->currentItem()->text().split(": ").first().toStdString();
 }
 
 void ClientWindow::onSuccessTakeBook(std::string const& bookName, alias::id_t clientId)

@@ -33,12 +33,30 @@ LibraryWindowImpl::LibraryWindowImpl(alias::id_t id, alias::book_container_t con
     setWindowFlags(Qt::CustomizeWindowHint);
 }
 
+std::string LibraryWindowImpl::getCurrentBook() const
+{
+    return m_bookList->currentItem() ? m_bookList->currentItem()->text().split(": ").first().toStdString() : "";
+}
+
 void LibraryWindowImpl::updateBooks(alias::book_container_t const& books)
 {
+    std::string const currentBook = getCurrentBook();
+
     m_bookList->clear();
     for (auto const& book : books)
     {
-        m_bookList->addItem(QString::fromStdString(book.name) + ": " + QString::number(book.amount));
+        m_bookList->addItem(QString::fromStdString(book.name) + ": " + QString::number(book.amount)); 
+    }
+
+    for (int i = 0; i < m_bookList->count(); ++i)
+    {
+        auto* item = m_bookList->item(i);
+        std::string itemBookName = item->text().split(": ").first().toStdString();
+        if (itemBookName == currentBook)
+        {
+            m_bookList->setCurrentItem(item);
+            break;
+        }
     }
 }
 

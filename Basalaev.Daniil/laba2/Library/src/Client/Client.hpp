@@ -27,6 +27,8 @@ private slots:
     void handleBookReturned(std::string const& bookName, alias::id_t clientId);
 
 private:
+    void processHostMsg();
+
     std::unique_ptr<ClientWindow> m_window{nullptr};
     std::atomic<bool> m_isRunning{true};
     http::OperationType_e m_lastOpeartion{};

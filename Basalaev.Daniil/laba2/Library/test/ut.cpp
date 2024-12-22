@@ -1,9 +1,16 @@
 #include "catch2/catch_all.hpp"
 #include "Common/Alias.hpp"
 #include "Common/Http.hpp"
+#include "Common/Reader.hpp"
 #include "Conn/conn_sock.hpp"
 #include "Conn/conn_fifo.hpp"
 #include "Conn/conn_pipe.hpp"
+
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QString>
 
 static constexpr alias::id_t ID = 1;
 static constexpr auto MAX_SIZE = 1024;
@@ -137,6 +144,101 @@ TEST_CASE("HTTP notification")
     {
         REQUIRE_FALSE(http::notification::parse("http://notification/"));
         REQUIRE_FALSE(http::notification::parse("http://notification/\"amount\":5"));
+    }
+}
+
+TEST_CASE("Reader::parse")
+{
+    SECTION("parse [sunny]")
+    {
+        auto const testFilePath = "test_books.json";
+        QFile file(testFilePath);
+        REQUIRE(file.open(QIODevice::WriteOnly));
+
+        QJsonArray booksArray = {
+            QJsonObject{{"name", "Book 1"}, {"amount", 1}},
+            QJsonObject{{"name", "Book 2"}, {"amount", 2}},
+            QJsonObject{{"name", "Book 3"}, {"amount", 3}}
+        };
+
+        QJsonObject rootObj;
+        rootObj["books"] = booksArray;
+
+        QJsonDocument doc(rootObj);
+        file.write(doc.toJson());
+        file.close();
+
+        std::optional<alias::book_container_t> result = Reader::parse(testFilePath);
+        REQUIRE(result.has_value());
+        REQUIRE(result->size() == 3);
+
+        CHECK((*result)[0].name == "Book 1");
+        CHECK((*result)[0].amount == 1);
+        CHECK((*result)[1].name == "Book 2");
+        CHECK((*result)[1].amount == 2);
+        CHECK((*result)[2].name == "Book 3");
+        CHECK((*result)[2].amount == 3);
+
+        QFile::remove(testFilePath);
+    }
+    SECTION("parse [rainy][Invalid File Path]")
+    {
+        std::optional<alias::book_container_t> result = Reader::parse("invalid_path.json");
+        REQUIRE_FALSE(result.has_value());
+    }
+    SECTION("parse [rainy][Invalid JSON Format]")
+    {
+        auto const testFilePath = "invalid_json.json";
+        QFile file(testFilePath);
+        REQUIRE(file.open(QIODevice::WriteOnly));
+
+        file.write("{ invalid json }");
+        file.close();
+
+        std::optional<alias::book_container_t> result = Reader::parse(testFilePath);
+        REQUIRE_FALSE(result.has_value());
+
+        QFile::remove(testFilePath);
+    }
+    SECTION("parse [rainy][Missing Books Array]")
+    {
+        auto const testFilePath = "missing_books.json";
+        QFile file(testFilePath);
+        REQUIRE(file.open(QIODevice::WriteOnly));
+
+        QJsonObject rootObj; // JSON без массива "books"
+        QJsonDocument doc(rootObj);
+        file.write(doc.toJson());
+        file.close();
+
+        std::optional<alias::book_container_t> result = Reader::parse(testFilePath);
+        REQUIRE_FALSE(result.has_value());
+
+        QFile::remove(testFilePath);
+    }
+    SECTION("parse [rainy][Invalid Book Entry]")
+    {
+        auto const testFilePath = "invalid_book_entry.json";
+        QFile file(testFilePath);
+        REQUIRE(file.open(QIODevice::WriteOnly));
+
+        QJsonArray booksArray = {
+            QJsonObject{{"name", "Book 1"}, {"amount", 1}},
+            QJsonObject{{"invalid_field", "Book 2"}, {"amount", 2}},
+            QJsonObject{{"name", "Book 3"}, {"amount", 3}}
+        };
+
+        QJsonObject rootObj;
+        rootObj["books"] = booksArray;
+
+        QJsonDocument doc(rootObj);
+        file.write(doc.toJson());
+        file.close();
+
+        std::optional<alias::book_container_t> result = Reader::parse(testFilePath);
+        REQUIRE_FALSE(result.has_value());
+
+        QFile::remove(testFilePath);
     }
 }
 

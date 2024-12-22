@@ -16,6 +16,8 @@ public:
     LibraryWindowImpl(alias::id_t, alias::book_container_t const&, QWidget* parent = nullptr);
     virtual ~LibraryWindowImpl() = default;
 
+    std::string getCurrentBook() const;
+
     void updateBooks(alias::book_container_t const&);
     void addHistoryEntry(utils::HistoryBookInfo const&);
 

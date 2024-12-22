@@ -5,6 +5,7 @@ add_library(LibraryLib
     Common/Http.cpp
     Common/LibraryWindowImpl.cpp
     Common/Logger.cpp
+    Common/Reader.cpp
     Common/SemaphoreLocal.cpp
     Common/Utils.cpp
     Conn/conn_fifo.cpp

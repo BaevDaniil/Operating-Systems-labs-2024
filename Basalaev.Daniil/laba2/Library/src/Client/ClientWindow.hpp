@@ -23,8 +23,6 @@ public:
     ClientWindow(alias::id_t, alias::book_container_t const&, QWidget* parent = nullptr);
     ~ClientWindow() override;
 
-    std::string getCurrentBook() const;
-
     void onSuccessTakeBook(std::string const& bookName, alias::id_t clientId) override;
     void onSuccessReturnBook(std::string const& bookName, alias::id_t clientId) override;
 

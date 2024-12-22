@@ -97,7 +97,9 @@ void HostWindow::updateClientsInfo(std::vector<utils::ClientInfoWithTimer> const
     m_clientList->clear();
     for (auto const& clientInfo : clientsInfo)
     {
-        QListWidgetItem* clientItem = new QListWidgetItem(clientInfo.info.toQString(), m_clientList);
+        QString const text = (clientInfo.info.secondsToKill == 0) ? QString("[Client][ID=%1] disconnected").arg(QString::number(clientInfo.info.clientId)) : clientInfo.info.toQString();
+
+        QListWidgetItem* clientItem = new QListWidgetItem(text, m_clientList);
 
         if (clientInfo.info.readingBook.empty())
         {
