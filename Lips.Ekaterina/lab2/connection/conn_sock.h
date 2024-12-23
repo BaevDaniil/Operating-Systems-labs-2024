@@ -2,6 +2,13 @@
 
 #include "conn.h"
 
+#include <unistd.h>
+#include <cstring>
+#include <iostream>
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <errno.h>
+#include <fcntl.h>  
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string>
@@ -14,16 +21,16 @@ public:
 
     static ConnSock* accept(ConnSock& host_listening_conn); // only for host
 
-    bool read(std::string& data, size_t max_size);
-    bool write(const std::string& data);
+    bool read(std::string& data, size_t max_size) override;
+    bool write(const std::string& data) override;
 
-    bool is_valid() const {
-        return sock_fd != -1;
-    }
+    void close();
+
+    bool is_valid() const override;
 
 private:
-    int sock_fd;              // Socket file Descriptor
-    sockaddr_in addr;  // socket address
+    int sock_fd;              
+    sockaddr_in addr;  
 
     ConnSock() = default; // for accept
 };

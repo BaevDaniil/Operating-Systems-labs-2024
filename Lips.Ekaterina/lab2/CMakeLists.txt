@@ -18,35 +18,45 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 # Host and Client source files for FIFO
 set(HOST_FIFO_SRC_FILES
+  host/host.cpp
   host/host_fifo.cpp
   connection/conn_fifo.cpp
 )
 
 set(CLIENT_FIFO_SRC_FILES
+  client/client.cpp
   client/client_fifo.cpp
   connection/conn_fifo.cpp
 )
 
 # Host and Client source files for Queue
 set(HOST_MQ_SRC_FILES
+  host/host.cpp
   host/host_mq.cpp
   connection/conn_mq.cpp
 )
 
 set(CLIENT_MQ_SRC_FILES
+  client/client.cpp
   client/client_mq.cpp
   connection/conn_mq.cpp
 )
 
 # Host and Client source files for Socket
 set(HOST_SOCK_SRC_FILES
+  host/host.cpp
   host/host_sock.cpp
   connection/conn_sock.cpp
 )
 
 set(CLIENT_SOCK_SRC_FILES
+  client/client.cpp
   client/client_sock.cpp
   connection/conn_sock.cpp
+)
+
+set(SEMAPHORE
+  semaphore.cpp
 )
 
 set(GUI
@@ -58,20 +68,17 @@ set(GUI
 qt6_wrap_cpp(MOC_SOURCES interface/client_interface.h)
 qt6_wrap_cpp(MOC_SOURCES interface/host_interface.h)
 
-
 # Add executables for FIFO communication
-add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})
-add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES} ${GUI} ${MOC_SOURCES})
-
+add_executable(host_fifo ${HOST_FIFO_SRC_FILES} ${SEMAPHORE} ${GUI} ${MOC_SOURCES})
+add_executable(client_fifo ${CLIENT_FIFO_SRC_FILES} ${SEMAPHORE} ${GUI} ${MOC_SOURCES})
 
 # Add executables for Queue communication
-add_executable(host_mq ${HOST_MQ_SRC_FILES} ${GUI} ${MOC_SOURCES})
-add_executable(client_mq ${CLIENT_MQ_SRC_FILES} ${GUI} ${MOC_SOURCES})
+add_executable(host_mq ${HOST_MQ_SRC_FILES} ${SEMAPHORE} ${GUI} ${MOC_SOURCES})
+add_executable(client_mq ${CLIENT_MQ_SRC_FILES} ${SEMAPHORE} ${GUI} ${MOC_SOURCES})
 
 # Add executables for Socket communication
-add_executable(host_sock ${HOST_SOCK_SRC_FILES} ${GUI} ${MOC_SOURCES})
-add_executable(client_sock ${CLIENT_SOCK_SRC_FILES} ${GUI} ${MOC_SOURCES})
-
+add_executable(host_sock ${HOST_SOCK_SRC_FILES} ${SEMAPHORE} ${GUI} ${MOC_SOURCES})
+add_executable(client_sock ${CLIENT_SOCK_SRC_FILES} ${SEMAPHORE} ${GUI} ${MOC_SOURCES})
 
 # Link Qt libraries to the GUI executable
 target_link_libraries(host_fifo Qt6::Widgets)

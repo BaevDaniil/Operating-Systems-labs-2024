@@ -1,12 +1,6 @@
 #include "host_interface.h"
 
 
-// #include "logger.hpp"
-#include <QMessageBox>
-#include <QApplication>
-#include <cstdlib>
-#include <signal.h>
-
 HostWindow::HostWindow(const std::vector<Book>& books, QWidget* parent)
     : QMainWindow(parent) {
 
@@ -20,9 +14,9 @@ HostWindow::HostWindow(const std::vector<Book>& books, QWidget* parent)
     for (const auto& book : books) {
         book_qlist->addItem(QString::fromStdString(book.name) + " [" + QString::number(book.count) + "]");
     }
-    left_label = new QLabel("Book list", this);
+    book_list_label = new QLabel("Book list", this);
 
-    layout1->addWidget(left_label);
+    layout1->addWidget(book_list_label);
     layout1->addWidget(book_qlist);
 
 
@@ -31,18 +25,17 @@ HostWindow::HostWindow(const std::vector<Book>& books, QWidget* parent)
 
     history_list = new QListWidget(this);
 
-    right_label = new QLabel("History list", this);
-    layout2->addWidget(right_label);
+    history_list_label = new QLabel("History list", this);
+    layout2->addWidget(history_list_label);
     layout2->addWidget(history_list);
+
 
     h_layout->addWidget(book_list_w);
     h_layout->addWidget(history_list_w);
-
     
     setCentralWidget(book_view);
-    setWindowTitle("Host Control Panel");
+    setWindowTitle("Host");
     resize(800, 600);
-
 }
 
 HostWindow::~HostWindow() {}
@@ -59,3 +52,4 @@ void HostWindow::update_books(const std::vector<Book>& books, std::string state,
         history_list->addItem(QString::fromStdString(time) + " [FAILED TO TAKE] " + QString::fromStdString(client_name) + " - " + QString::fromStdString(book_name));
     }
 }
+

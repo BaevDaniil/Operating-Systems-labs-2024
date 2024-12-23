@@ -1,25 +1,44 @@
 #include "client_interface.h"
 
 
-#include <QMessageBox>
-#include <iostream>
-
-ClientWindow::ClientWindow(const std::vector<Book>& books, QWidget* parent)
+ClientWindow::ClientWindow(const std::vector<Book>& books, pid_t pid, QWidget* parent)
     : QMainWindow(parent) {
     stacked_widget = new QStackedWidget(this);
 
     create_base_view(books);
     create_reading_view();
 
+    client_pid = pid;
+
+    connect(&timer, &QTimer::timeout, this, [this]() {
+        if (!timer.isActive()) return;
+
+        if (--timekill <= 0) {
+            terminate_client();
+        } 
+        else {
+            timer_label->setText(QString("Timer: %1 sec").arg(timekill));
+        }
+    });
+
+    connect(this, &ClientWindow::restart_timer_signal, this, &ClientWindow::restart_timer);
+    connect(this, &ClientWindow::stop_timer_signal, this, [this]() {
+        timer.stop();
+    });
+
+    timer.setInterval(1000);
+    timer.start();
+
     setCentralWidget(stacked_widget);
-    setWindowTitle("Client Control Panel");
+    setWindowTitle("Client");
     resize(800, 600);
 
-    // Set started window
     stacked_widget->setCurrentIndex(0);
 }
 
+
 ClientWindow::~ClientWindow() {}
+
 
 void ClientWindow::create_base_view(const std::vector<Book>& books) {
     QWidget* book_view = new QWidget(this);
@@ -32,11 +51,11 @@ void ClientWindow::create_base_view(const std::vector<Book>& books) {
     for (const auto& book : books) {
         book_qlist->addItem(QString::fromStdString(book.name) + " [" + QString::number(book.count) + "]");
     }
-    left_label = new QLabel("Book list", this);
-    select_button = new QPushButton("Pick up a book", this);
+    book_list_label = new QLabel("Book list", this);
+    select_button = new QPushButton("Take a book", this);
     select_button->setEnabled(false);
 
-    layout1->addWidget(left_label);
+    layout1->addWidget(book_list_label);
     layout1->addWidget(book_qlist);
     layout1->addWidget(select_button);
 
@@ -45,9 +64,12 @@ void ClientWindow::create_base_view(const std::vector<Book>& books) {
     QVBoxLayout* layout2 = new QVBoxLayout(history_list_w);
 
     history_list = new QListWidget(this);
-    right_label = new QLabel("History list", this);
-    layout2->addWidget(right_label);
+    history_list_label = new QLabel("History list", this);
+    timer_label = new QLabel("Timer: 7 sec", this);
+    timer_label->setText(QString("Timer: %1 sec").arg(conn_timeout));
+    layout2->addWidget(history_list_label);
     layout2->addWidget(history_list);
+    layout2->addWidget(timer_label);
 
     h_layout->addWidget(book_list_w);
     h_layout->addWidget(history_list_w);
@@ -60,6 +82,7 @@ void ClientWindow::create_base_view(const std::vector<Book>& books) {
 
     stacked_widget->addWidget(book_view);
 }
+
 
 void ClientWindow::create_reading_view() {
     QWidget* readingView = new QWidget(this);
@@ -76,32 +99,35 @@ void ClientWindow::create_reading_view() {
     stacked_widget->addWidget(readingView);
 }
 
+
 void ClientWindow::select_book() {
-    std::cout << "select_book\n";
     if (book_qlist->currentItem()) {
         QString book_name = book_qlist->currentItem()->text().split(" [").first();
         reading_label->setText("Reading book: " + book_name);
 
-        emit bookSelected(book_name);
+        emit book_selected_signal(book_name);
     }
 }
 
+
 void ClientWindow::cancel_reading() {
     QString book_name = reading_label->text().split(": ").last();
-    emit bookReturned(book_name);
+    emit book_returned_signal(book_name);
 
     stacked_widget->setCurrentIndex(0);
 }
+
 
 void ClientWindow::success_take_book() {
     std::cout << "success_take_book\n";
     stacked_widget->setCurrentIndex(1);
 }
 
+
 void ClientWindow::fail_take_book() {
     std::cout << "Failed to take book\n";
-    // QMessageBox::warning(nullptr, "FAIL", "Failed to take book");
 }
+
 
 void ClientWindow::update_books(const std::vector<Book>& books, std::string state, std::string book_name, std::string time, bool flag) {
     std::cout << "ClientWindow::update_books: " << book_name << std::endl;
@@ -116,5 +142,30 @@ void ClientWindow::update_books(const std::vector<Book>& books, std::string stat
         std::string fail_state = "[FAILED TO TAKE]";
         history_list->addItem(QString::fromStdString(time) + " " + QString::fromStdString(fail_state) + " " + QString::fromStdString(book_name));
     }
+}
+
+
+void ClientWindow::terminate_client() {
+    timer.stop();
+    timer_label->setText("Client terminated");
+    QMessageBox::information(this, "Terminate", "Client terminated");
+    kill(client_pid, SIGKILL);
+}
+
+
+void ClientWindow::restart_timer() {
+    timekill = conn_timeout;
+    timer_label->setText(QString("Timer: %1 sec").arg(conn_timeout));
+    timer.start();
+}
+
+
+void ClientWindow::restart_timer_wrap() {
+    emit restart_timer_signal();
+}
+
+
+void ClientWindow::stop_timer_wrap() {
+    emit stop_timer_signal();
 }
 

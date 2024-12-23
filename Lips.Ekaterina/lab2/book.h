@@ -8,6 +8,7 @@ struct Book {
     int count;
 };
 
+
 const std::vector<Book> books = {
     {"Сборник стихов Пушкина", 7},
     {"Сборник стихов Есенина", 10},
