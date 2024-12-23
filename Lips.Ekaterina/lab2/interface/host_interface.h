@@ -28,12 +28,11 @@ private:
     QListWidget* book_qlist;
     QListWidget* history_list;
 
-
 public:
 
     HostWindow(const std::vector<Book>& books, QWidget* parent = nullptr);
     virtual ~HostWindow();
 
-    void update_books(const std::vector<Book>& books, std::string state, std::string book_name, std::string client_name, std::string time, bool flag);
+    void update_history(const std::vector<Book>& books, const std::string& state, const std::string& book_name, const std::string& client_name, const std::string& time, bool flag);
 
 };

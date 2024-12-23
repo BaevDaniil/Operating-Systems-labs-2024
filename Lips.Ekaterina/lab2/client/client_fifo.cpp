@@ -22,7 +22,7 @@ bool ClientFifo::setup_conn() {
 }
 
 
-ClientFifo::ClientFifo(std::vector<Book> books) : Client(std::move(books)) { }
+ClientFifo::ClientFifo(const std::vector<Book>& books) : Client(std::move(books)) { }
 
 
 ClientFifo::~ClientFifo() {

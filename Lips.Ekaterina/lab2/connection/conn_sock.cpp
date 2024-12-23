@@ -119,6 +119,7 @@ ConnSock* ConnSock::accept(ConnSock& host_listening_conn) {
     return conn;
 }
 
+
 bool ConnSock::read(std::string& data, size_t max_size) {
     if (is_valid()) {
         char buf[1024];

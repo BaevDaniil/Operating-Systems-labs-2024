@@ -14,7 +14,7 @@
 class ClientFifo : public Client { 
 public:
 
-    ClientFifo(std::vector<Book> books);
+    ClientFifo(const std::vector<Book>& books);
     ~ClientFifo();
     
     bool setup_conn() override;

@@ -14,7 +14,7 @@ class HostSock : public Host {
 private:
 
     int port = 9095;
-    
+
     ConnSock* host_listening_conn;
 
 public:

@@ -6,7 +6,6 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QObject>
-
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
@@ -19,7 +18,6 @@
 #include <iomanip>
 #include <sstream>
 #include <csignal>
-
 
 
 class Client { 
@@ -42,14 +40,16 @@ public:
 
     ClientWindow window;
 
-    Client(std::vector<Book> books);
+    Client(const std::vector<Book>& books);
     virtual ~Client() {}
     
     virtual bool setup_conn() = 0;
     void read_from_host();
     void write_to_host();
     void read_host_pid();
-    
+
+    void return_book(const std::string& book_name);
+    void take_book(const std::string& book_name);
 };
 
 

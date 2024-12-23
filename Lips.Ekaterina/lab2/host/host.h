@@ -4,10 +4,10 @@
 #include "../connection/conn.h"
 #include "../semaphore.h"
 
-
 #include <QMessageBox>
 #include <QApplication>
 #include <QTimer>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
@@ -17,7 +17,6 @@
 #include <stdlib.h>
 
 
-
 class Host {
 protected:
 
@@ -25,6 +24,8 @@ protected:
     static constexpr int timeout = 5;
 
     std::vector<Book> books;
+
+    std::vector<std::string> reading_books;
 
     Semaphore semaphore;
 
@@ -42,15 +43,13 @@ public:
 
     bool create_pid_file();
     void read_from_client(); 
-    void write_to_client(std::string response);
+    void write_to_client(const std::string& response);
+
+    bool return_book(const std::string& book_name, const std::string& client_name);
+    bool take_book(const std::string& book_name, const std::string& client_name);
 
     virtual bool setup_conn() = 0;
 
 };
-
-
-bool return_book(std::vector<Book>& books, const std::string& book_name, std::string client_name);
-
-bool take_book(std::vector<Book>& books, const std::string& book_name, std::string client_name);
 
 void read_wrap(Host& host);

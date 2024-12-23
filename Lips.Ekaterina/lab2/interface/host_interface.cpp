@@ -38,9 +38,11 @@ HostWindow::HostWindow(const std::vector<Book>& books, QWidget* parent)
     resize(800, 600);
 }
 
+
 HostWindow::~HostWindow() {}
 
-void HostWindow::update_books(const std::vector<Book>& books, std::string state, std::string book_name, std::string client_name, std::string time, bool flag) {
+
+void HostWindow::update_history(const std::vector<Book>& books, const std::string& state, const std::string& book_name, const std::string& client_name, const std::string& time, bool flag) {
     if (flag) {
         book_qlist->clear();
         for (const auto& book : books) {

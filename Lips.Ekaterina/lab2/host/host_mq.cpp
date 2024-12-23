@@ -5,6 +5,8 @@
 
 
 bool HostMq::setup_conn() {
+    std::cout << "setup_conn\n";
+    
     if (!create_pid_file()) {
         return false;
     }

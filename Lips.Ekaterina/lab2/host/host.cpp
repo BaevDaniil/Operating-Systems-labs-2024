@@ -19,7 +19,7 @@ bool Host::create_pid_file() {
 }
 
 
-void Host::write_to_client(std::string response) {
+void Host::write_to_client(const std::string& response) {
     if (client_conn && client_conn->is_valid()) {
         if (!client_conn->write(response)) {
             std::cout << "Failed to write response \n";
@@ -57,7 +57,7 @@ void Host::read_from_client() {
                     client_name = str.substr(0, delimetr_pos);
                     time = str.substr(delimetr_pos + 1);
                     std::string response;
-                    if (take_book(books, book_name, client_name)){
+                    if (take_book(book_name, client_name)){
                         response = "YES" + book_name + "#" + time;
                     }
                     else {
@@ -77,11 +77,11 @@ void Host::read_from_client() {
                     delimetr_pos = str.find("#");
                     client_name = str.substr(0, delimetr_pos);
                     time = str.substr(delimetr_pos + 1);
-                    return_book(books, book_name, client_name); 
+                    return_book(book_name, client_name); 
                     
                 }
 
-                window.update_books(books, state, book_name, client_name, time, flag);
+                window.update_history(books, state, book_name, client_name, time, flag);
             }
 
             semaphore.post();
@@ -92,11 +92,14 @@ void Host::read_from_client() {
 }
 
 
-bool return_book(std::vector<Book>& books, const std::string& book_name, std::string client_name) {
+bool Host::return_book(const std::string& book_name, const std::string& client_name) {
     for (auto& book : books) {
         if (book.name == book_name) {
             book.count++;
             std::cout << "Book returned: " << book_name << ", Client_name: " << client_name << "\n";
+            
+            reading_books.erase(std::remove(reading_books.begin(), reading_books.end(), book_name));
+
             return true;
         }
     }
@@ -105,23 +108,32 @@ bool return_book(std::vector<Book>& books, const std::string& book_name, std::st
 }
 
 
-bool take_book(std::vector<Book>& books, const std::string& book_name, std::string client_name) {
-    std::cout << "takeBook\n";
-    for (auto& book : books) {
-        if (book.name == book_name) {
-            if (book.count > 0) {
-                book.count--;
-                std::cout << "Book taken: " << book_name << ", Client_name: " << client_name << "\n";
-                return true;
-            } else {
-                std::cout << "Book not available: " << book_name << "\n";
-                return false;
+bool Host::take_book(const std::string& book_name, const std::string& client_name) {
+    if (!reading_books.empty() && std::find(reading_books.begin(), reading_books.end(), book_name) != reading_books.end()) {
+        std::cout << "The book has already been taken" << std::endl;
+    }
+    else {
+        for (auto& book : books) {
+            if (book.name == book_name) {
+                if (book.count > 0) {
+                    book.count--;
+                    std::cout << "Book taken: " << book_name << ", Client_name: " << client_name << "\n";
+
+                    reading_books.push_back(book_name);
+
+                    return true;
+                } 
+                else {
+                    std::cout << "Book not available: " << book_name << "\n";
+                    return false;
+                }
             }
         }
     }
     std::cout << "No such book in library: " << book_name << "\n";
     return false;
 }
+
 
 void read_wrap(Host& host) {
     host.read_from_client();

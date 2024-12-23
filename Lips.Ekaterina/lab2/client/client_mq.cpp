@@ -25,7 +25,7 @@ bool ClientMq::setup_conn() {
 }
 
 
-ClientMq::ClientMq(std::vector<Book> books) : Client(std::move(books)) {}
+ClientMq::ClientMq(const std::vector<Book>& books) : Client(std::move(books)) {}
 
 
 ClientMq::~ClientMq() {

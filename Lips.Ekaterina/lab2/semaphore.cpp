@@ -1,11 +1,7 @@
 #include "semaphore.h"
-#include <iostream>
-#include <cstring>
-#include <fcntl.h>
 
 
 Semaphore::Semaphore(unsigned int value, bool host_flag) {
-
     std::string semaphore_name = "/sem" + std::to_string(value);
     if (host_flag) {
         semaphore = sem_open(semaphore_name.c_str(), O_CREAT | O_EXCL, 0777, 2);

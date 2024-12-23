@@ -2,6 +2,11 @@
 
 #include <semaphore.h>
 
+#include <iostream>
+#include <cstring>
+#include <fcntl.h>
+
+
 class Semaphore {
 public:
     Semaphore(unsigned int value, bool host_flag);

@@ -16,6 +16,7 @@ include_directories(include)
 # Find Qt6 package
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
+
 # Host and Client source files for FIFO
 set(HOST_FIFO_SRC_FILES
   host/host.cpp
@@ -100,3 +101,4 @@ set_target_properties(client_sock PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BI
 
 # Custom target to build all
 add_custom_target(all_targets DEPENDS host_fifo client_fifo host_mq client_mq host_sock client_sock)
+

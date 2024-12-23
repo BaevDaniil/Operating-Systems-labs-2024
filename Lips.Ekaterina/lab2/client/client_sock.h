@@ -19,7 +19,7 @@
 class ClientSock : public Client {    
 public:
 
-    ClientSock(std::vector<Book> books);
+    ClientSock(const std::vector<Book>& books);
     ~ClientSock();
     
     bool setup_conn() override;
