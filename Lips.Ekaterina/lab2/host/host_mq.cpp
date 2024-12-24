@@ -32,7 +32,7 @@ bool HostMq::setup_conn() {
 }
 
 
-HostMq::HostMq(const std::vector<Book>& books_) : Host(std::move(books_)) {}
+HostMq::HostMq(const std::vector<Book>& books_) : Host(books_) {}
 
 
 HostMq::~HostMq() {

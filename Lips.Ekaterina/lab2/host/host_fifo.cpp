@@ -36,7 +36,7 @@ bool HostFifo::setup_conn() {
 }
 
 
-HostFifo::HostFifo(const std::vector<Book>& books_) : Host(std::move(books_)) {}
+HostFifo::HostFifo(const std::vector<Book>& books_) : Host(books_) {}
 
 
 HostFifo::~HostFifo() {

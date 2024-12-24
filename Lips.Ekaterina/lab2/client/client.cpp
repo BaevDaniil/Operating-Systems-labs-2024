@@ -1,7 +1,7 @@
 #include "client.h"
 
 
-Client::Client(const std::vector<Book>& books) : client_books(std::move(books)), window(client_books, client_pid) {
+Client::Client(const std::vector<Book>& books) : client_books(books), window(client_books, client_pid) {
     read_host_pid();
     semaphore = new Semaphore(host_pid, 0);
 }

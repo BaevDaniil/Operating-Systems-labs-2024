@@ -10,3 +10,4 @@ find . -type f -name 'CMakeCache.txt' -delete
 find . -type f -name 'Makefile' -delete
 rm -rf CMakeFiles
 rm -rf .qt
+rm -rf interface

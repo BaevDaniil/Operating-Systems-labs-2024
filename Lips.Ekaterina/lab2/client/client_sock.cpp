@@ -31,7 +31,7 @@ bool ClientSock::setup_conn() {
 }
 
 
-ClientSock::ClientSock(const std::vector<Book>& books) : Client(std::move(books)) {}
+ClientSock::ClientSock(const std::vector<Book>& books) : Client(books) {}
 
 
 ClientSock::~ClientSock() {

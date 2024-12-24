@@ -4,7 +4,7 @@
 #include "../book.h"
 
 
-Host::Host(const std::vector<Book>& books_) : books(std::move(books_)), semaphore(host_pid, 1), window(books) {}
+Host::Host(const std::vector<Book>& books_) : books(books_), semaphore(host_pid, 1), window(books) {}
 
 
 bool Host::create_pid_file() {

@@ -30,7 +30,7 @@ protected:
 
 public:
     
-    std::string client_name = "Linups";
+    std::string client_name = "Client";
     bool is_running = true;
 
     Semaphore* semaphore;

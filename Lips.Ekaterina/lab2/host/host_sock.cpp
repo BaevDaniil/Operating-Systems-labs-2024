@@ -37,7 +37,7 @@ bool HostSock::create_port_file() {
 }
 
 
-HostSock::HostSock(const std::vector<Book>& books_) : Host(std::move(books_)) {}
+HostSock::HostSock(const std::vector<Book>& books_) : Host(books_) {}
 
 
 HostSock::~HostSock() {
