@@ -33,8 +33,8 @@ public:
     void Initialize(const std::string& configLocalPath);
 
     void Terminate();
-
     void ReloadConfig();
-
     void Run();
+    void deleteDirectoriesByDepth(const std::string& rootPathStr, int depth);
+    static void handleSignal(int signal);
 };

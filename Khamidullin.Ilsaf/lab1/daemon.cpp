@@ -10,7 +10,7 @@
 #include <queue>
 #include <thread>
 
-static void handleSignal(int signal)
+static void DeepCleanerDaemon::handleSignal(int signal)
 {
     switch (signal)
     {
@@ -27,7 +27,7 @@ static void handleSignal(int signal)
     }
 }
 
-void deleteDirectoriesByDepth(const std::string& rootPathStr, int depth)
+void DeepCleanerDaemon::deleteDirectoriesByDepth(const std::string& rootPathStr, int depth)
 {
     std::filesystem::path rootPath(rootPathStr);
 
