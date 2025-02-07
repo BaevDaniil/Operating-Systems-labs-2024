@@ -1,0 +1,2 @@
+/home/vinetiger/study/Operating-Systems-labs-2024/Umnov.Sergei/lab_01/test1 txt
+/home/vinetiger/study/Operating-Systems-labs-2024/Umnov.Sergei/lab_01/test2 py
